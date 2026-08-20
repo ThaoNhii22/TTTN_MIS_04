@@ -5,15 +5,9 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from './ProtectedRoute';
 import WorkshopPage from '../pages/WorkshopPage';
-
-function PlaceholderPage({ title }) {
-  return (
-    <section className="page">
-      <h1>{title}</h1>
-      <p>Màn hình này sẽ được triển khai ở task tiếp theo.</p>
-    </section>
-  );
-}
+import WorkshopDetailPage from '../pages/WorkshopDetailPage';
+import WaitlistPage from '../pages/WaitlistPage';
+import CheckInPage from '../pages/CheckInPage';
 
 function AppRouter() {
   return (
@@ -31,13 +25,18 @@ function AppRouter() {
             />
 
             <Route
+              path="/workshops/:id"
+              element={<WorkshopDetailPage />}
+            />
+
+            <Route
               path="/waitlist"
-              element={<PlaceholderPage title="Waitlist" />}
+              element={<WaitlistPage />}
             />
 
             <Route
               path="/check-in"
-              element={<PlaceholderPage title="QR Check-in" />}
+              element={<CheckInPage />}
             />
           </Route>
 
