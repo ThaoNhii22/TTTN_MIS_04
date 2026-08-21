@@ -1,0 +1,1717 @@
+TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP. HỒ CHÍ MINH
+VIỆN CÔNG NGHỆ THÔNG TIN VÀ ĐIỆN, ĐIỆN TỬ---------------------------------------
+BÁO CÁO THỰC TẬP TỐT NGHIỆP
+TÊN ĐỀ TÀI 
+QUẢN LÝ KHÓA HỌC HOẶC SỰ KIỆN NỘI BỘ
+NGÀNH: HỆ THỐNG THÔNG TIN QUẢN LÝ
+CHUYÊN NGÀNH: HỆ THỐNG THÔNG TIN QUẢN LÝ
+NGƯỜI HƯỚNG DẪN
+Thầy: Mai Ngọc Châu
+SINH VIÊN THỰC HIỆN:
+Nguyễn Thiên Nam; MSSV: 027205000119
+Nguyễn Thị Thảo Nhi; MSSV: 089305010843
+Trương Dư Hoài; MSSV: 096305013404
+TP. HỒ CHÍ MINH - 2026
+TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP. HỒ CHÍ MINH
+VIỆN CÔNG NGHỆ THÔNG TIN VÀ ĐIỆN, ĐIỆN TỬ---------------------------------------
+HỌ VÀ TÊN SINH VIÊN
+TÊN ĐỀ TÀI 
+QUẢN LÝ KHÓA HỌC HOẶC SỰ KIỆN NỘI BỘ
+NGÀNH: HỆ THỐNG THÔNG TIN QUẢN LÝ
+CHUYÊN NGÀNH: HỆ THỐNG THÔNG TIN QUẢN LÝ
+BÁO CÁO THỰC TẬP TỐT NGHIỆP
+NGƯỜI HƯỚNG DẪN
+Thầy: Mai Bảo Châu
+TP. HỒ CHÍ MINH – 2026
+LỜI CAM ĐOAN
+MỤC LỤC
+1. TỔNG QUAN/ GIỚI THIỆU1
+1.1. Giới thiệu chung/ Đặt vấn đề1
+1.2. Khảo sát và phân tích các đề tài liên quan đến vấn đề cần giải quyết1
+2. GIẢI PHÁP ĐỀ XUẤT1
+2.1. Cơ sở lý thuyết1
+2.2. Lịch sử phát triển1
+2.3. Phương pháp/chỉ tiêu đánh giá1
+2.4. Kết quả dự kiến của đề tài1
+3. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG1
+3.1. Phân tích chức năng1
+3.2. Thiết kế1
+4. KIỂM THỬ VÀ CÀI ĐẶT1
+5. KẾT QUẢ, KẾT LUẬN/ HƯỚNG PHÁT TRIỂN1
+TÀI LIỆU THAM KHẢO2
+DANH MỤC HÌNH ẢNH
+1. TỔNG QUAN
+1.1 Giới thiệu chung1.1.1 Bối cảnh và đặt vấn đề
+Trong môi trường trường học, doanh nghiệp và các tổ chức nội bộ, các hoạt động như workshop, seminar, khóa kỹ năng và hoạt động câu lạc bộ thường được tổ chức nhằm chia sẻ kiến thức, đào tạo kỹ năng và tạo cơ hội để các thành viên tham gia vào các hoạt động chung. Khi số lượng sự kiện và người tham gia tăng lên, việc quản lý thông tin, đăng ký, số lượng chỗ, điểm danh và kết quả sau sự kiện trở nên phức tạp hơn nếu các nghiệp vụ được thực hiện bằng nhiều công cụ riêng biệt.
+Theo quy trình hiện trạng của đề tài MIS_04, thông tin sự kiện thường được công bố qua các kênh như Zalo hoặc Fanpage, trong khi người tham gia đăng ký thông qua biểu mẫu trực tuyến. Dữ liệu đăng ký sau đó được tổng hợp trên Google Sheet hoặc Excel để người tổ chức theo dõi và xử lý. Cách thức này khiến thông tin về sự kiện và người tham gia bị phân tán giữa nhiều công cụ, đồng thời phụ thuộc đáng kể vào thao tác thủ công của người tổ chức.
+Một vấn đề khác là việc kiểm soát số lượng người đăng ký. Khi số lượng đăng ký tiến gần hoặc đạt giới hạn của sự kiện, người tổ chức phải theo dõi và kiểm tra số lượng thủ công. Việc phát hiện đăng ký trùng, xác định người được xác nhận tham gia và xử lý trường hợp vượt quá quota có thể phát sinh sai sót. Khi sự kiện đã đủ chỗ, danh sách chờ cũng cần được quản lý và cập nhật. Trong trường hợp một người đã được xác nhận hủy đăng ký, việc bổ sung người tiếp theo trong danh sách chờ nếu thực hiện thủ công sẽ làm tăng khối lượng công việc cho người tổ chức.
+Quy trình điểm danh cũng tồn tại những hạn chế khi sử dụng danh sách giấy hoặc các phương thức thủ công. Việc này khó ghi nhận chính xác thời điểm tham dự và có thể phát sinh tình trạng điểm danh hộ. Sau sự kiện, hoạt động khảo sát thường được thực hiện thông qua một biểu mẫu riêng, khiến dữ liệu khảo sát không được liên kết trực tiếp với dữ liệu đăng ký và điểm danh. Người tổ chức vì vậy phải tổng hợp dữ liệu từ nhiều nguồn để đánh giá kết quả của sự kiện và tính toán các chỉ số liên quan.
+Từ những hạn chế trên, nhu cầu đặt ra là xây dựng một hệ thống quản lý tập trung có khả năng hỗ trợ toàn bộ quy trình tổ chức và tham gia sự kiện. Hệ thống cần giảm các thao tác thủ công, kiểm soát nhất quán số lượng đăng ký, quản lý danh sách chờ, hỗ trợ điểm danh và khảo sát, đồng thời cung cấp dữ liệu phục vụ việc theo dõi và đánh giá hiệu quả của sự kiện.
+Đề tài TTTN_MIS_04 — Quản lý khóa học hoặc sự kiện nội bộ được thực hiện nhằm đáp ứng nhu cầu trên thông qua việc xây dựng một Web App hỗ trợ quản lý tập trung các hoạt động nội bộ, từ khâu tạo và phê duyệt sự kiện đến đăng ký, điểm danh, khảo sát và tổng hợp kết quả.
+1.2.2 Các bên liên quan
+Quy trình nghiệp vụ của hệ thống có bốn Actor/Lane chính, bao gồm Người tham gia, Người tổ chức, Hệ thống và Quản trị viên. Trong quy trình hiện trạng, Người tham gia và Người tổ chức là các thành phần chính; trong quy trình đề xuất, Hệ thống và Quản trị viên được đưa vào nhằm hỗ trợ tự động hóa và kiểm soát quy trình nghiệp vụ.
+1.2.2.1 Người tham gia
+Người tham gia là đối tượng sử dụng hệ thống để tìm kiếm, đăng ký và tham gia các sự kiện đã được công bố.
+Các hoạt động chính của Người tham gia gồm:
+Xem thông tin sự kiện.
+Đăng ký tham gia.
+Hủy đăng ký.
+Theo dõi trạng thái đăng ký.
+Thực hiện điểm danh bằng mã hoặc QR.
+Thực hiện khảo sát sau khi tham dự.
+Người tham gia chỉ được đăng ký đối với sự kiện đã được công bố. Quy định này nhằm đảm bảo các sự kiện chưa được phê duyệt hoặc chưa sẵn sàng sẽ không phát sinh lượt đăng ký.
+1.2.2.2 Người tổ chức
+Người tổ chức chịu trách nhiệm tạo và quản lý các sự kiện trong phạm vi được phân quyền.
+Các hoạt động chính gồm:
+Tạo sự kiện.
+Chỉnh sửa thông tin sự kiện.
+Thiết lập thông tin về thời gian và quota.
+Gửi sự kiện để phê duyệt.
+Theo dõi tình hình đăng ký và tham dự.
+Theo dõi kết quả của sự kiện.
+Theo quy trình đề xuất, sự kiện do Người tổ chức tạo sẽ được quản lý qua các trạng thái trong suốt vòng đời bao gồm: Nháp, Chờ duyệt, Đã công bố, Đã hủy và Đã kết thúc. 
+1.2.2.3 Quản trị viên
+Quản trị viên chịu trách nhiệm kiểm tra và phê duyệt sự kiện trước khi sự kiện được công bố.
+Các hoạt động chính gồm:
+Tiếp nhận sự kiện đang chờ duyệt.
+Kiểm tra thông tin sự kiện.
+Phê duyệt sự kiện.
+Từ chối sự kiện nếu thông tin chưa đáp ứng yêu cầu.
+Cho phép sự kiện được chỉnh sửa và gửi duyệt lại khi cần thiết.
+Việc phê duyệt trước khi công bố giúp kiểm soát nội dung sự kiện và đảm bảo chỉ những sự kiện đã được kiểm tra mới có thể mở đăng ký cho Người tham gia.
+1.1.3. Mục tiêu của đề tài
+1.1.3.1. Mục tiêu tổng quát
+Mục tiêu của đề tài là xây dựng một Web App quản lý khóa học hoặc sự kiện nội bộ, hỗ trợ số hóa và tập trung hóa quy trình quản lý sự kiện từ khâu tạo, phê duyệt và công bố đến đăng ký, quản lý danh sách chờ, điểm danh, khảo sát và tổng hợp kết quả.
+Hệ thống hướng đến việc giảm các thao tác quản lý thủ công, nâng cao tính nhất quán của dữ liệu và hỗ trợ Người tổ chức theo dõi, đánh giá hiệu quả của các hoạt động nội bộ.
+1.1.3.2. Mục tiêu cụ thể
+Đề tài tập trung vào các mục tiêu sau:
+Quản lý tập trung thông tin sự kiện, bao gồm workshop, seminar, khóa kỹ năng và các hoạt động nội bộ.
+Quản lý vòng đời sự kiện, từ khi Người tổ chức tạo sự kiện cho đến khi sự kiện được phê duyệt và công bố.
+Kiểm soát quy trình phê duyệt, đảm bảo sự kiện được Quản trị viên kiểm tra trước khi công bố cho Người tham gia.
+Kiểm soát đăng ký, đảm bảo một người không thể đăng ký trùng cho cùng một sự kiện.
+Kiểm soát quota, đảm bảo số lượng đăng ký được xác nhận không vượt quá sức chứa của sự kiện.
+Quản lý danh sách chờ, đảm bảo những người chưa thể được xác nhận do sự kiện hết chỗ vẫn được quản lý theo thứ tự đăng ký.
+Tự động bổ sung danh sách chờ, khi một lượt đăng ký đã được xác nhận bị hủy và tạo ra chỗ trống.
+Hỗ trợ điểm danh bằng mã hoặc QR, đồng thời kiểm tra tính hợp lệ của mã và điều kiện thời gian trước khi ghi nhận tham dự.
+Quản lý khảo sát sau sự kiện, chỉ cho phép người đã được ghi nhận tham dự thực hiện khảo sát.
+Cung cấp dashboard và dữ liệu thống kê, hỗ trợ theo dõi tình hình đăng ký, tham dự, tỷ lệ lấp đầy và mức độ hài lòng.
+Kiểm soát quyền truy cập, đảm bảo Người tham gia, Người tổ chức và Quản trị viên chỉ thực hiện được các nghiệp vụ phù hợp với vai trò của mình.
+Ghi nhận lịch sử thao tác, hỗ trợ truy vết các thay đổi quan trọng trong quá trình vận hành hệ thống.
+1.1.4. Phạm vi của đề tài
+1.1.4.1. Phạm vi thực hiện
+Trong phạm vi của đề tài, hệ thống tập trung triển khai các nhóm chức năng chính sau.
+1.1.4.1.1 Quản lý sự kiện
+Hệ thống hỗ trợ Người tổ chức:
+Tạo sự kiện.
+Chỉnh sửa sự kiện.
+Quản lý thông tin sự kiện.
+Thiết lập thời gian tổ chức.
+Thiết lập quota.
+Lưu sự kiện ở trạng thái Nháp.
+Gửi sự kiện để phê duyệt.
+Quản trị viên có trách nhiệm kiểm tra và phê duyệt hoặc từ chối sự kiện. Sự kiện chỉ được công bố sau khi đáp ứng điều kiện phê duyệt.
+1.1.4.1.2 Đăng ký và hủy đăng ký
+Hệ thống hỗ trợ Người tham gia:
+Xem sự kiện đã công bố.
+Đăng ký tham gia.
+Hủy đăng ký.
+Theo dõi trạng thái đăng ký.
+Hệ thống phải kiểm tra đăng ký trùng và kiểm soát số lượng người được xác nhận theo quota của sự kiện.
+1.1.4.1.3 Quản lý Waitlist
+Khi sự kiện không còn đủ chỗ, người đăng ký mới được đưa vào danh sách chờ.
+Danh sách chờ được quản lý theo thứ tự đăng ký. Khi có chỗ trống phát sinh do một lượt đăng ký đã được xác nhận bị hủy, hệ thống tự động xử lý người tiếp theo trong danh sách chờ theo quy tắc đã xác định.
+1.1.4.1.4 Điểm danh
+Hệ thống hỗ trợ điểm danh bằng mã hoặc QR.
+Quá trình điểm danh phải đảm bảo:
+Mã điểm danh hợp lệ.
+Người thực hiện đáp ứng điều kiện tham gia.
+Thời điểm điểm danh nằm trong khoảng thời gian được cho phép.
+Chỉ khi các điều kiện được đáp ứng, hệ thống mới ghi nhận trạng thái tham dự.
+1.1.4.1.5 Khảo sát sau sự kiện
+Sau khi tham dự sự kiện, Người tham gia có thể thực hiện khảo sát để đánh giá sự kiện.
+Hệ thống kiểm tra trạng thái tham dự trước khi cho phép thực hiện khảo sát, nhằm đảm bảo khảo sát được thực hiện bởi đúng đối tượng đã tham gia sự kiện.
+1.1.4.1.6 Dashboard và thống kê
+Hệ thống cung cấp dữ liệu để theo dõi và đánh giá hiệu quả của sự kiện, bao gồm:
+Số lượt đăng ký.
+Số lượt hủy.
+Số người tham dự.
+Tỷ lệ lấp đầy.
+Tỷ lệ tham dự.
+Mức độ hài lòng.
+Các dữ liệu này là cơ sở để xây dựng dashboard và đánh giá kết quả hoạt động của hệ thống.
+1.1.4.1.7 Phân quyền và Audit Log
+Hệ thống áp dụng phân quyền theo ba nhóm người dùng:
+Người tham gia.
+Người tổ chức.
+Quản trị viên.
+Việc kiểm tra quyền phải được thực hiện ở phía server để đảm bảo người dùng không thể thực hiện các thao tác vượt quá quyền được cấp.
+Đồng thời, hệ thống ghi nhận Audit Log đối với các thao tác nghiệp vụ quan trọng nhằm hỗ trợ truy vết. Theo Business Rules, Audit Log không được lưu các thông tin nhạy cảm như Password hoặc Token.
+1.1.4.2. Phạm vi không thực hiện
+Trong phiên bản của đề tài MIS_04, hệ thống không tập trung triển khai các chức năng sau:
+Thanh toán trực tuyến.
+Livestream sự kiện.
+Ứng dụng trí tuệ nhân tạo (AI).
+Tích hợp SMS/email trả phí.
+Các nội dung trên được xác định ngoài phạm vi của phiên bản đề tài.
+Việc xác định rõ phạm vi giúp nhóm tập trung nguồn lực vào các nghiệp vụ cốt lõi của hệ thống quản lý sự kiện và đảm bảo phù hợp với thời gian, nguồn lực thực hiện đề tài.
+1.1.5. Các chỉ số đánh giá chính của dự án
+Để đánh giá mức độ đáp ứng của hệ thống sau khi triển khai, đề tài sử dụng một số nhóm chỉ số chính.
+1.1.5.1. Customer Satisfaction — CSAT
+CSAT được sử dụng để đánh giá mức độ hài lòng của Người tham gia đối với sự kiện.
+Dữ liệu được thu thập thông qua chức năng khảo sát sau sự kiện. Chỉ những Người tham gia đã được ghi nhận tham dự mới đủ điều kiện thực hiện khảo sát.
+1.1.5.2. Capacity Utilization Rate
+Capacity Utilization Rate phản ánh mức độ sử dụng sức chứa của một sự kiện.
+Chỉ số này giúp Người tổ chức đánh giá mức độ khai thác quota được thiết lập và theo dõi khả năng đáp ứng nhu cầu tham gia của sự kiện.
+1.1.5.3. Show-up Rate
+Show-up Rate phản ánh tỷ lệ Người tham gia thực tế tham dự so với số lượt đăng ký được xác nhận.
+Chỉ số này được xác định dựa trên dữ liệu đăng ký và dữ liệu điểm danh, qua đó giúp đánh giá mức độ chuyển đổi từ đăng ký sang tham dự thực tế.
+1.1.5.4. API Response Time
+API Response Time được sử dụng để đánh giá thời gian hệ thống phản hồi đối với các yêu cầu nghiệp vụ.
+Đây là một trong các chỉ tiêu kỹ thuật được sử dụng để đánh giá chất lượng hoạt động của hệ thống.
+1.1.5.5. Quota Accuracy
+Quota Accuracy đánh giá khả năng kiểm soát số lượng đăng ký được xác nhận theo quota của sự kiện.
+Hệ thống cần đảm bảo số lượng được xác nhận không vượt quá số chỗ được phép, kể cả trong trường hợp có nhiều yêu cầu đăng ký phát sinh gần như đồng thời. Đây là yêu cầu quan trọng đối với nghiệp vụ quản lý quota của hệ thống.
+1.2. Khảo sát và phân tích các đề tài liên quan đến vấn đề cần giải quyết
+1.2.1. Phân tích hiện trạng quy trình nghiệp vụ thủ công (As-Is)
+Để có cơ sở thực tế cho việc thiết kế hệ thống mới, nhóm nghiên cứu đã tiến hành khảo sát và đặc tả quy trình tổ chức hoạt động workshop nội bộ hiện tại (As-Is) đang áp dụng tại đơn vị. Quy trình hiện trạng gồm 2 tác nhân chính tham gia (Người tổ chức, Người tham gia) và được thực hiện qua 10 bước thủ công thông qua việc chắp vá nhiều công cụ rời rạc.
+Bảng 1.1: Bảng đặc tả chi tiết quy trình nghiệp vụ hiện trạng (As-Is)
+STT
+Lane / Actor
+Tên bước
+Loại shape
+Input
+Output
+Ghi chú
+1
+Người tổ chức
+Bắt đầu: có nhu cầu tổ chức sự kiện
+Start Event
+—
+Thông tin sự kiện dự kiến
+Khởi phát từ nhu cầu đào tạo/chia sẻ nội bộ. 
+2
+Người tổ chức
+Đăng thông tin sự kiện qua Zalo/Fanpage
+Task
+Thông tin sự kiện (thời gian, địa điểm, số lượng dự kiến)
+Bài đăng công khai cho tổ chức
+Không có cơ chế lưu trữ tập trung.
+3
+Người tham gia
+Đăng ký qua Google Form
+Task
+Bài đăng đã công khai
+Một dòng dữ liệu trong Google Sheet
+Không kiểm tra trùng lặp tại thời điểm đăng ký.
+4
+Người tổ chức
+Tổng hợp danh sách trên Excel
+Task
+Dữ liệu thô từ Google Sheet
+Danh sách đã lọc
+Rà trùng thủ công, dễ sai sót.
+5
+Người tổ chức
+Kiểm tra còn chỗ hay không
+Gateway
+Danh sách đã lọc, giới hạn số lượng dự kiến
+Nhánh Còn chỗ / Hết chỗ
+Không có cơ chế danh sách chờ tự động.
+6a
+Người tổ chức
+(Nhánh Hết chỗ) Ghi chú thủ công / xử lý danh sách chờ
+Task
+Danh sách vượt số lượng
+Danh sách chờ không chính thức
+Ghi nhận rời rạc, dễ bỏ sót khi có người hủy chỗ. 
+6b
+Người tổ chức
+(Nhánh Còn chỗ) Xác nhận tham gia qua Email
+Task
+Danh sách đã lọc
+Danh sách xác nhận
+Thao tác copy-paste lặp đi lặp lại cho từng người. 
+7
+Người tổ chức
+Điểm danh bằng giấy tại sự kiện
+Task
+Danh sách xác nhận (bản in)
+Danh sách đã điểm danh (viết tay)
+Không có mốc thời gian rõ ràng..
+8
+Người tổ chức
+Gửi khảo sát rời rạc sau sự kiện
+Task
+Danh sách đã điểm danh
+Một Google Form khảo sát mới
+Không liên kết với dữ liệu đăng ký/điểm danh.
+9
+Người tổ chức
+Tổng hợp KPI thủ công
+Task
+Dữ liệu từ nhiều Form/Excel
+Báo cáo tổng hợp
+Tốn thời gian đối chiếu dữ liệu thô từ các nguồn khác nhau, dễ sai lệch số liệu.
+10
+Người tổ chức
+Kết thúc quy trình
+End Event
+Báo cáo tổng hợp
+—
+Kết thúc vòng đời một sự kiện thủ công. 
+1.2.2. Khảo sát các hệ thống và công cụ quản lý liên quan
+Trên thị trường hiện nay có hai nhóm giải pháp phổ biến được dùng để quản lý sự kiện: Nhóm các công cụ văn phòng miễn phí kết hợp (Google Forms + Excel) và Nhóm các nền tảng thương mại chuyên dụng (Eventbrite, Microsoft Teams Webinars, Zoho Backstage, Cvent). Nhóm nghiên cứu tiến hành khảo sát các giải pháp này nhằm tìm ra các tính năng có thể học hỏi và xác định tính phù hợp với bối cảnh nội bộ.
+Bảng 1.2: Bảng tổng hợp khảo sát các hệ thống hiện hữu
+Tên hệ thống / Công cụ
+Ưu điểm cốt lõi
+Nhược điểm / Hạn chế lớn
+Tính phù hợp với môi trường nội bộ tổ chức
+Google Forms + Shee
+- Miễn phí, dễ sử dụng.
+- Triển khai biểu mẫu đăng ký rất nhanh.
+- Không tự động chặn khi quá Quota.
+- Không có danh sách chờ tự động.
+- Không hỗ trợ check-in bảo mật.
+Thấp: Chỉ phù hợp với sự kiện quy mô nhỏ dưới 30 người, không yêu cầu kiểm soát tài nguyên nghiêm ngặt.
+Eventbrite
+- Giao diện chuyên nghiệp.
+- Có tính năng Waitlist và quét mã QR check-in tốt
+- Tập trung vào sự kiện thương mại ra công chúng.
+- Phí dịch vụ cao.
+- Không đồng bộ với tài khoản nhân sự nội bộ
+Trung bình: Quá thừa các tính năng thương mại (bán vé, thanh toán) nhưng thiếu tính năng quản trị nhân sự nội bộ
+Microsoft Teams Webinars
+- Bảo mật tốt theo chuẩn doanh nghiệp.
+- Đồng bộ lịch họp và có báo cáo chuyên sâu.
+- Chỉ tối ưu cho workshop trực tuyến (Online).
+- Không tối ưu cho việc điểm danh trực tiếp (Offline) tại hội trường.
+Trung bình: Chỉ giải quyết tốt bài toán học tập từ xa, không xử lý được vấn đề giới hạn ghế vật lý hội trường.
+Zoho Backstage / Cvent
+- Quản lý vòng đời sự kiện toàn diện.
+- Tự động hóa Waitlist khi có người hủy chỗ.
+- Chi phí bản quyền doanh nghiệp cực kỳ đắt đỏ.
+- Khó tùy biến sâu theo luật KPI riêng của từng tổ chức.
+Trung bình: Khó tiếp cận do rào cản chi phí và không thể tích hợp sâu vào hệ thống đánh giá nội bộ của đơn vị.
+1.2.3. Phân tích khoảng trống nghiệp vụ 
+Từ kết quả phân tích hiện trạng quy trình As-Is và khảo sát các công cụ hiện hữu, nhóm phát hiện ra ba khoảng trống nghiệp vụ cốt lõi mà các giải pháp trên chưa giải quyết triệt để cho bài toán quản lý workshop nội bộ. Đây chính là lý do và động lực bắt buộc để xây dựng hệ thống mới (To-Be):
+Khoảng trống 1: Bài toán kiểm soát Quota dưới tác động truy cập đồng thời:
+Hiện trạng: Google Forms không thể tự động đóng form ngay lập tức khi chạm mốc giới hạn, dẫn đến tình trạng "vỡ trận" số lượng đăng ký vượt quá sức chứa vật lý của phòng hội trường.
+Giải pháp To-Be: Hệ thống mới ứng dụng cơ chế kiểm soát truy cập đồng thời tại tầng Cơ sở dữ liệu thông qua giải pháp InnoDB Row Locking (SELECT ... FOR UPDATE). Cơ chế này đảm bảo tại một thời điểm millisecond, hệ thống sẽ xếp hàng khóa hàng dữ liệu, chặn đứng hoàn toàn rủi ro vỡ Quota bất chấp hàng trăm request gửi lên cùng lúc.
+Khoảng trống 2: Sự đứt gãy trong luồng tự động hóa danh sách chờ:
+Hiện trạng: Khi một người tham gia đã xác nhận thực hiện hủy vé, người tổ chức phải dò lại danh sách chờ trên Excel để liên hệ người tiếp theo bằng tay. Luồng thông tin bị ngắt quãng và phụ thuộc hoàn toàn vào trí nhớ con người.
+Giải pháp To-Be: Hệ thống tự động triển khai thuật toán Waitlist theo nguyên tắc FIFO (First In, First Out). Ngay khi một bản ghi trạng thái Đã xác nhận chuyển sang Đã hủy, Database Transaction sẽ tự động đôn bản ghi đầu tiên trong hàng đợi danh sách chờ lên trạng thái Đã xác nhận theo thời gian thực mà không cần bất kỳ sự can thiệp thủ công nào.
+Khoảng trống 3: Tính chính xác và bảo mật trong điểm danh:
+Hiện trạng: Việc ký tên trên giấy tại sự kiện tốn thời gian, gây ùn tắc tại cửa ra vào, không lưu vết thời gian thực tế và tạo kẽ hở lớn cho hành vi điểm danh hộ. Dữ liệu điểm danh này cũng hoàn toàn tách biệt với biểu mẫu khảo sát sau đó.
+Giải pháp To-Be: Hệ thống tích hợp tính năng Mã hóa và xác thực QR Code check-in. Ứng dụng mô hình phân quyền RBAC để biến thiết bị của Người tổ chức thành máy quét. Server sẽ kiểm tra tính hợp lệ của mã, cửa sổ thời gian cho phép và cập nhật tức thì trạng thái sang Đã tham dự, đồng thời tự động kích hoạt quyền làm khảo sát cho duy nhất đối tượng này.
+2. GIẢI PHÁP ĐỀ XUẤT
+2.1. Cơ sở lý thuyết
+2.2. Lịch sử phát triển
+2.3. Phương pháp/chỉ tiêu đánh giá
+2.4. Kết quả dự kiến của đề tài
+3. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+3.1. Phân tích chức năng 
+3.1.1. Danh sách Actor
+Actor
+Vai trò trong hệ thống
+Người tham gia
+Đăng ký, hủy đăng ký, điểm danh và thực hiện khảo sát 
+Người tổ chức
+Tạo, chỉnh sửa, gửi duyệt, quản lý và hủy sự kiện 
+Quản trị viên
+Kiểm tra, phê duyệt hoặc từ chối sự kiện 
+3.1.2. Sơ đồ và mô tả quy trình nghiệp vụ As-Is
+3.1.2.1. Sơ đồ
+3.1.2.2. Mô tả quy trình
+Giai đoạn 1  Khởi phát nhu cầu: Mọi thứ bắt đầu khi người tổ chức (một CLB, khoa hoặc phòng ban) có nhu cầu tổ chức một buổi workshop, seminar hoặc khóa kỹ năng. Ở giai đoạn này chưa có gì được ghi nhận chính thức; chỉ là ý tưởng và một vài thông tin sơ bộ như chủ đề, thời gian dự kiến và số lượng người tham gia mong muốn.
+Giai đoạn 2  Công bố thủ công qua mạng xã hội: Người tổ chức soạn một bài đăng, thường trên Zalo nhóm hoặc Fanpage, Group để thông báo cho đối tượng quan tâm. Đây là kênh một chiều, không có cơ chế lưu trữ tập trung; nếu bài đăng bị trôi hoặc người quan tâm bỏ lỡ, việc tra cứu lại thông tin sự kiện không thuận tiện.
+Giai đoạn 3  Đăng ký qua Google Form Người tham gia thấy bài đăng, truy cập Google Form và điền thông tin cá nhân để đăng ký. Form chỉ đóng vai trò thu thập dữ liệu và không thực hiện kiểm tra nghiệp vụ chống đăng ký trùng.
+Giai đoạn 4  Tổng hợp Excel thủ công: Người tổ chức tải dữ liệu từ Google Sheet về, sau đó rà soát từng dòng để tìm đăng ký trùng, xóa hoặc điều chỉnh dữ liệu và sắp xếp lại danh sách. Công việc phụ thuộc nhiều vào sự cẩn thận của người thực hiện.
+Giai đoạn 5  Điểm rẽ nhánh: còn chỗ hay không: Sau khi có danh sách đã lọc, người tổ chức so sánh số lượng đăng ký với giới hạn chỗ ngồi đã định trước. Việc kiểm soát giới hạn số lượng chưa được thực hiện tự động bởi một hệ thống quản lý tập trung. 
+Giai đoạn 6a  Nếu hết chỗ: Người tổ chức tự quyết định từ chối hoặc ghi chú tên vào một danh sách chờ không chính thức. Nếu sau đó có người hủy đăng ký, việc liên hệ người tiếp theo phụ thuộc vào sự chủ động và ghi nhớ của người tổ chức.
+Giai đoạn 6b  Nếu còn chỗ: Người tổ chức nhắn tin xác nhận riêng cho từng người tham gia, thường qua Email cá nhân. Đây là thao tác thủ công và phải lặp lại cho từng người.
+Giai đoạn 7  Điểm danh bằng giấy: Tại sự kiện, người tổ chức in danh sách đã xác nhận ra giấy và người tham gia ký tên khi đến. Cách này không ghi nhận chính xác thời điểm tham dự.
+Giai đoạn 8  Khảo sát rời rạc Sau sự kiện, người tổ chức tạo một Google Form khảo sát mới và gửi cho danh sách đã điểm danh. Form khảo sát không liên kết trực tiếp với dữ liệu đăng ký và điểm danh, nên việc đối chiếu phải thực hiện thủ công.
+Giai đoạn 9  Tổng hợp KPI thủ công: Người tổ chức gộp dữ liệu từ form đăng ký, giấy điểm danh và form khảo sát để tính các chỉ số như tỷ lệ tham dự thực tế và mức hài lòng trung bình. Việc đối chiếu thủ công làm tăng thời gian xử lý và nguy cơ sai lệch.3.1.3. Sơ đồ và mô tả quy trình nghiệp vụ To-Be
+3.1.3.1. Sơ đồ
+3.1.3.1. Mô tả quy trình nghiệp
+Giai đoạn 1 Tạo sự kiện trên hệ thống: Người tổ chức đăng nhập vào hệ thống và mở chức năng tạo sự kiện. Hệ thống cung cấp biểu mẫu để nhập thông tin và lưu trữ dữ liệu sự kiện tập trung, thay thế việc quản lý thông tin phân tán trên nhiều công cụ.
+Giai đoạn 2  Nhập thông tin và lưu ở trạng thái Nháp: Người tổ chức nhập các thông tin cần thiết của sự kiện như thời gian, địa điểm và tổng số vé. Sau khi lưu, sự kiện được đặt ở trạng thái Nháp, cho phép người tổ chức tiếp tục bổ sung hoặc chỉnh sửa nội dung trước khi gửi Quản trị viên phê duyệt.
+Giai đoạn 3  Gửi sự kiện để Quản trị viên phê duyệt: Sau khi hoàn tất thông tin, Người tổ chức gửi sự kiện đến Quản trị viên để kiểm tra và phê duyệt. Trong thời gian chờ phê duyệt, sự kiện chưa được công bố công khai và người tham gia chưa thể đăng ký.
+Giai đoạn 4  Quản trị viên kiểm tra và phê duyệt: Quản trị viên kiểm tra thông tin của sự kiện. Nếu thông tin đáp ứng yêu cầu, Quản trị viên phê duyệt sự kiện. Nếu chưa đáp ứng yêu cầu, Quản trị viên từ chối và phản hồi lý do để Người tổ chức chỉnh sửa. Sau khi chỉnh sửa, Người tổ chức có thể gửi sự kiện để phê duyệt lại.
+Giai đoạn 5  Công bố sự kiện sau khi được phê duyệt: Sau khi Quản trị viên phê duyệt, hệ thống chuyển sự kiện sang trạng thái Đã công bố và hiển thị sự kiện cho người tham gia. Việc công bố được hệ thống thực hiện tự động dựa trên kết quả phê duyệt.
+Giai đoạn 6  Người tham gia đăng ký trực tuyến: Người tham gia lựa chọn sự kiện đã được công bố và thực hiện đăng ký bằng địa chỉ email của mình. Mỗi lượt đăng ký tương ứng đúng một vé (một người tham gia); hệ thống không hỗ trợ đăng ký nhiều vé hoặc đăng ký hộ người khác trong một lượt. Hệ thống tiếp nhận yêu cầu và kiểm tra các điều kiện đăng ký.
+Giai đoạn 7  Hệ thống tự động kiểm tra và rẽ nhánh: Hệ thống kiểm tra địa chỉ email đã có lượt đăng ký cho sự kiện hay chưa, đồng thời kiểm tra số vé còn lại. Nếu đủ vé, lượt đăng ký được xác nhận. Nếu không đủ vé, lượt đăng ký được đưa vào Danh sách chờ sau khi người tham gia xác nhận đồng ý. Nếu email đã có lượt đăng ký cho sự kiện, hệ thống từ chối lượt đăng ký mới và hiển thị thông báo.
+Giai đoạn 8  Tự động xử lý Danh sách chờ khi có người hủy: Khi một lượt đăng ký đã được xác nhận bị hủy, hệ thống xác định số vé được giải phóng và kiểm tra Danh sách chờ. Hệ thống ưu tiên lượt đăng ký đứng đầu danh sách để bổ sung vào số vé còn trống theo thứ tự hàng đợi, giảm sự phụ thuộc vào thao tác thủ công của Người tổ chức.
+Giai đoạn 9  Điểm danh bằng mã hoặc mã QR: Tại sự kiện, người tham gia sử dụng mã hoặc mã QR do hệ thống cung cấp để thực hiện điểm danh trong khoảng thời gian cho phép. Nếu thông tin điểm danh hợp lệ, hệ thống ghi nhận người tham gia ở trạng thái Đã tham dự.
+Giai đoạn 10  Tự động gửi khảo sát: Sau sự kiện, hệ thống chỉ mở hoặc gửi khảo sát cho những người tham gia đã được ghi nhận ở trạng thái Đã tham dự. Kết quả khảo sát được liên kết với thông tin tham gia tương ứng.
+Giai đoạn 11  Hoàn thành khảo sát: Người tham gia thực hiện khảo sát và gửi kết quả đánh giá về hệ thống. Hệ thống tiếp nhận và lưu trữ dữ liệu khảo sát để phục vụ việc tổng hợp và đánh giá kết quả sự kiện.
+Giai đoạn 12  Hiển thị các chỉ số trên Bảng điều khiển: Hệ thống tổng hợp dữ liệu đăng ký, điểm danh và khảo sát để tính toán và hiển thị các chỉ số như Tỷ lệ tham dự, Tỷ lệ lấp đầy và Mức độ hài lòng của người tham gia trên Bảng điều khiển.
+Giai đoạn 13  Kết thúc quy trình: Người tổ chức theo dõi kết quả và các chỉ số của sự kiện trên Bảng điều khiển. Sau khi hoàn tất việc theo dõi và đánh giá, quy trình quản lý sự kiện được kết thúc.
+3.1.4. Danh sách Use Case
+STT
+Tên Use Case
+Ý nghĩa
+1
+Đăng nhập 
+Cho phép người dùng xác thực tài khoản và truy cập các chức năng theo vai trò được phân quyền.
+2
+Đăng xuất
+Cho phép người dùng kết thúc phiên làm việc và thoát khỏi hệ thống một cách an toàn.
+3
+Tạo Workshop
+Cho phép Người tổ chức tạo mới một Workshop và nhập các thông tin cần thiết.
+4
+Chỉnh sửa Workshop
+Cho phép Người tổ chức cập nhật thông tin của Workshop thuộc phạm vi quản lý.
+5
+Gửi Workshop để phê duyệt
+Cho phép Người tổ chức gửi Workshop đã hoàn thiện đến Quản trị viên để xét duyệt.
+6
+Xét duyệt Workshop
+Cho phép Quản trị viên kiểm tra, phê duyệt hoặc từ chối Workshop trước khi công bố.
+7
+Quản lý Workshop
+Cho phép Người tổ chức theo dõi và thực hiện các thao tác quản lý Workshop, bao gồm quản lý thông tin, Quota và hủy Workshop.
+8
+Xem danh sách Workshop
+Cho phép Người tham gia xem các Workshop được công bố và đang khả dụng trên hệ thống.
+9
+Đăng ký tham gia Workshop
+Cho phép Người tham gia đăng ký Workshop; hệ thống kiểm tra điều kiện, Quota và xử lý Danh sách chờ khi Workshop đã đủ chỗ.
+10
+Hủy đăng ký Workshop
+Cho phép Người tham gia hủy lượt đăng ký của mình và hệ thống xử lý chỗ trống, Danh sách chờ theo quy định.
+11
+Xem trạng thái đăng ký
+Cho phép Người tham gia theo dõi trạng thái đăng ký của mình như đã đăng ký, đang chờ hoặc đã hủy.
+12
+Điểm danh bằng mã QR
+Cho phép Người tham gia sử dụng mã QR để điểm danh khi tham dự Workshop trong thời gian được quy định.
+13
+Xem thông tin điểm danh
+Cho phép Người tham gia xem thông tin và trạng thái điểm danh của mình đối với Workshop đã tham dự.
+14
+Cấp tài khoản & Phân quyền vai trò
+Cho phép Quản trị viên tạo mới tài khoản nội bộ hoặc thay đổi vai trò của người dùng trong hệ thống và tự động ghi vết Audit Log.
+15
+Quản lý tài khoản người dùng
+Cho phép Quản trị viên quản lý thông tin và trạng thái các tài khoản người dùng trong hệ thống.
+16
+Thực hiện khảo sát Workshop
+Cho phép Người tham gia thực hiện khảo sát sau khi tham dự Workshop để cung cấp phản hồi và đánh giá.
+17
+Xem kết quả khảo sát
+Cho phép Người tổ chức xem và theo dõi kết quả khảo sát của Workshop thuộc phạm vi quản lý.
+18
+Xem bảng điều khiển
+Cho phép người có quyền truy cập xem tổng quan tình hình Workshop, đăng ký, điểm danh và các thông tin quản lý trên Dashboard.
+19
+Xem chỉ số đánh giá Workshop
+Cho phép Người tổ chức hoặc người có quyền xem các chỉ số đánh giá Workshop như mức độ hài lòng, tỷ lệ tham gia và tỷ lệ sử dụng Quota.
+20
+Xem nhật ký hoạt động
+Cho phép Quản trị viên theo dõi các hoạt động quan trọng được ghi nhận trong hệ thống thông qua Audit Log.
+3.1.5. Đặc tả Use Case
+3.1.5.1. Use Case Đăng nhập
+3.1.5.1.1. Mô tả
+Use Case này cho phép Người dùng đăng nhập vào hệ thống bằng tài khoản đã đăng ký. Hệ thống xác thực thông tin đăng nhập và xác định vai trò của Người dùng. Nếu thông tin hợp lệ, Người dùng được truy cập các chức năng tương ứng với quyền hạn.
+3.1.5.1.2. Luồng sự kiện
+3.1.5.1.2.1. Luồng sự kiện chính
+Người dùng truy cập chức năng “Đăng nhập”. 
+Hệ thống hiển thị màn hình đăng nhập. 
+Người dùng nhập thông tin đăng nhập. 
+Người dùng chọn “Đăng nhập”. 
+Hệ thống xác thực thông tin. 
+Hệ thống xác định vai trò của Người dùng. 
+Hệ thống tạo phiên đăng nhập. 
+Hệ thống cho phép Người dùng truy cập hệ thống. 
+3.1.5.1.2.2. Luồng sự kiện khác
+Nếu thông tin đăng nhập không hợp lệ, hệ thống từ chối đăng nhập. 
+Nếu tài khoản không tồn tại hoặc không thể xác thực, hệ thống thông báo lỗi. 
+Nếu xảy ra lỗi hệ thống, phiên đăng nhập không được tạo. 
+3.1.5.1.3. Yêu cầu đặc biệt
+Hệ thống phải xác thực Người dùng trước khi cho phép truy cập. 
+Hệ thống phải xác định đúng vai trò của Người dùng. 
+Quyền truy cập chức năng phải được kiểm soát theo vai trò. 
+3.1.5.1.4. Trạng thái hệ thống trước khi thực hiện
+Người dùng đã có tài khoản. 
+Người dùng chưa đăng nhập vào hệ thống. 
+3.1.5.1.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp đăng nhập thành công:
+Người dùng được xác thực. 
+Phiên đăng nhập được tạo. 
+Người dùng được truy cập các chức năng phù hợp với vai trò. 
+Trường hợp đăng nhập thất bại:
+Người dùng không được truy cập hệ thống. 
+Hệ thống hiển thị thông báo lỗi. 
+3.1.5.1.6. Điểm mở rộng
+Use Case Tạo Workshop: Người tổ chức có thể tạo Workshop sau khi đăng nhập. 
+Use Case Quản lý Workshop: Người tổ chức có thể quản lý Workshop sau khi đăng nhập.
+3.1.5.2. Use Case Đăng xuất
+3.1.5.2.1. Mô tả
+Use Case này cho phép Người dùng kết thúc phiên sử dụng hệ thống. Khi thực hiện đăng xuất, hệ thống kết thúc phiên xác thực hiện tại và đưa Người dùng về trạng thái chưa đăng nhập.
+3.1.5.2.2. Luồng sự kiện
+3.1.5.2.2.1. Luồng sự kiện chính
+Người dùng đang đăng nhập vào hệ thống. 
+Người dùng chọn chức năng “Đăng xuất”. 
+Hệ thống tiếp nhận yêu cầu đăng xuất. 
+Hệ thống kết thúc phiên đăng nhập hiện tại. 
+Hệ thống chuyển Người dùng về màn hình đăng nhập. 
+3.1.5.2.2.2. Luồng sự kiện khác
+Nếu phiên đăng nhập đã hết hạn, hệ thống đưa Người dùng về trạng thái chưa đăng nhập. 
+Nếu xảy ra lỗi trong quá trình đăng xuất, hệ thống xử lý theo cơ chế quản lý phiên của hệ thống. 
+3.1.5.2.3. Yêu cầu đặc biệt
+Sau khi đăng xuất, Người dùng không được tiếp tục truy cập các chức năng yêu cầu đăng nhập bằng phiên đã kết thúc. 
+Phiên xác thực phải được xử lý an toàn. 
+3.1.5.2.4. Trạng thái hệ thống trước khi thực hiện
+Người dùng đã đăng nhập. 
+Phiên đăng nhập đang còn hiệu lực. 
+3.1.5.2.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp đăng xuất thành công:
+Phiên đăng nhập được kết thúc. 
+Người dùng được chuyển về màn hình đăng nhập. 
+Các chức năng yêu cầu xác thực không còn được truy cập. 
+Trường hợp phiên đã hết hạn:
+Người dùng được đưa về trạng thái chưa đăng nhập. 
+3.1.5.2.6. Điểm mở rộng
+Use Case Đăng nhập hệ thống: Người dùng có thể đăng nhập lại để tiếp tục sử dụng hệ thống.
+3.1.5.3. Use Case Tạo Workshop
+3.1.5.3.1. Mô tả
+Use Case này cho phép Người tổ chức tạo một Workshop trên hệ thống. Người tổ chức nhập các thông tin cần thiết của Workshop và lưu lại. Sau khi tạo thành công, Workshop được lưu với trạng thái “Nháp”.
+3.1.5.3.2. Luồng sự kiện
+3.1.5.3.2.1. Luồng sự kiện chính
+Người tổ chức đăng nhập hệ thống. 
+Người tổ chức chọn chức năng “Tạo Workshop”. 
+Hệ thống hiển thị biểu mẫu tạo Workshop. 
+Người tổ chức nhập thông tin Workshop. 
+Người tổ chức chọn “Lưu”. 
+Hệ thống kiểm tra thông tin. 
+Hệ thống tạo Workshop với trạng thái “Nháp”. 
+Hệ thống thông báo tạo Workshop thành công. 
+3.1.5.3.2.2. Luồng sự kiện khác
+Nếu thông tin không hợp lệ, hệ thống yêu cầu Người tổ chức bổ sung hoặc chỉnh sửa. 
+Nếu Người tổ chức hủy thao tác, Workshop không được tạo. 
+Nếu xảy ra lỗi lưu dữ liệu, hệ thống thông báo thao tác không thành công. 
+3.1.5.3.3. Yêu cầu đặc biệt
+Chỉ Người tổ chức có quyền tạo Workshop. 
+Workshop mới tạo phải ở trạng thái “Nháp”. 
+Workshop Nháp chưa được công bố cho Người tham gia. 
+3.1.5.3.4. Trạng thái hệ thống trước khi thực hiện
+Người tổ chức đã đăng nhập. 
+Người tổ chức có quyền tạo Workshop. 
+3.1.5.3.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp tạo thành công:
+Workshop được tạo và lưu vào hệ thống. 
+Trạng thái Workshop là “Nháp”. 
+Người tổ chức có thể tiếp tục chỉnh sửa hoặc gửi phê duyệt. 
+Trường hợp tạo thất bại:
+Workshop không được tạo hoặc không được lưu dữ liệu không hợp lệ. 
+Hệ thống thông báo nguyên nhân. 
+3.1.5.3.6. Điểm mở rộng
+Use Case Chỉnh sửa Workshop: Người tổ chức có thể chỉnh sửa Workshop. 
+Use Case Gửi Workshop để phê duyệt: Người tổ chức có thể gửi Workshop sau khi hoàn thiện
+3.1.5.4. Use Case Chỉnh sửa Workshop
+3.1.5.4.1. Mô tả
+Use Case này cho phép Người tổ chức chỉnh sửa thông tin của Workshop thuộc phạm vi quản lý. Hệ thống kiểm tra quyền và tính hợp lệ của dữ liệu trước khi lưu. Các thay đổi về Quota phải tuân thủ Business Rules.
+3.1.5.4.2. Luồng sự kiện
+3.1.5.4.2.1. Luồng sự kiện chính
+Người tổ chức truy cập danh sách Workshop. 
+Người tổ chức chọn Workshop cần chỉnh sửa. 
+Hệ thống hiển thị thông tin Workshop. 
+Người tổ chức cập nhật thông tin. 
+Người tổ chức chọn “Lưu thay đổi”. 
+Hệ thống kiểm tra quyền và dữ liệu. 
+Hệ thống lưu thay đổi. 
+Hệ thống thông báo chỉnh sửa thành công. 
+3.1.5.4.2.2. Luồng sự kiện khác
+Nếu dữ liệu không hợp lệ, hệ thống yêu cầu chỉnh sửa lại. 
+Nếu thay đổi Quota vi phạm Business Rules, hệ thống từ chối thay đổi. 
+Nếu xảy ra lỗi lưu dữ liệu, hệ thống không hoàn tất thay đổi. 
+3.1.5.4.3. Yêu cầu đặc biệt
+Dữ liệu sau chỉnh sửa phải được lưu chính xác. 
+Thay đổi Quota phải tuân thủ Business Rules. 
+Các thao tác thay đổi dữ liệu nhạy cảm phải được ghi nhận theo cơ chế Audit Log. 
+3.1.5.4.4. Trạng thái hệ thống trước khi thực hiện
+Người tổ chức đã đăng nhập. 
+Workshop tồn tại. 
+Người tổ chức có quyền quản lý Workshop. 
+3.1.5.4.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp chỉnh sửa thành công:
+Thông tin Workshop được cập nhật. 
+Dữ liệu mới được lưu vào hệ thống. 
+Các thay đổi cần thiết được ghi nhận. 
+Trường hợp chỉnh sửa thất bại:
+Dữ liệu cũ được giữ nguyên. 
+Hệ thống thông báo nguyên nhân. 
+3.1.5.4.6. Điểm mở rộng
+Use Case Gửi Workshop để phê duyệt: Sau khi hoàn thiện, Người tổ chức có thể gửi Workshop để xét duyệt
+3.1.5.5. Use Case Gửi Workshop để phê duyệt
+3.1.5.5.1. Mô tả
+Use Case này cho phép Người tổ chức gửi Workshop đã hoàn thiện đến Quản trị viên để xét duyệt. Hệ thống kiểm tra điều kiện trước khi chuyển Workshop sang trạng thái “Chờ duyệt”.
+3.1.5.5.2. Luồng sự kiện
+3.1.5.5.2.1. Luồng sự kiện chính
+Người tổ chức chọn Workshop cần gửi duyệt. 
+Hệ thống hiển thị thông tin Workshop. 
+Người tổ chức chọn “Gửi phê duyệt”. 
+Hệ thống kiểm tra trạng thái và thông tin Workshop. 
+Nếu hợp lệ, hệ thống chuyển Workshop sang “Chờ duyệt”. 
+Hệ thống ghi nhận yêu cầu gửi phê duyệt. 
+Hệ thống thông báo gửi phê duyệt thành công. 
+3.1.5.5.2.2. Luồng sự kiện khác
+Nếu Workshop chưa đủ thông tin, hệ thống yêu cầu Người tổ chức bổ sung. 
+Nếu Workshop không ở trạng thái phù hợp, hệ thống từ chối gửi duyệt. 
+Nếu xảy ra lỗi, Workshop giữ nguyên trạng thái hiện tại. 
+3.1.5.5.3. Yêu cầu đặc biệt
+Chỉ Workshop đáp ứng điều kiện mới được gửi phê duyệt. 
+Workshop Chờ duyệt chưa được công bố. 
+Người tham gia chưa thể đăng ký Workshop khi chưa được công bố. 
+3.1.5.5.4. Trạng thái hệ thống trước khi thực hiện
+Người tổ chức đã đăng nhập. 
+Workshop tồn tại. 
+Workshop đang ở trạng thái “Nháp”. 
+Thông tin Workshop đã được hoàn thiện. 
+3.1.5.5.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp gửi thành công:
+Workshop chuyển sang trạng thái “Chờ duyệt”. 
+Yêu cầu được chuyển đến Quản trị viên. 
+Workshop chưa được công bố. 
+Trường hợp gửi thất bại:
+Workshop giữ nguyên trạng thái. 
+Hệ thống thông báo nguyên nhân. 
+3.1.5.5.6. Điểm mở rộng
+Use Case Xét duyệt Workshop: Quản trị viên thực hiện xét duyệt Workshop. 
+Use Case Chỉnh sửa Workshop: Người tổ chức chỉnh sửa nếu Workshop bị từ chối. 
+3.1.5.6. Use Case Xét duyệt Workshop
+3.1.5.6.1. Mô tả
+Use Case này cho phép Quản trị viên kiểm tra Workshop đang ở trạng thái “Chờ duyệt” và đưa ra quyết định Duyệt hoặc Từ chối. Nếu được duyệt, Workshop được công bố; nếu bị từ chối, Workshop được trả về để Người tổ chức chỉnh sửa. Nội dung này phù hợp với Business Rule về vòng đời Workshop: Nháp → Chờ duyệt → Đã công bố, hoặc quay lại Nháp khi bị từ chối. 
+3.1.5.6.2. Luồng sự kiện
+3.1.5.6.2.1. Luồng sự kiện chính
+Quản trị viên truy cập danh sách Workshop Chờ duyệt. 
+Quản trị viên chọn Workshop cần xét duyệt. 
+Hệ thống hiển thị thông tin Workshop. 
+Quản trị viên kiểm tra thông tin. 
+Quản trị viên chọn “Duyệt”. 
+Hệ thống chuyển Workshop sang “Đã công bố”. 
+Hệ thống ghi nhận kết quả xét duyệt. 
+Hệ thống thông báo kết quả. 
+3.1.5.6.2.2. Luồng sự kiện khác
+Nếu Quản trị viên chọn “Từ chối”, hệ thống yêu cầu ghi nhận lý do. 
+Workshop được chuyển về trạng thái phù hợp để Người tổ chức chỉnh sửa. 
+Nếu Workshop không còn ở trạng thái Chờ duyệt, hệ thống từ chối thao tác. 
+Nếu xảy ra lỗi, trạng thái Workshop không bị thay đổi. 
+3.1.5.6.3. Yêu cầu đặc biệt
+Chỉ Quản trị viên được thực hiện xét duyệt Workshop. 
+Workshop phải được phê duyệt trước khi công bố. 
+Kết quả xét duyệt phải được lưu trữ và ghi nhận theo cơ chế Audit Log. 
+3.1.5.6.4. Trạng thái hệ thống trước khi thực hiện
+Quản trị viên đã đăng nhập. 
+Workshop tồn tại. 
+Workshop đang ở trạng thái “Chờ duyệt”. 
+3.1.5.6.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp Duyệt:
+Workshop chuyển sang “Đã công bố”. 
+Workshop được hiển thị cho Người tham gia. 
+Kết quả xét duyệt được ghi nhận. 
+Trường hợp Từ chối:
+Workshop không được công bố. 
+Workshop được trả về để Người tổ chức chỉnh sửa. 
+Lý do từ chối được ghi nhận. 
+3.1.5.6.6. Điểm mở rộng
+Use Case Chỉnh sửa Workshop: Người tổ chức chỉnh sửa Workshop bị từ chối. 
+Use Case Gửi Workshop để phê duyệt: Người tổ chức gửi lại Workshop sau khi chỉnh sửa 
+3.1.5.7. Use Case Quản lý Workshop
+3.1.5.7.1. Mô tả
+Use Case này cho phép Người tổ chức theo dõi và quản lý các Workshop thuộc phạm vi của mình. Các thao tác quản lý bao gồm cập nhật thông tin, quản lý Quota và hủy Workshop theo điều kiện nghiệp vụ. Việc quản lý phải tuân thủ trạng thái Workshop và các Business Rules liên quan. 
+3.1.5.7.2. Luồng sự kiện
+3.1.5.7.2.1. Luồng sự kiện chính
+Người tổ chức truy cập chức năng “Quản lý Workshop”. 
+Người tổ chức chọn một Workshop. 
+Hệ thống hiển thị thông tin và trạng thái hiện tại. 
+Người tổ chức chọn thao tác cần thực hiện. 
+Hệ thống kiểm tra quyền và điều kiện nghiệp vụ. 
+Hệ thống thực hiện và lưu thao tác. 
+Hệ thống hiển thị kết quả cho Người tổ chức. 
+3.1.5.7.2.2. Luồng sự kiện khác
+Nếu thay đổi Quota vi phạm Business Rules, hệ thống không thực hiện. 
+Nếu Người tổ chức tăng Quota, hệ thống có thể kích hoạt việc đôn Người tham gia từ Danh sách chờ theo quy định. 
+Nếu Người tổ chức giảm Quota thấp hơn số lượng đã xác nhận, hệ thống chặn thao tác và yêu cầu xử lý phù hợp. 
+Nếu Người tổ chức thực hiện yêu cầu hủy Workshop, hệ thống kiểm tra điều kiện và xử lý yêu cầu theo quy định nghiệp vụ, bao gồm trường hợp cần Quản trị viên phê duyệt trước khi hủy. 
+Nếu xảy ra lỗi, hệ thống không hoàn tất thay đổi. 
+Các trường hợp tăng/giảm Quota và hủy Workshop được tài liệu nghiệp vụ xác định là các biến động cần xử lý riêng; đặc biệt hủy Workshop sẽ chuyển Workshop sang Đã hủy và cập nhật các Registration liên quan thành Đã hủy. 
+3.1.5.7.3. Yêu cầu đặc biệt
+Các thao tác phải tuân thủ trạng thái Workshop và Business Rules. 
+Thay đổi Quota phải đảm bảo tính nhất quán dữ liệu. 
+Các thao tác nhạy cảm phải được ghi nhận Audit Log. 
+3.1.5.7.4. Trạng thái hệ thống trước khi thực hiện
+Người tổ chức đã đăng nhập. 
+Workshop tồn tại. 
+3.1.5.7.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp thao tác thành công:
+Workshop được cập nhật theo yêu cầu. 
+Dữ liệu được lưu chính xác. 
+Các thao tác cần thiết được ghi nhận Audit Log. 
+Trường hợp thao tác thất bại:
+Dữ liệu không bị thay đổi sai. 
+Hệ thống thông báo nguyên nhân. 
+3.1.5.7.6. Điểm mở rộng
+Use Case Chỉnh sửa Workshop: Khi Người tổ chức cần cập nhật thông tin Workshop. 
+Đăng ký tham gia Workshop: Sau khi Workshop được công bố, Người tham gia có thể thực hiện đăng ký. 
+Quản lý Quota và Danh sách chờ: Khi có thay đổi về Quota, hệ thống xử lý Danh sách chờ theo Business Rules.
+3.1.5.8. Use Case Xem danh sách Workshop
+3.1.5.8.1. Mô tả
+Use Case này cho phép Người dùng xem danh sách các Workshop đang có trên hệ thống. Hệ thống hiển thị các Workshop phù hợp cùng những thông tin cơ bản để Người dùng có thể lựa chọn Workshop muốn tìm hiểu hoặc tham gia.
+3.1.5.8.2. Luồng sự kiện
+3.1.5.8.2.1. Luồng sự kiện chính
+Người dùng truy cập chức năng “Danh sách Workshop”. 
+Hệ thống tiếp nhận yêu cầu và kiểm tra các Workshop đang có. 
+Hệ thống lọc và hiển thị các Workshop phù hợp với trạng thái công bố. 
+Hệ thống hiển thị thông tin cơ bản của từng Workshop. 
+Người dùng xem danh sách và có thể chọn Workshop để xem thông tin chi tiết. 
+3.1.5.8.2.2. Luồng sự kiện khác
+Nếu không có Workshop phù hợp, hệ thống hiển thị danh sách Workshop trống. 
+Nếu xảy ra lỗi khi tải dữ liệu, hệ thống thông báo không thể tải danh sách Workshop. 
+3.1.5.8.3. Yêu cầu đặc biệt
+Chỉ các Workshop phù hợp với trạng thái được phép hiển thị mới xuất hiện trong danh sách. 
+Thông tin Workshop phải được hiển thị chính xác và cập nhật theo dữ liệu trên hệ thống. 
+Danh sách Workshop phải được tải trong thời gian phù hợp để đảm bảo trải nghiệm Người dùng. 
+3.1.5.8.4. Trạng thái hệ thống trước khi thực hiện
+Hệ thống đang hoạt động bình thường. 
+Người dùng có quyền truy cập chức năng xem danh sách Workshop. 
+3.1.5.8.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp có Workshop:
+Danh sách Workshop được hiển thị. 
+Người dùng có thể xem thông tin cơ bản và lựa chọn Workshop. 
+Trường hợp không có Workshop:
+Hệ thống hiển thị danh sách trống hoặc thông báo phù hợp. 
+3.1.5.8.6. Điểm mở rộng
+Use Case Đăng ký tham gia Workshop: Khi Người tham gia chọn một Workshop và muốn đăng ký tham gia. 
+Use Case Xem thông tin Workshop: Khi Người dùng chọn một Workshop để xem thông tin chi tiết. 
+3.1.5.9. Use Case Đăng ký tham gia Workshop
+3.1.5.9.1. Mô tả
+Use Case này cho phép Người tham gia đăng ký tham gia một Workshop để giữ chỗ. Hệ thống kiểm tra điều kiện đăng ký, trạng thái Workshop, lượt đăng ký trước đó và số lượng chỗ còn lại. Nếu Workshop đã đủ số lượng, Người tham gia có thể được đưa vào Danh sách chờ theo thứ tự đăng ký.
+3.1.5.9.2. Luồng sự kiện
+3.1.5.9.2.1. Luồng sự kiện chính
+Người tham gia truy cập danh sách Workshop. 
+Hệ thống hiển thị danh sách các Workshop phù hợp. 
+Người tham gia chọn Workshop muốn tham gia. 
+Hệ thống hiển thị thông tin Workshop. 
+Người tham gia chọn chức năng “Đăng ký tham gia”. 
+Hệ thống kiểm tra điều kiện đăng ký. 
+Hệ thống kiểm tra Người tham gia đã đăng ký Workshop này trước đó hay chưa. 
+Hệ thống kiểm tra số lượng chỗ còn lại. 
+Nếu Workshop còn chỗ, hệ thống tạo lượt đăng ký với trạng thái “Đã đăng ký”. 
+Hệ thống thông báo đăng ký thành công và cập nhật số lượng chỗ còn lại. 
+3.1.5.9.2.2. Luồng sự kiện khác
+Nếu Workshop đã đủ số lượng, hệ thống thông báo Workshop đã đủ chỗ và đề nghị Người tham gia tham gia Danh sách chờ. 
+Nếu Người tham gia đồng ý, hệ thống tạo lượt đăng ký với trạng thái “Đang chờ” và xác định vị trí trong Danh sách chờ. 
+Nếu Người tham gia đã đăng ký Workshop, hệ thống không tạo lượt đăng ký mới và thông báo phù hợp. 
+Nếu Workshop đã đóng đăng ký, hệ thống không cho phép đăng ký. 
+Nếu Workshop đã bị hủy hoặc không còn khả dụng, hệ thống không cho phép đăng ký. 
+Nếu xảy ra lỗi trong quá trình đăng ký, hệ thống không tạo lượt đăng ký và thông báo đăng ký không thành công. 
+3.1.5.9.3. Yêu cầu đặc biệt
+Hệ thống không được để số lượng đăng ký vượt quá Quota của Workshop. 
+Mỗi Người tham gia không được đăng ký trùng một Workshop. 
+Danh sách chờ phải được xác định theo thứ tự đăng ký. 
+Hệ thống phải đảm bảo tính nhất quán dữ liệu khi có nhiều Người tham gia đăng ký đồng thời. 
+3.1.5.9.4. Trạng thái hệ thống trước khi thực hiện
+Người tham gia đã đăng nhập. 
+Workshop tồn tại và đang ở trạng thái cho phép đăng ký. 
+Người tham gia chưa có lượt đăng ký đối với Workshop. 
+3.1.5.9.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp Workshop còn chỗ:
+Lượt đăng ký được tạo. 
+Trạng thái là “Đã đăng ký”. 
+Số lượng chỗ còn lại được cập nhật. 
+Trường hợp tham gia Danh sách chờ:
+Lượt đăng ký được tạo. 
+Trạng thái là “Đang chờ”. 
+Vị trí trong Danh sách chờ được xác định. 
+3.1.5.9.6. Điểm mở rộng
+Use Case Hủy đăng ký Workshop: Khi Người tham gia muốn hủy lượt đăng ký. 
+Use Case Điểm danh bằng mã QR: Khi Người tham gia đã đăng ký và đến tham dự Workshop. 
+Use Case Xem trạng thái đăng ký: Khi Người tham gia muốn kiểm tra trạng thái lượt đăng ký. 
+3.1.5.10. Use Case Hủy đăng ký Workshop
+3.1.5.10.1. Mô tả
+Use Case này cho phép Người tham gia hủy lượt đăng ký Workshop đã thực hiện trước đó. Hệ thống kiểm tra quyền và trạng thái lượt đăng ký trước khi thực hiện hủy. Sau khi hủy, hệ thống cập nhật dữ liệu đăng ký và xử lý chỗ trống hoặc Danh sách chờ theo quy định nghiệp vụ.
+3.1.5.10.2. Luồng sự kiện
+3.1.5.10.2.1. Luồng sự kiện chính
+Người tham gia truy cập danh sách các Workshop đã đăng ký. 
+Hệ thống hiển thị các lượt đăng ký của Người tham gia. 
+Người tham gia chọn Workshop muốn hủy đăng ký. 
+Hệ thống hiển thị thông tin và trạng thái lượt đăng ký. 
+Người tham gia chọn “Hủy đăng ký”. 
+Hệ thống kiểm tra trạng thái lượt đăng ký. 
+Hệ thống yêu cầu Người tham gia xác nhận hủy. 
+Người tham gia xác nhận. 
+Hệ thống cập nhật trạng thái lượt đăng ký thành “Đã hủy”. 
+Hệ thống cập nhật số lượng chỗ còn lại của Workshop. 
+Nếu có Danh sách chờ, hệ thống xử lý Người tham gia tiếp theo theo quy định. 
+Hệ thống thông báo hủy đăng ký thành công. 
+3.1.5.10.2.2. Luồng sự kiện khác
+Nếu lượt đăng ký không tồn tại, hệ thống thông báo không tìm thấy lượt đăng ký. 
+Nếu lượt đăng ký đã được hủy, hệ thống thông báo trạng thái hiện tại. 
+Nếu lượt đăng ký không ở trạng thái cho phép hủy, hệ thống từ chối thao tác. 
+Nếu Người tham gia hủy thao tác xác nhận, hệ thống giữ nguyên lượt đăng ký. 
+Nếu xảy ra lỗi, hệ thống không hoàn tất việc hủy đăng ký. 
+3.1.5.10.3. Yêu cầu đặc biệt
+Người tham gia chỉ được hủy lượt đăng ký của chính mình. 
+Việc hủy đăng ký phải cập nhật dữ liệu chính xác. 
+Việc xử lý Danh sách chờ sau khi có chỗ trống phải tuân theo thứ tự đăng ký. 
+Không được tạo trạng thái đăng ký không hợp lệ. 
+3.1.5.10.4. Trạng thái hệ thống trước khi thực hiện
+Người tham gia đã đăng nhập. 
+Người tham gia có lượt đăng ký đối với Workshop. 
+Lượt đăng ký đang ở trạng thái cho phép hủy. 
+3.1.5.10.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp hủy thành công:
+Lượt đăng ký được cập nhật thành “Đã hủy”. 
+Số lượng chỗ được cập nhật. 
+Danh sách chờ được xử lý nếu có. 
+Trường hợp hủy thất bại:
+Lượt đăng ký giữ nguyên trạng thái. 
+Hệ thống thông báo nguyên nhân. 
+3.1.5.10.6. Điểm mở rộng
+Use Case Xem trạng thái đăng ký: Sau khi hủy, Người tham gia có thể xem lại trạng thái lượt đăng ký. 
+3.1.5.11. Use Case Xem trạng thái đăng ký
+3.1.5.11.1. Mô tả
+Use Case này cho phép Người tham gia xem trạng thái hiện tại của các lượt đăng ký Workshop đã thực hiện. Hệ thống hiển thị thông tin Workshop, trạng thái đăng ký và các thông tin liên quan như vị trí trong Danh sách chờ nếu có.
+3.1.5.11.2. Luồng sự kiện
+3.1.5.11.2.1. Luồng sự kiện chính
+Người tham gia truy cập chức năng “Lượt đăng ký của tôi”. 
+Hệ thống xác định các lượt đăng ký thuộc Người tham gia. 
+Hệ thống hiển thị danh sách các lượt đăng ký. 
+Người tham gia chọn một lượt đăng ký. 
+Hệ thống hiển thị thông tin chi tiết và trạng thái hiện tại của lượt đăng ký. 
+3.1.5.11.2.2. Luồng sự kiện khác
+Nếu Người tham gia chưa có lượt đăng ký, hệ thống hiển thị danh sách trống. 
+Nếu lượt đăng ký không còn tồn tại, hệ thống thông báo dữ liệu không khả dụng. 
+Nếu xảy ra lỗi khi tải dữ liệu, hệ thống thông báo không thể tải thông tin đăng ký. 
+3.1.5.11.3. Yêu cầu đặc biệt
+Người tham gia chỉ được xem lượt đăng ký của chính mình. 
+Trạng thái đăng ký phải phản ánh đúng dữ liệu hiện tại. 
+Nếu đang ở Danh sách chờ, hệ thống phải hiển thị vị trí chờ nếu dữ liệu có áp dụng. 
+3.1.5.11.4. Trạng thái hệ thống trước khi thực hiện
+Người tham gia đã đăng nhập. 
+Hệ thống có thể truy xuất thông tin đăng ký của Người tham gia. 
+3.1.5.11.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp có lượt đăng ký:
+Danh sách lượt đăng ký được hiển thị. 
+Trạng thái của lượt đăng ký được hiển thị chính xác. 
+Trường hợp không có lượt đăng ký:
+Hệ thống hiển thị danh sách trống hoặc thông báo phù hợp. 
+3.1.5.11.6. Điểm mở rộng
+Use Case Hủy đăng ký Workshop: Khi Người tham gia muốn hủy một lượt đăng ký. 
+Use Case Điểm danh bằng mã QR: Khi lượt đăng ký ở trạng thái phù hợp để tham dự Workshop. 
+3.1.5.12. Use Case Điểm danh bằng mã QR
+3.1.5.12.1. Mô tả
+Use Case này cho phép Người tham gia thực hiện điểm danh bằng cách quét mã QR của Workshop. Hệ thống kiểm tra thông tin Người tham gia, trạng thái đăng ký và tính hợp lệ của mã QR trước khi ghi nhận điểm danh.
+3.1.5.12.2. Luồng sự kiện
+3.1.5.12.2.1. Luồng sự kiện chính
+Người tham gia đăng nhập vào hệ thống. 
+Người tham gia đến Workshop và chọn chức năng điểm danh. 
+Hệ thống mở chức năng quét mã QR. 
+Người tham gia quét mã QR của Workshop. 
+Hệ thống kiểm tra tính hợp lệ của mã QR. 
+Hệ thống xác định Workshop tương ứng. 
+Hệ thống kiểm tra Người tham gia có lượt đăng ký hợp lệ hay không. 
+Hệ thống kiểm tra điều kiện điểm danh. 
+Hệ thống tạo bản ghi điểm danh. 
+Hệ thống thông báo điểm danh thành công. 
+3.1.5.12.2.2. Luồng sự kiện khác
+Nếu mã QR không hợp lệ hoặc hết hiệu lực, hệ thống từ chối điểm danh. 
+Nếu Người tham gia chưa đăng ký Workshop, hệ thống không cho phép điểm danh. 
+Nếu Người tham gia đã điểm danh trước đó, hệ thống không tạo bản ghi điểm danh trùng. 
+Nếu Workshop không ở trạng thái cho phép điểm danh, hệ thống từ chối thao tác. 
+Nếu xảy ra lỗi khi lưu dữ liệu, hệ thống thông báo điểm danh không thành công. 
+3.1.5.12.3. Yêu cầu đặc biệt
+Mã QR phải được xác thực trước khi ghi nhận điểm danh. 
+Mỗi lượt đăng ký chỉ được ghi nhận điểm danh theo quy định nghiệp vụ. 
+Thời gian điểm danh phải được lưu chính xác. 
+Hệ thống phải ngăn chặn việc điểm danh bằng mã QR không hợp lệ. 
+3.1.5.12.4. Trạng thái hệ thống trước khi thực hiện
+Người tham gia đã đăng nhập. 
+Người tham gia đã đăng ký Workshop. 
+Workshop đang ở thời gian và trạng thái cho phép điểm danh. 
+Mã QR hợp lệ được cung cấp. 
+3.1.5.12.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp điểm danh thành công:
+Bản ghi điểm danh được tạo. 
+Thời gian điểm danh được lưu. 
+Hệ thống thông báo điểm danh thành công. 
+Trường hợp điểm danh thất bại:
+Không tạo bản ghi điểm danh không hợp lệ. 
+Hệ thống hiển thị nguyên nhân. 
+3.1.5.12.6. Điểm mở rộng
+Use Case Xem thông tin điểm danh: Sau khi điểm danh, Người dùng có thể xem thông tin điểm danh theo quyền được cấp. 
+3.1.5.13. Use Case Xem thông tin điểm danh
+3.1.5.13.1. Mô tả
+Use Case này cho phép Người dùng có quyền xem thông tin điểm danh của Người tham gia trong Workshop. Hệ thống hiển thị thông tin điểm danh dựa trên quyền truy cập và dữ liệu đã được ghi nhận.
+3.1.5.13.2. Luồng sự kiện
+3.1.5.13.2.1. Luồng sự kiện chính
+Người dùng đăng nhập vào hệ thống. 
+Người dùng truy cập chức năng “Thông tin điểm danh”. 
+Hệ thống kiểm tra quyền truy cập. 
+Hệ thống hiển thị danh sách Workshop phù hợp với quyền của Người dùng. 
+Người dùng chọn Workshop. 
+Hệ thống truy xuất dữ liệu điểm danh. 
+Hệ thống hiển thị thông tin điểm danh của Người tham gia. 
+3.1.5.13.2.2. Luồng sự kiện khác
+Nếu Người dùng không có quyền xem thông tin điểm danh, hệ thống từ chối truy cập. 
+Nếu Workshop không có dữ liệu điểm danh, hệ thống hiển thị danh sách trống. 
+Nếu không tìm thấy dữ liệu điểm danh, hệ thống thông báo dữ liệu không khả dụng. 
+Nếu xảy ra lỗi khi tải dữ liệu, hệ thống thông báo không thể tải thông tin điểm danh. 
+3.1.5.13.3. Yêu cầu đặc biệt
+Chỉ Người dùng có quyền phù hợp mới được xem thông tin điểm danh. 
+Dữ liệu điểm danh phải được hiển thị chính xác. 
+Thông tin điểm danh phải được bảo vệ theo quyền truy cập của Người dùng. 
+3.1.5.13.4. Trạng thái hệ thống trước khi thực hiện
+Người dùng đã đăng nhập. 
+Người dùng có quyền xem thông tin điểm danh. 
+Hệ thống có dữ liệu Workshop và điểm danh. 
+3.1.5.13.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp có dữ liệu:
+Thông tin điểm danh được hiển thị. 
+Người dùng có thể xem dữ liệu theo phạm vi quyền được cấp. 
+Trường hợp không có dữ liệu:
+Hệ thống hiển thị danh sách trống hoặc thông báo phù hợp. 
+3.1.5.13.6. Điểm mở rộng
+Use Case Điểm danh bằng mã QR: Dữ liệu được xem có thể được tạo từ quá trình điểm danh bằng mã QR.
+3.1.5.14. Cấp tài khoản & Phân quyền vai trò
+3.1.5.14.1. Mô tả
+Use Case này cho phép Quản trị viên (Admin) tạo mới tài khoản nội bộ (Organizer / Admin) hoặc thay đổi vai trò (Role) của người dùng trong hệ thống (ví dụ: nâng từ Participant lên Organizer khi một Ban tổ chức/CLB mới đăng ký vận hành Workshop). Mọi thao tác đổi quyền đều bắt buộc ghi vết Audit Log.
+3.1.5.14.2. Luồng sự kiện
+3.1.5.14.2.1. Luồng sự kiện chính
+Quản trị viên đăng nhập vào hệ thống và truy cập chức năng "Quản lý Phân quyền & Vai trò".
+Hệ thống hiển thị danh sách người dùng kèm Vai trò hiện tại (Admin, Organizer, Participant).
+Quản trị viên chọn một người dùng cần thay đổi quyền HOẶC chọn "Cấp tài khoản mới".
+Trường hợp đổi Role:
+Quản trị viên chọn Vai trò mới (ví dụ: chuyển từ Participant $\rightarrow$ Organizer).
+Quản trị viên xác nhận thay đổi.
+Trường hợp cấp tài khoản mới:
+Quản trị viên nhập thông tin (Họ tên, Email, Vai trò được gán).
+Quản trị viên nhấn "Tạo tài khoản".
+Hệ thống kiểm tra điều kiện (Email chưa tồn tại, Quản trị viên có đủ thẩm quyền).
+Hệ thống cập nhật Vai trò mới / Tạo tài khoản mới vào CSDL.
+Hệ thống tự động ghi nhận bản ghi vết vào AuditLogs theo quy tắc BR-10.
+Hệ thống hiển thị thông báo thao tác thành công.
+3.1.5.14.2.2. Luồng sự kiện khác
+Nếu người dùng cố tình đổi vai trò của chính mình (Self-demotion/promotion không hợp lệ): Hệ thống từ chối và hiển thị thông báo lỗi.
+Nếu Email cấp mới đã tồn tại trên hệ thống: Hệ thống báo lỗi "Email đã được đăng ký".
+Nếu Người thực hiện không phải Admin (Gọi API trái phép): Backend kiểm tra middleware RBAC, từ chối xử lý và trả về lỗi 403 Forbidden.
+3.1.5.14.3. Yêu cầu đặc biệt
+Chỉ Quản trị viên (Admin) mới có quyền thực hiện.
+Mọi thao tác thay đổi vai trò bắt buộc phải được hệ thống lưu vào bảng AuditLogs với các trường: actor_id (ID của Admin), action = "UPDATE_ROLE", target_entity = "Users", old_value, new_value, timestamp (BR-10).
+Khi người dùng được đổi sang quyền Organizer, ở lần đăng nhập tiếp theo, Token/Session mới phải phản ánh đúng Menu và API dành cho Organizer.
+3.1.5.14.4. Trạng thái hệ thống trước khi thực hiện
+Quản trị viên đã đăng nhập thành công.
+Tài khoản cần đổi role đã tồn tại trên hệ thống (hoặc thông tin tạo mới hợp lệ).
+3.1.5.14.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp thành công: Vai trò người dùng được cập nhật chính xác trong CSDL; 1 bản ghi AuditLog được khởi tạo.
+Trường hợp thất bại: Quyền hạn cũ được giữ nguyên; Hệ thống hiển thị thông báo nguyên nhân.
+3.1.5.15. Quản lý tài khoản người dùng
+3.1.5.15.1. Mô tả
+Use Case này cho phép Người dùng cập nhật thông tin cá nhân (Họ tên, Mật khẩu) hoặc cho phép Quản trị viên (Admin) thực hiện các thao tác quản lý trạng thái tài khoản trên hệ thống (như Khóa / Mở khóa tài khoản). Hệ thống kiểm tra quyền hạn và ghi vết các thao tác nhạy cảm của Admin.
+3.1.5.15.2. Luồng sự kiện
+3.1.5.15.2.1. Luồng sự kiện chính
+Người dùng đăng nhập vào hệ thống và chọn chức năng "Thông tin tài khoản" (hoặc Admin chọn "Danh sách người dùng").
+Hệ thống hiển thị thông tin tài khoản hiện tại.
+Trường hợp Người dùng tự cập nhật:
+Người dùng nhập thông tin mới (Họ tên, Mật khẩu cũ, Mật khẩu mới).
+Người dùng nhấn "Lưu thay đổi".
+Trường hợp Admin quản lý trạng thái:
+Admin chọn một người dùng và chọn thao tác "Khóa tài khoản" hoặc "Mở khóa tài khoản".
+Admin nhập Lý do thực hiện.
+Admin nhấn "Xác nhận".
+Hệ thống kiểm tra tính hợp lệ của dữ liệu và quyền hạn của Người thực hiện.
+Hệ thống cập nhật thông tin / trạng thái mới vào CSDL.
+Nếu là thao tác đổi trạng thái do Admin thực hiện, hệ thống tự động ghi vết vào AuditLogs theo quy tắc BR-10.
+Hệ thống thông báo thực hiện thành công.
+3.1.5.15.2.2. Luồng sự kiện khác 
+Nếu mật khẩu cũ không chính xác: Hệ thống từ chối cập nhật và thông báo "Mật khẩu hiện tại không đúng".
+Nếu Admin cố tình thực hiện hành động tự Khóa tài khoản của chính mình: Hệ thống từ chối và hiển thị lỗi "Không thể tự khóa tài khoản Admin đang đăng nhập".
+Nếu tài khoản bị Khóa khi đang có phiên làm việc: Hệ thống ngay lập tức thu hồi Token/Session, buộc tài khoản đó phải đăng xuất.
+Nếu xảy ra lỗi CSDL: Hệ thống không cập nhật dữ liệu và thông báo lỗi hệ thống.
+3.1.5.15.3. Yêu cầu đặc biệt
+Người dùng thông thường chỉ được xem và sửa thông tin cá nhân của chính mình.
+Chỉ Quản trị viên mới có quyền Khóa/Mở khóa tài khoản khác.
+Thao tác Khóa/Mở khóa tài khoản bắt buộc phải ghi vết Audit Log (actor_id, action = "CHANGE_USER_STATUS", target_id, old_value, new_value, timestamp).
+3.1.5.15.4. Trạng thái hệ thống trước khi thực hiện
+Người dùng đã đăng nhập thành công.
+Tài khoản cần quản lý đang tồn tại trên hệ thống.
+3.1.5.15.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp thành công: Thông tin cá nhân hoặc Trạng thái tài khoản (Active / Blocked) được cập nhật; Ghi vết Audit Log nếu do Admin thực hiện.
+Trường hợp thất bại: Dữ liệu cũ được giữ nguyên; Hệ thống hiển thị thông báo nguyên nhân.
+3.1.5.15.6. Điểm mở rộng
+UC-01: Đăng nhập hệ thống: Khi tài khoản bị khóa, UC-01 sẽ từ chối lượt đăng nhập tiếp theo.
+UC-14: Cấp tài khoản & Phân quyền vai trò: Liên kết khi Admin quản lý toàn bộ danh sách User.
+3.1.5.16. Thực hiện khảo sát Workshop
+3.1.5.16.1. Mô tả
+Use Case này cho phép Người tham gia thực hiện đánh giá, cho điểm (Rating) và gửi nhận xét (Feedback) về Workshop mà mình đã tham dự. Hệ thống kiểm tra điều kiện điểm danh trước khi mở form khảo sát theo đúng quy tắc BR-09.
+3.1.5.16.2. Luồng sự kiện
+3.1.5.16.2.1. Luồng sự kiện chính
+Người tham gia truy cập danh sách "Workshop đã tham dự".
+Hệ thống hiển thị danh sách các Workshop mà Người tham gia đã được ghi nhận trạng thái Đã tham dự.
+Người tham gia chọn Workshop cần đánh giá và bấm "Thực hiện khảo sát".
+Hệ thống kiểm tra điều kiện nghiệp vụ (Trạng thái registration = Đã tham dự và chưa làm khảo sát trước đó).
+Hệ thống hiển thị biểu mẫu khảo sát (Điểm đánh giá số sao 1-5, câu hỏi trắc nghiệm, ý kiến đóng góp).
+Người tham gia điền đầy đủ thông tin và chọn "Gửi khảo sát".
+Hệ thống lưu kết quả khảo sát, liên kết trực tiếp với mã lượt đăng ký (registration_id).
+Hệ thống hiển thị thông báo gửi khảo sát thành công.
+3.1.5.16.2.2. Luồng sự kiện khác 
+Nếu Người tham gia chưa điểm danh (Trạng thái Đã xác nhận / Danh sách chờ / Đã hủy): Hệ thống từ chối mở form theo BR-09 và hiển thị thông báo "Bạn cần điểm danh tham dự Workshop để thực hiện khảo sát này".
+Nếu Người tham gia đã gửi khảo sát cho Workshop này trước đó: Hệ thống từ chối cho gửi lại và hiển thị thông báo "Bạn đã hoàn thành khảo sát cho Workshop này rồi".
+Nếu Người tham gia bỏ trống các trường đánh giá bắt buộc: Hệ thống hiển thị cảnh báo "Vui lòng hoàn thành các trường đánh giá bắt buộc".
+3.1.5.16.3. Yêu cầu đặc biệt
+Bắt buộc tuân thủ BR-09: Chỉ những lượt đăng ký ở trạng thái Đã tham dự mới được quyền gửi khảo sát.
+Mỗi lượt đăng ký chỉ được gửi khảo sát đúng 1 lần (1 Registration = 1 Survey).
+Kết quả khảo sát được lưu trữ cố định để phục vụ tính toán các chỉ số KPI tự động.
+3.1.5.16.4. Trạng thái hệ thống trước khi thực hiện
+Người tham gia đã đăng nhập.
+Lượt đăng ký của Người tham gia đối với Workshop đang ở trạng thái Đã tham dự.
+3.1.5.16.5. Trạng thái hệ thống sau khi thực hiện
+Trường hợp thành công: Bản ghi khảo sát được khởi tạo trong bảng Surveys; Dữ liệu được tính toán vào điểm trung bình của Workshop.
+Trường hợp thất bại: Không có bản ghi mới nào được lưu; Hệ thống báo lỗi nguyên nhân.
+3.1.5.16.6. Điểm mở rộng
+UC-12: Điểm danh bằng mã QR: Là điều kiện tiên quyết để tạo dữ liệu Đã tham dự cho UC-16.
+UC-17: Xem kết quả khảo sát: Nhận dữ liệu đầu vào từ UC-16.
+3.1.5.17 Xem kết quả khảo sát
+3.1.5.17.1. Mô tả
+Use Case này cho phép Người tổ chức (Organizer) hoặc Quản trị viên (Admin) xem tổng hợp điểm số đánh giá và chi tiết ý kiến đóng góp của Người tham gia đối với các Workshop thuộc phạm vi quản lý của mình.
+3.1.5.17.2. Luồng sự kiện
+3.1.5.17.2.1. Luồng sự kiện chính
+Người tổ chức đăng nhập vào hệ thống và chọn Workshop cần xem báo cáo.
+Người tổ chức chọn chức năng "Xem kết quả khảo sát".
+Hệ thống kiểm tra quyền sở hữu đối với Workshop (organizer_id == current_user_id).
+Hệ thống truy xuất dữ liệu từ bảng Surveys liên quan đến Workshop.
+Hệ thống hiển thị:
+Điểm đánh giá trung bình (Average Rating).
+Biểu đồ phân bổ số sao (1 sao đến 5 sao).
+Danh sách các ý kiến nhận xét chi tiết.
+Người tổ chức xem và có thể lọc nhận xét theo số sao.
+3.1.5.17.2.2. Luồng sự kiện khác 
+Nếu Workshop chưa có lượt khảo sát nào: Hệ thống hiển thị thông điệp "Chưa có phản hồi khảo sát nào cho Workshop này".
+Nếu Người tổ chức truy cập khảo sát của Workshop không do mình quản lý: Backend kiểm tra phân quyền và trả về lỗi 403 Forbidden.
+3.1.5.17.3. Yêu cầu đặc biệt
+Người tổ chức chỉ có quyền xem khảo sát của các Workshop thuộc sở hữu của mình.
+Chức năng này chỉ ở chế độ Đọc (Read-only); Người tổ chức không được quyền sửa hoặc xóa bất kỳ phản hồi nào của Người tham gia.
+3.1.5.17.4. Trạng thái hệ thống trước khi thực hiện
+Người tổ chức / Admin đã đăng nhập.
+Workshop tồn tại trên hệ thống.
+3.1.5.17.5. Trạng thái hệ thống sau khi thực hiện
+Kết quả khảo sát được hiển thị trực quan; Không có sự thay đổi dữ liệu trong CSDL.
+3.1.5.17.6. Điểm mở rộng
+UC-16: Thực hiện khảo sát Workshop: Cung cấp dữ liệu phản hồi cho UC-17.
+UC-19: Xem chỉ số đánh giá Workshop: Tổng hợp kết quả khảo sát thành chỉ số Mức độ hài lòng.
+3.1.5.18. Xem bảng điều khiển
+3.1.5.18.1. Mô tả
+Use Case này cung cấp giao diện tổng quan cá nhân hóa dưới dạng các thẻ thông số nhanh (Widgets) và lối tắt chức năng (Shortcuts) tùy theo vai trò của Người dùng (Admin, Organizer, Participant) ngay sau khi đăng nhập. Use Case này chỉ đóng vai trò hiển thị dữ liệu tổng hợp ở mức cao (High-level Summary), không thực hiện các tính toán phân tích chuyên sâu.
+3.1.5.18.2. Luồng sự kiện
+3.1.5.18.2.1. Luồng sự kiện chính
+Người dùng đăng nhập thành công và truy cập chức năng "Bảng điều khiển".
+Hệ thống xác định Vai trò (Role) của Người dùng đang đăng nhập.
+Hệ thống truy xuất dữ liệu đếm nhanh (Aggregated Counters) tương ứng với vai trò:
+Nếu là Quản trị viên (Admin):
+Thẻ số lượng Workshop đang Chờ duyệt (Cần xử lý gấp).
+Thẻ tổng số Workshop đang hoạt động.
+Thẻ tổng số Người dùng trên hệ thống.
+Danh sách lối tắt: Duyệt Workshop nhanh, Quản lý tài khoản, Xem Audit Log.
+Nếu là Người tổ chức (Organizer):
+Thẻ tổng số Workshop do mình quản lý.
+Thẻ tổng số vé Đã đăng ký / Tổng Quota của các Workshop sắp diễn ra.
+Thẻ thông báo số lượt đăng ký mới trong ngày.
+Danh sách lối tắt: Tạo Workshop mới, Quản lý Workshop, Xem báo cáo KPI.
+Nếu là Người tham gia (Participant):
+Thẻ Workshop sắp diễn ra gần nhất mà mình đã đăng ký (kèm đếm ngược thời gian).
+Thẻ tổng số Workshop Đã tham dự.
+Thẻ trạng thái các vé đang trong Danh sách chờ.
+Danh sách lối tắt: Xem Mã QR điểm danh, Tìm Workshop mới, Lịch sử đăng ký.
+Hệ thống hiển thị các thẻ thông số và danh sách lối tắt lên màn hình.
+Người dùng xem thông tin tổng quan hoặc nhấp vào các lối tắt để chuyển nhanh đến chức năng tương ứng.
+3.1.5.18.2.2. Luồng sự kiện khác (Exception / Alternative Flow)
+Nếu phiên đăng nhập hết hạn (Session Expired): Hệ thống chuyển hướng người dùng về màn hình Đăng nhập (UC-01) kèm thông báo lỗi.
+Nếu không có dữ liệu (Người dùng mới/Chưa có Workshop): Hệ thống hiển thị trạng thái rỗng (Empty State) kèm nút hướng dẫn thao tác đầu tiên (như "Tìm Workshop ngay" hoặc "Tạo Workshop đầu tiên").
+Nếu dịch vụ đếm dữ liệu bị gián đoạn hoặc quá tải: Hệ thống hiển thị thông báo "Chưa thể tải dữ liệu tổng quan" tại widget bị lỗi và cung cấp nút "Tải lại", các phần khác của hệ thống vẫn hoạt động bình thường.
+3.1.5.18.3. Yêu cầu đặc biệt
+Chỉ đọc (Read-only): Dashboard chỉ đóng vai trò hiển thị và điều hướng, không cho phép chỉnh sửa dữ liệu trực tiếp tại màn hình này.
+Hiệu năng cao (Performance): Dữ liệu trên Dashboard phải được tải trong thời gian $< 1.5$ giây. Bắt buộc sử dụng các truy vấn đếm tối ưu (COUNT, EXISTS) hoặc bộ nhớ đệm (Cache) để tránh làm chậm hệ thống.
+Phân quyền chặt chẽ: Người dùng ở vai trò nào chỉ được thấy Widget thuộc thẩm quyền của vai trò đó.
+3.1.5.18.4. Trạng thái hệ thống trước khi thực hiện
+Người dùng đã đăng nhập vào hệ thống.
+3.1.5.18.5. Trạng thái hệ thống sau khi thực hiện
+Màn hình Bảng điều khiển hiển thị đầy đủ các thẻ chỉ số tổng quan và lối tắt tác nghiệp phù hợp với vai trò.
+3.1.5.18.6. Điểm mở rộng
+UC-03: Lối tắt dành cho Organizer từ Dashboard.
+UC-06: Lối tắt dành cho Admin xử lý duyệt nhanh từ Dashboard.
+UC-12: Lối tắt mở nhanh Mã QR cho Participant từ Dashboard.
+UC-19: Điều hướng từ các thẻ chỉ số sang màn hình Phân tích KPI chi tiết.
+3.1.5.19. Xem chỉ số đánh giá Workshop (KPI Metrics)
+3.1.5.19.1. Mô tả
+Use Case này cho phép Người tổ chức và Quản trị viên xem chi tiết các chỉ số đo lường hiệu suất (KPI) chuyên sâu của một hoặc nhiều Workshop theo thời gian thực (Real-time Analytics), phục vụ việc đánh giá chất lượng vận hành và đưa ra quyết định cải tiến.
+3.1.5.19.2. Luồng sự kiện
+3.1.5.19.2.1. Luồng sự kiện chính
+Người dùng (Organizer / Admin) truy cập chức năng "Báo cáo & KPI Workshop".
+Hệ thống hiển thị bộ lọc (Theo Workshop, Theo khoảng thời gian, Theo trạng thái).
+Người dùng chọn Workshop cụ thể cần phân tích.
+Hệ thống truy xuất CSDL và tự động tính toán các chỉ số:
+Tỷ lệ lấp đầy Quota (Fill Rate): $\frac{\text{Số lượt Đã xác nhận}}{\text{Tổng Quota}} \times 100\%$
+Tỷ lệ tham dự thực tế (Attendance Rate): $\frac{\text{Số lượt Đã tham dự}}{\text{Số lượt Đã xác nhận}} \times 100\%$
+Tỷ lệ Hủy vé (Cancellation Rate): $\frac{\text{Số lượt Đã hủy}}{\text{Tổng lượt đăng ký}} \times 100\%$
+Mức độ hài lòng trung bình (Satisfaction Score): Điểm đánh giá trung bình từ khảo sát.
+Hệ thống hiển thị bảng chỉ số cùng các biểu đồ trực quan (Biểu đồ tròn, biểu đồ cột).
+3.1.5.19.2.2. Luồng sự kiện khác (Exception / Alternative Flow)
+Nếu Workshop chưa diễn ra hoặc chưa có lượt đăng ký: Các chỉ số tỷ lệ hiển thị $0\%$ hoặc giá trị N/A.
+Nếu Người tổ chức cố tình gọi API lấy chỉ số KPI của Workshop thuộc Organizer khác: Backend kiểm tra Scope và trả về lỗi 403 Forbidden.
+3.1.5.19.3. Yêu cầu đặc biệt
+Công thức tính toán các chỉ số phải hoàn toàn chính xác theo đúng dữ liệu thực tế lưu trữ trong CSDL.
+Hỗ trợ xuất dữ liệu chỉ số báo cáo ra file Excel / PDF nếu có yêu cầu.
+3.1.5.19.4. Trạng thái hệ thống trước khi thực hiện
+Người dùng đã đăng nhập với vai trò Organizer hoặc Admin.
+Workshop được chọn đang tồn tại trên hệ thống.
+3.1.5.19.5. Trạng thái hệ thống sau khi thực hiện
+Màn hình chỉ số KPI hiển thị trực quan các dữ liệu phân tích mà không làm biến đổi dữ liệu hệ thống.
+3.1.5.19.6. Điểm mở rộng
+UC-07: Quản lý Workshop: Nhúng trực tiếp các chỉ số KPI vào màn hình chi tiết quản lý Workshop.
+3.1.5.20. Xem nhật ký hoạt động (Audit Log)
+3.1.5.20.1. Mô tả
+Use Case này cho phép Quản trị viên (Admin) tra cứu, tìm kiếm và xem danh sách các bản ghi nhật ký hệ thống (Server Audit Logs). Chức năng này giúp theo dõi vết các thao tác nhạy cảm, phục vụ công tác kiểm toán, bảo mật và tuân thủ quy tắc BR-10.
+3.1.5.20.2. Luồng sự kiện
+3.1.5.20.2.1. Luồng sự kiện chính
+Quản trị viên đăng nhập vào hệ thống và chọn chức năng "Nhật ký hoạt động (Audit Log)".
+Hệ thống hiển thị danh sách các bản ghi nhật ký mới nhất từ bảng AuditLogs.
+Admin có thể nhập điều kiện lọc:
+Lọc theo Người thực hiện (actor_id).
+Lọc theo Hành động (action: APPROVE_WORKSHOP, REJECT_WORKSHOP, UPDATE_QUOTA, AUTO_PROMOTION_WAITLIST, CHANGE_ROLE...).
+Lọc theo Khoảng thời gian (timestamp).
+Lọc theo Đối tượng tác động (target_entity).
+Admin bấm "Tìm kiếm".
+Hệ thống thực hiện truy vấn và hiển thị danh sách kết quả phân trang.
+Admin chọn một bản ghi để xem chi tiết thông tin thay đổi (old_value và new_value dưới dạng định dạng cấu trúc JSON).
+3.1.5.20.2.2. Luồng sự kiện khác
+Nếu Người dùng không phải Admin (Organizer hoặc Participant) cố tình truy cập: Backend từ chối ngay lập tức tại Middleware và trả về lỗi 403 Forbidden.
+Nếu không tìm thấy bản ghi phù hợp với bộ lọc: Hệ thống hiển thị thông báo "Không tìm thấy nhật ký hoạt động thỏa mãn điều kiện".
+Nếu xảy ra lỗi truy vấn dữ liệu Audit Log: Hệ thống thông báo "Không thể tải dữ liệu nhật ký hệ thống".
+3.1.5.20.3. Yêu cầu đặc biệt
+Bắt buộc tuân thủ BR-10: Mọi thao tác tác động đến dữ liệu nhạy cảm phải xuất hiện đầy đủ bản ghi tại Use Case này.
+Dữ liệu Audit Log là chỉ đọc (Read-only / Immutable). Không ai (kể cả Admin) được phép chỉnh sửa hoặc xóa các bản ghi vết trong AuditLogs.
+Bảo mật dữ liệu: Tuyệt đối không lưu trữ hoặc hiển thị Mật khẩu (Password) và Mã xác thực (Token) trong dữ liệu chi tiết của Audit Log.
+3.1.5.20.4. Trạng thái hệ thống trước khi thực hiện
+Quản trị viên đã đăng nhập vào hệ thống.
+3.1.5.20.5. Trạng thái hệ thống sau khi thực hiện
+Quản trị viên tra cứu thành công các vết hoạt động hệ thống; Dữ liệu AuditLogs được giữ nguyên vẹn.
+3.1.5.20.6. Điểm mở rộng
+Liên kết với tất cả Use Cases có phát sinh thay đổi nhạy cảm: UC-06, UC-07, UC-10, UC-14, UC-15 (Tất cả đều tự động ghi vết vào UC-20).
+3.1.6. Business Rules
+Bảng Business Rules 
+Mã BR
+Tên Business Rule
+Mô tả quy tắc nghiệp vụ
+Điều kiện
+Xử lý / Kết quả
+Đối tượng liên quan
+BR-01
+Chống đăng ký trùng
+Một địa chỉ email không được tạo nhiều lượt đăng ký cho cùng một sự kiện.mỗi lượt đăng ký tương ứng đúng 1 vé = 1 người tham gia. Hệ thống không hỗ trợ đăng ký nhiều vé hoặc đăng ký hộ trong cùng một lượt. 
+Người tham gia gửi yêu cầu đăng ký và hệ thống phát hiện địa chỉ email đó đã có lượt đăng ký cho sự kiện. 
+Hệ thống từ chối lượt đăng ký mới và hiển thị thông báo email đã được đăng ký cho sự kiện. 
+Người tham gia, Sự kiện, Đăng ký 
+BR-02
+Kiểm soát số lượng vé và danh sách chờ 
+Hệ thống phải kiểm soát tổng số vé đã được xác nhận theo tổng số vé được phép của sự kiện. 
+Người tham gia gửi yêu cầu đăng ký và hệ thống kiểm tra số vé còn lại của sự kiện.
+Nếu đủ vé → lượt đăng ký được Đã xác nhận. Nếu không đủ vé → lượt đăng ký được đưa vào Danh sách chờ sau khi Người tham gia xác nhận tham gia Danh sách chờ.
+Sự kiện, Đăng ký 
+BR-03
+Tự động xử lý Danh sách chờ khi có lượt đăng ký bị hủy  
+Khi một lượt đăng ký đã được xác nhận bị hủy, hệ thống phải ưu tiên lượt đăng ký đầu tiên trong Danh sách chờ để bổ sung số vé còn trống. 
+Có lượt đăng ký đã được xác nhận bị hủy và Danh sách chờ còn lượt đăng ký. 
+Hệ thống ưu tiên lượt đăng ký đầu tiên trong Danh sách chờ và chuyển sang Đã xác nhận khi số vé còn trống đáp ứng yêu cầu. 
+Đăng ký, Sự kiện
+BR-04
+Điểm danh bằng mã QR/mã điểm danh
+Người tham gia phải sử dụng mã QR hợp lệ để được ghi nhận tham dự.
+Người tham gia được thực hiện quét điểm danh tại sự kiện bằng mã QR. 
+Nếu mã hợp lệ → cập nhật trạng thái Đã tham dự. Nếu mã không hợp lệ → không ghi nhận điểm danh. 
+Người tham gia, Điểm danh 
+BR-05
+Kiểm soát thời gian điểm danh
+Hệ thống chỉ chấp nhận điểm danh trong khoảng thời gian được quy định cho sự kiện.
+Người tham gia thực hiện điểm danh và thời gian hiện tại được kiểm tra với khoảng thời gian cho phép. 
+Trong thời gian cho phép → ghi nhận Đã tham dự. Ngoài thời gian → từ chối điểm danh. 
+Sự kiện, Điểm danh 
+BR-06
+Quản trị viên phê duyệt sự kiện
+Sự kiện phải được Quản trị viên kiểm tra và phê duyệt trước khi được công bố cho người tham gia. 
+Người tổ chức gửi sự kiện ở trạng thái Nháp để Quản trị viên kiểm tra. 
+Quản trị viên duyệt → hệ thống cho phép công bố sự kiện. Quản trị viên từ chối → hệ thống gửi phản hồi để Người tổ chức chỉnh sửa và gửi duyệt lại.  
+Người tổ chức, Quản trị viên, Sự kiện 
+BR-07
+Quản lý trạng thái sự kiện
+Sự kiện phải được quản lý theo trạng thái nghiệp vụ phù hợp trong suốt vòng đời.
+Người tổ chức tạo, chỉnh sửa hoặc gửi sự kiện để duyệt; Quản trị viên xử lý yêu cầu phê duyệt. 
+Sự kiện chuyển theo luồng Nháp → Chờ duyệt → Đã công bố → Đã hủy/Đã kết thúc. Nếu bị từ chối → quay lại trạng thái Nháp để Người tổ chức chỉnh sửa và gửi duyệt lại. 
+Người tổ chức, Quản trị viên, Sự kiện 
+BR-08
+Chỉ cho đăng ký sự kiện đã công bố 
+Người tham gia chỉ được tạo lượt đăng ký cho những sự kiện đã được công bố chính thức. 
+Người tham gia thực hiện đăng ký sự kiện. 
+Nếu sự kiện ở trạng thái Đã công bố → cho phép đăng ký. Nếu chưa được công bố → không cho phép đăng ký. 
+Người tham gia, Sự kiện, Đăng ký 
+BR-09
+Khảo sát sau khi tham dự
+Chỉ người tham gia được ghi nhận ở trạng thái Đã tham dự mới được nhận hoặc mở khảo sát đánh giá.
+Người tham gia có trạng thái Đã tham dự. 
+Hệ thống mở/gửi khảo sát cho Người tham gia và lưu kết quả đánh giá. 
+Người tham gia, Điểm danh, Khảo sát 
+BR-10
+Server Audit Log
+Mọi thao tác tác động đến dữ liệu nhạy cảm phải được Server ghi lại nhật ký vết (Audit Trail). 
+Admin duyệt/từ chối/hủy sự kiện, Organizer đổi Quota/Thời gian, Hệ thống auto-đôn Waitlist, Sửa quyền User, Cấp tài khoản mới, Khóa/mở khóa tài khoản,
+Server Middleware tự động ghi bản ghi vào bảng AuditLogs (Actor_ID, Action, Target_Entity, Old_Value, New_Value, Timestamp, IP). Không lưu Password/Token. 
+Quản trị viên, Người tổ chức, Hệ thống, AuditLog 
+BR-11 
+Hủy đăng ký bởi Người tham gia 
+Người tham gia được phép hủy lượt đăng ký trước mốc hạn chót của sự kiện. 
+Đăng ký đang Đã xác nhận/Danh sách chờ, còn trước mốc hạn chót 
+Trước hạn chót → chuyển Đã hủy, giải phóng chỗ, kích hoạt BR-03 đôn Danh sách chờ. Sau hạn chót → từ chối và thông báo lý do. 
+Người tham gia, Đăng ký, Sự kiện 
+BR-12 
+Người tổ chức sửa Giới hạn số lượng sau công bố 
+Người tổ chức được phép yêu cầu thay đổi tổng số vé sau khi sự kiện đã công bố. 
+Người tổ chức gửi yêu cầu thay đổi tổng số vé. 
+Giới hạn mới > số Đã xác nhận → cập nhật, tự động đôn Danh sách chờ nếu tăng theo BR-03. Giới hạn mới < số Đã xác nhận → từ chối, yêu cầu xử lý thủ công. 
+Người tổ chức, Sự kiện, Đăng ký, Danh sách chờ
+BR-13 
+Hủy toàn bộ sự kiện 
+Khi một sự kiện bị hủy, toàn bộ lượt đăng ký liên quan phải được hủy theo. 
+Sự kiện đang Chờ duyệt/Đã công bố, chưa diễn ra. 
+Chuyển sự kiện sang Đã hủy; toàn bộ Đăng ký liên quan (Đã xác nhận + Danh sách chờ) chuyển Đã hủy; ghi nhận lý do hủy. 
+Quản trị viên, Người tổ chức, Sự kiện, Đăng ký 
+BR-14 
+Chống điểm danh trùng 
+Một lượt đăng ký chỉ được ghi nhận tham dự một lần, dù mã QR/mã điểm danh được quét nhiều lần.  
+Mã QR/mã điểm danh của một lượt đăng ký đã Đã tham dự bị quét lại.  
+Lần quét đầu trong khung giờ cho phép → ghi nhận Đã tham dự. Các lần quét sau → không tạo bản ghi mới, thông báo “Đã điểm danh lúc [thời điểm]”. 
+Người tham gia, Đăng ký, Điểm danh, Sự kiện
+3.1.7. Ma trận phân quyền RBAC
+3.1.8. Sơ đồ trạng thái Workshop
+3.1.9. Sơ đồ trạng thái lượt đăng ký
+3.2. Thiết kế
+3.2.1. Kiến trúc hệ thống
+3.2.2. Mô hình dữ liệu ERD
+3.2.3. Từ điển dữ liệu 
+Bảng USERS
+Tên trường
+Kiểu 
+dữ liệu
+Độ dài
+PK/
+FK/
+UQ
+Nullable
+Default
+Ý nghĩa
+Ràng buộc nghiệp vụ
+user_id
+BIGINT
+—
+PK
+Không
+AUTO_INCREMENT
+Mã định danh người dùng
+Duy nhất
+full_name
+VARCHAR
+100
+—
+Không
+—
+Họ và tên người dùng
+Không được để trống
+email
+VARCHAR
+255
+UQ
+Không
+—
+Email đăng nhập
+Không được trùng
+password_hash
+VARCHAR
+100
+—
+Không
+—
+Mật khẩu đã mã hóa
+Không lưu mật khẩu dạng plain text
+role
+ENUM
+—
+—
+Không
+—
+Vai trò người dùng
+admin, organizer, participant
+status
+ENUM
+—
+—
+Không
+—
+Trạng thái tài khoản
+active, inactive, locked
+created_at
+DATETIME
+—
+—
+Không
+CURRENT_TIMESTAMP
+Thời điểm tạo tài khoản
+—
+updated_at
+DATETIME
+—
+—
+Có
+CURRENT_TIMESTAMP
+Thời điểm cập nhật cuối
+Tự cập nhật khi dữ liệu thay đổi
+Bảng WORKSHOPS
+Tên trường
+Kiểu dữ liệu
+Độ dài
+PK/
+FK/
+UQ
+Nullable
+Default
+Ý nghĩa
+Ràng buộc nghiệp vụ
+workshop_id
+BIGINT
+—
+PK
+Không
+AUTO_INCREMENT
+Mã Workshop
+Duy nhất
+organizer_id
+BIGINT
+—
+FK
+Không
+—
+Người tổ chức Workshop
+FK → USERS.user_id
+title
+VARCHAR
+200
+—
+Không
+—
+Tên Workshop
+Không được để trống
+description
+TEXT
+—
+—
+Có
+NULL
+Mô tả Workshop
+—
+location
+VARCHAR
+255
+—
+Có
+NULL
+Địa điểm tổ chức
+—
+start_at
+DATETIME
+—
+—
+Không
+—
+Thời gian bắt đầu
+Phải trước end_at
+end_at
+DATETIME
+—
+—
+Không
+—
+Thời gian kết thúc
+Phải sau start_at
+registration_open_at
+DATETIME
+—
+—
+Không
+—
+Thời điểm mở đăng ký
+Phải trước thời điểm đóng đăng ký
+registration_close_at
+DATETIME
+—
+—
+Không
+—
+Thời điểm đóng đăng ký
+Phải sau thời điểm mở đăng ký
+quota
+INT
+—
+—
+Không
+—
+Số lượng người tối đa
+Phải lớn hơn 0
+checkin_code
+VARCHAR
+255
+UQ
+Có
+NULL
+Mã dùng để điểm danh Workshop
+Chỉ có hiệu lực trong thời gian check-in
+checkin_start_at
+DATETIME
+—
+—
+Không
+—
+Thời điểm bắt đầu cho phép check-in
+Phải trước checkin_end_at
+checkin_end_at
+DATETIME
+—
+—
+Không
+—
+Thời điểm kết thúc check-in
+Phải sau checkin_start_at
+status
+ENUM
+—
+—
+Không
+draft
+Trạng thái Workshop
+draft, pending, published, cancelled, completed
+cancel_reason
+TEXT
+—
+—
+Có
+NULL
+Lý do hủy Workshop
+Có giá trị khi Workshop bị hủy
+created_at
+DATETIME
+—
+—
+Không
+CURRENT_TIMESTAMP
+Thời điểm tạo Workshop
+—
+updated_at
+DATETIME
+—
+—
+Không
+CURRENT_TIMESTAMP
+Thời điểm cập nhật cuối
+—
+Bảng REGISTRATIONS
+Tên trường
+Kiểu dữ liệu
+Độ dài
+PK/
+FK/
+UQ
+Nullable
+Default
+Ý nghĩa
+Ràng buộc nghiệp vụ
+registration_id
+BIGINT
+—
+PK
+Không
+AUTO_INCREMENT
+Mã lượt đăng ký
+Duy nhất
+workshop_id
+BIGINT
+—
+FK
+Không
+—
+Workshop được đăng ký
+FK → WORKSHOPS.workshop_id
+user_id
+BIGINT
+—
+FK
+Không
+—
+Người tham gia
+FK → USERS.user_id
+status
+ENUM
+—
+—
+Không
+—
+Trạng thái đăng ký
+registered, waitlist, confirmed, cancelled, attended
+waitlist_position
+INT
+—
+—
+Có
+NULL
+Vị trí trong danh sách chờ
+Có giá trị khi status = waitlist
+registered_at
+DATETIME
+—
+—
+Không
+—
+Thời điểm đăng ký
+Dùng xác định thứ tự Waitlist
+cancelled_at
+DATETIME
+—
+—
+Có
+NULL
+Thời điểm hủy đăng ký
+Có khi đăng ký bị hủy
+cancel_reason
+TEXT
+—
+—
+Có
+NULL
+Lý do hủy đăng ký
+—
+confirmed_at
+DATETIME
+—
+—
+Có
+NULL
+Thời điểm được xác nhận
+Có khi đăng ký được xác nhận
+—
+—
+—
+UQ
+—
+—
+Chống đăng ký trùng
+UNIQUE(workshop_id, user_id)
+Bảng ATTENDANCE
+Tên trường
+Kiểu dữ liệu
+Độ dài
+PK/FK/UQ
+Nullable
+Default
+Ý nghĩa
+Ràng buộc nghiệp vụ
+attendance_id
+BIGINT
+—
+PK
+Không
+AUTO_INCREMENT
+Mã bản ghi điểm danh
+Duy nhất
+registration_id
+BIGINT
+—
+FK/UQ
+Không
+—
+Lượt đăng ký được điểm danh
+FK → REGISTRATIONS.registration_id; tối đa một bản ghi điểm danh
+checkin_at
+DATETIME
+—
+—
+Không
+—
+Thời điểm điểm danh
+Phải nằm trong cửa sổ check-in
+checkin_method
+ENUM
+—
+—
+Không
+—
+Phương thức điểm danh
+qr, manual
+status
+ENUM
+—
+—
+Không
+—
+Trạng thái điểm danh
+present, invalid
+created_at
+DATETIME
+—
+—
+Không
+CURRENT_TIMESTAMP
+Thời điểm tạo bản ghi
+—
+Bảng SURVEYS
+Tên trường
+Kiểu dữ liệu
+Độ dài
+PK/FK/UQ
+Nullable
+Default
+Ý nghĩa
+Ràng buộc nghiệp vụ
+survey_id
+BIGINT
+—
+PK
+Không
+AUTO_INCREMENT
+Mã khảo sát
+Duy nhất
+registration_id
+BIGINT
+—
+FK/UQ
+Không
+—
+Lượt đăng ký thực hiện khảo sát
+FK → REGISTRATIONS.registration_id
+rating
+TINYINT
+—
+—
+Không
+—
+Mức độ đánh giá
+Giá trị đánh giá hợp lệ theo quy định khảo sát
+answers
+JSON
+—
+—
+Không
+—
+Nội dung câu trả lời khảo sát
+Lưu dữ liệu câu trả lời
+feedback
+TEXT
+—
+—
+Có
+NULL
+Phản hồi của người tham gia
+Có thể để trống
+submitted_at
+DATETIME
+—
+—
+Không
+—
+Thời điểm gửi khảo sát
+—
+Bảng AUDIT_LOGS
+Tên trường
+Kiểu dữ liệu
+Độ dài
+PK/
+FK/
+UQ
+Nullable
+Default
+Ý nghĩa
+Ràng buộc nghiệp vụ
+audit_log_id
+BIGINT
+—
+PK
+Không
+AUTO_INCREMENT
+Mã nhật ký
+Duy nhất
+actor_id
+BIGINT
+—
+FK
+Không
+—
+Người thực hiện hành động
+FK → USERS.user_id
+action
+VARCHAR
+80
+—
+Không
+—
+Hành động được thực hiện
+—
+target_entity
+VARCHAR
+80
+—
+Không
+—
+Entity bị tác động
+—
+target_id
+BIGINT
+—
+—
+Có
+NULL
+ID bản ghi bị tác động
+—
+old_value
+JSON
+—
+—
+Có
+NULL
+Dữ liệu trước thay đổi
+—
+new_value
+JSON
+—
+—
+Có
+NULL
+Dữ liệu sau thay đổi
+—
+timestamp
+DATETIME
+—
+—
+Không
+CURRENT_TIMESTAMP
+Thời điểm ghi log
+—
+ip_address
+VARCHAR
+45
+—
+Có
+NULL
+Địa chỉ IP
+—
+4. KIỂM THỬ VÀ CÀI ĐẶT
+5. KẾT QUẢ, KẾT LUẬN/ HƯỚNG PHÁT TRIỂN
+TÀI LIỆU THAM KHẢO 
+[1] Tên tác giả (Năm), “Tựa đề”, Tên báo/ nhà xuất bản, trang.
+[2] 
