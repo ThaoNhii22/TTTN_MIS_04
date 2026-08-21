@@ -1,100 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-
-const workshopData = [
-  {
-    id: 1,
-    title: 'UI/UX Design Workshop',
-    category: 'Design',
-    date: '24/08/2026',
-    time: '08:30 - 11:30',
-    location: 'Phòng A203',
-    organizer: 'Phòng Công tác Sinh viên',
-    quota: 40,
-    registered: 32,
-    status: 'open',
-    description:
-      'Khám phá các nguyên tắc cơ bản trong thiết kế trải nghiệm người dùng và xây dựng giao diện trực quan.',
-  },
-  {
-    id: 2,
-    title: 'Python for Data Analysis',
-    category: 'Technology',
-    date: '27/08/2026',
-    time: '13:30 - 16:30',
-    location: 'Lab B302',
-    organizer: 'CLB Công nghệ',
-    quota: 35,
-    registered: 35,
-    status: 'full',
-    description:
-      'Thực hành xử lý dữ liệu bằng Python, Pandas và các kỹ thuật phân tích dữ liệu cơ bản.',
-  },
-  {
-    id: 3,
-    title: 'React Advanced Workshop',
-    category: 'Technology',
-    date: '30/08/2026',
-    time: '08:30 - 11:30',
-    location: 'Lab B301',
-    organizer: 'Khoa Công nghệ Thông tin',
-    quota: 30,
-    registered: 18,
-    status: 'open',
-    description:
-      'Tìm hiểu cách xây dựng ứng dụng React có cấu trúc tốt, routing và quản lý trạng thái.',
-  },
-  {
-    id: 4,
-    title: 'Public Speaking Essentials',
-    category: 'Soft Skill',
-    date: '02/09/2026',
-    time: '18:00 - 20:30',
-    location: 'Hội trường C',
-    organizer: 'Trung tâm Hỗ trợ Sinh viên',
-    quota: 50,
-    registered: 21,
-    status: 'open',
-    description:
-      'Rèn luyện kỹ năng thuyết trình, giao tiếp và xây dựng sự tự tin khi nói trước đám đông.',
-  },
-  {
-    id: 5,
-    title: 'Digital Marketing Fundamentals',
-    category: 'Marketing',
-    date: '05/09/2026',
-    time: '08:30 - 11:30',
-    location: 'Phòng A201',
-    organizer: 'CLB Truyền thông',
-    quota: 45,
-    registered: 12,
-    status: 'open',
-    description:
-      'Tổng quan về Digital Marketing, nội dung số, social media và các chỉ số đo lường cơ bản.',
-  },
-  {
-    id: 6,
-    title: 'Career Orientation 2026',
-    category: 'Career',
-    date: '10/09/2026',
-    time: '14:00 - 17:00',
-    location: 'Hội trường A',
-    organizer: 'Phòng Quan hệ Doanh nghiệp',
-    quota: 100,
-    registered: 76,
-    status: 'open',
-    description:
-      'Định hướng nghề nghiệp và kết nối với doanh nghiệp dành cho sinh viên chuẩn bị tốt nghiệp.',
-  },
-];
+import { getWorkshops } from '../services/workshopService';
 
 function WorkshopPage() {
+  const [workshops, setWorkshops] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('all');
   const [availability, setAvailability] = useState('all');
 
+  useEffect(() => {
+    setWorkshops(getWorkshops());
+  }, []);
+
   const filteredWorkshops = useMemo(() => {
-    return workshopData.filter((workshop) => {
+    return workshops.filter((workshop) => {
       const keyword = searchTerm.toLowerCase().trim();
 
       const matchesSearch =
@@ -115,10 +34,10 @@ function WorkshopPage() {
         matchesAvailability
       );
     });
-  }, [searchTerm, category, availability]);
+  }, [workshops, searchTerm, category, availability]);
 
   const categories = [
-    ...new Set(workshopData.map((workshop) => workshop.category)),
+    ...new Set(workshops.map((workshop) => workshop.category)),
   ];
 
   return (
