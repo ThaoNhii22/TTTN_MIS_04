@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, Enum, DateTime, func
+from sqlalchemy import Column, BigInteger, Integer, String, Enum, DateTime, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -6,7 +6,7 @@ from app.core.database import Base
 class User(Base):
     __tablename__ = "USERS"
 
-    user_id = Column(BigInteger, primary_key=True, autoincrement=True, comment="Mã định danh người dùng")
+    user_id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True, comment="Mã định danh người dùng")
     full_name = Column(String(100), nullable=False, comment="Họ và tên người dùng")
     email = Column(String(255), unique=True, nullable=False, index=True, comment="Email đăng nhập duy nhất")
     password_hash = Column(String(255), nullable=False, comment="Mật khẩu đã mã hóa")

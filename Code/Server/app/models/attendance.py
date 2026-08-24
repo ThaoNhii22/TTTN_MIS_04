@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, Enum, DateTime, ForeignKey, func
+from sqlalchemy import Column, BigInteger, Integer, Enum, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -6,9 +6,9 @@ from app.core.database import Base
 class Attendance(Base):
     __tablename__ = "ATTENDANCE"
 
-    attendance_id = Column(BigInteger, primary_key=True, autoincrement=True, comment="Mã bản ghi điểm danh duy nhất")
+    attendance_id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True, comment="Mã bản ghi điểm danh duy nhất")
     registration_id = Column(
-        BigInteger,
+        BigInteger().with_variant(Integer, "sqlite"),
         ForeignKey("REGISTRATIONS.registration_id", ondelete="CASCADE"),
         unique=True,
         nullable=False,
@@ -21,6 +21,12 @@ class Attendance(Base):
         nullable=False,
         default="qr",
         comment="Phương thức điểm danh: qr, manual",
+    )
+    status = Column(
+        Enum("present", "invalid", name="attendance_status_enum"),
+        nullable=False,
+        default="present",
+        comment="Trạng thái điểm danh: present, invalid",
     )
     created_at = Column(DateTime, server_default=func.now(), nullable=False, comment="Thời điểm tạo bản ghi điểm danh")
 

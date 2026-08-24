@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   getAttendanceHistory,
@@ -22,22 +22,47 @@ function CheckInPage() {
   const [checkInError, setCheckInError] = useState(null);
 
   // Load data
-  const loadData = () => {
-    const tickets = getConfirmedRegistrations('sinhvien@workshop.edu.vn');
-    setMyTickets(tickets);
-    if (tickets.length > 0 && !selectedTicket) {
-      setSelectedTicket(tickets[0]);
+  const loadData = useCallback(async () => {
+    try {
+      const tickets = await getConfirmedRegistrations();
+      setMyTickets(tickets);
+      if (tickets.length > 0 && !selectedTicket) {
+        setSelectedTicket(tickets[0]);
+      }
+      const logs = await getAttendanceHistory();
+      setAttendanceLogs(logs);
+    } catch (err) {
+      console.error('Lỗi khi tải dữ liệu điểm danh:', err);
     }
-    const logs = getAttendanceHistory();
-    setAttendanceLogs(logs);
-  };
+  }, [selectedTicket]);
 
   useEffect(() => {
-    loadData();
+    let ignore = false;
+    async function load() {
+      try {
+        const tickets = await getConfirmedRegistrations();
+        if (!ignore) {
+          setMyTickets(tickets);
+          if (tickets.length > 0) {
+            setSelectedTicket((prev) => prev || tickets[0]);
+          }
+          const logs = await getAttendanceHistory();
+          if (!ignore) {
+            setAttendanceLogs(logs);
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi khi tải dữ liệu điểm danh:', err);
+      }
+    }
+    load();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // Handle Check-in action (Self or Scanner)
-  const handleExecuteCheckIn = async (codeToVerify, isSelfCheckin = false) => {
+  const handleExecuteCheckIn = async (codeToVerify) => {
     setIsProcessing(true);
     setCheckInResult(null);
     setCheckInError(null);
@@ -48,20 +73,34 @@ function CheckInPage() {
         throw new Error('Vui lòng nhập hoặc quét mã QR/mã vé.');
       }
 
-      // Ignore time window for demo convenience if self-checkin, else strict check
+      const isQr = code.includes('|');
+      let wsId = selectedTicket ? selectedTicket.workshopId : 1;
+      let regId = selectedTicket ? selectedTicket.id : null;
+
+      if (isQr) {
+        const parts = code.split('|');
+        if (parts.length >= 3) {
+          wsId = Number(parts[1]);
+          regId = Number(parts[2]);
+        }
+      }
+
       const result = await processCheckIn({
-        qrPayload: code.includes('|') ? code : '',
-        ticketCode: !code.includes('|') ? code : '',
-        ignoreTimeWindow: isSelfCheckin || true, // set true for smooth demo
+        workshopId: wsId,
+        qrPayload: isQr ? code : null,
+        checkinCode: !isQr ? code : null,
+        registrationId: regId,
+        checkinMethod: isQr ? 'qr' : 'manual',
       });
 
       setCheckInResult(result);
       setManualCode('');
-      loadData();
+      await loadData();
     } catch (err) {
+      const msg = err.userMessage || err.response?.data?.detail || err.message || 'Điểm danh không thành công.';
       setCheckInError({
-        code: err.code || 'ERROR',
-        message: err.message || 'Điểm danh không thành công.',
+        code: 'CHECKIN_FAILED',
+        message: msg,
       });
     } finally {
       setIsProcessing(false);
@@ -251,7 +290,7 @@ function CheckInPage() {
                               type="button"
                               className="eticket-checkin-btn"
                               disabled={isProcessing}
-                              onClick={() => handleExecuteCheckIn(selectedTicket.ticketCode, true)}
+                              onClick={() => handleExecuteCheckIn(selectedTicket.qrPayload || selectedTicket.ticketCode, true)}
                             >
                               {isProcessing ? 'Đang xác thực điểm danh...' : 'Xác nhận Điểm danh (Tự check-in)'}
                             </button>
@@ -297,9 +336,9 @@ function CheckInPage() {
                     disabled={isScanning || isProcessing}
                     onClick={() => {
                       if (myTickets.length > 0) {
-                        handleSimulateCameraScan(myTickets[0].ticketCode);
+                        handleSimulateCameraScan(myTickets[0].qrPayload || myTickets[0].ticketCode);
                       } else {
-                        handleSimulateCameraScan('WS-1-1042');
+                        handleSimulateCameraScan('TTTN_MIS_04|1|1|user@workshop.edu.vn');
                       }
                     }}
                   >

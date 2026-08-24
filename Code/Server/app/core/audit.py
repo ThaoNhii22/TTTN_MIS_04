@@ -3,6 +3,15 @@ from sqlalchemy.orm import Session
 from app.models.audit_log import AuditLog
 
 
+def sanitize_log_dict(d: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    if not d or not isinstance(d, dict):
+        return d
+    return {
+        k: ("[REDACTED]" if any(s in k.lower() for s in ["password", "secret", "token", "hash"]) else v)
+        for k, v in d.items()
+    }
+
+
 def log_audit_action(
     db: Session,
     actor_id: int,
@@ -22,8 +31,8 @@ def log_audit_action(
         action=action,
         target_entity=target_entity,
         target_id=target_id,
-        old_value=old_value,
-        new_value=new_value,
+        old_value=sanitize_log_dict(old_value),
+        new_value=sanitize_log_dict(new_value),
         ip_address=ip_address,
     )
     db.add(audit_entry)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, SmallInteger, Text, JSON, DateTime, ForeignKey, func
+from sqlalchemy import Column, BigInteger, Integer, SmallInteger, Text, JSON, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -6,9 +6,9 @@ from app.core.database import Base
 class Survey(Base):
     __tablename__ = "SURVEYS"
 
-    survey_id = Column(BigInteger, primary_key=True, autoincrement=True, comment="Mã khảo sát duy nhất")
+    survey_id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True, comment="Mã khảo sát duy nhất")
     registration_id = Column(
-        BigInteger,
+        BigInteger().with_variant(Integer, "sqlite"),
         ForeignKey("REGISTRATIONS.registration_id", ondelete="CASCADE"),
         unique=True,
         nullable=False,

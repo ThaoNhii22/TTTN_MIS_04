@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import {
   cancelRegistration,
   getWorkshopById,
@@ -9,7 +9,6 @@ import {
 
 function WorkshopDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const [workshop, setWorkshop] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,25 +34,50 @@ function WorkshopDetailPage() {
   const [actionSuccess, setActionSuccess] = useState(null);
 
   // Load workshop & user registration
-  const loadData = () => {
-    const data = getWorkshopById(id);
-    if (data) {
-      setWorkshop(data);
-      const reg = getUserRegistration(data.id, formData.email);
-      setUserRegistration(reg || null);
+  const loadData = useCallback(async () => {
+    try {
+      const data = await getWorkshopById(id);
+      if (data) {
+        setWorkshop(data);
+        const reg = await getUserRegistration(data.id);
+        setUserRegistration(reg || null);
+      }
+    } catch (err) {
+      console.error('Lỗi khi tải chi tiết Workshop:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [id]);
 
   useEffect(() => {
-    loadData();
+    let ignore = false;
+    async function load() {
+      try {
+        const data = await getWorkshopById(id);
+        if (!ignore && data) {
+          setWorkshop(data);
+          const reg = await getUserRegistration(data.id);
+          if (!ignore) {
+            setUserRegistration(reg || null);
+            setLoading(false);
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi khi tải chi tiết Workshop:', err);
+        if (!ignore) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      ignore = true;
+    };
   }, [id]);
 
   // Calculate remaining quota & fill percentage
   const quotaInfo = useMemo(() => {
     if (!workshop) return { remaining: 0, fillPercent: 0, isFull: false };
     const remaining = Math.max(0, workshop.quota - workshop.registered);
-    const fillPercent = Math.min(100, (workshop.registered / workshop.quota) * 100);
+    const fillPercent = workshop.quota > 0 ? Math.min(100, (workshop.registered / workshop.quota) * 100) : 0;
     const isFull = workshop.registered >= workshop.quota;
     return { remaining, fillPercent, isFull };
   }, [workshop]);
@@ -63,17 +87,15 @@ function WorkshopDetailPage() {
     if (!workshop) return { canCancel: true, deadlineStr: '', hoursLeft: 0 };
     const eventTime = new Date(workshop.startAt).getTime();
     const cutoffTime = eventTime - (workshop.cutoffHours || 24) * 60 * 60 * 1000;
-    const now = Date.now();
-    const canCancel = now < cutoffTime;
-    const hoursLeft = Math.max(0, Math.round((cutoffTime - now) / (1000 * 60 * 60)));
+    const canCancel = userRegistration?.isCancellable ?? true;
     const deadlineDate = new Date(cutoffTime);
     const deadlineStr = `${deadlineDate.getHours().toString().padStart(2, '0')}:${deadlineDate
       .getMinutes()
       .toString()
       .padStart(2, '0')} ngày ${deadlineDate.toLocaleDateString('vi-VN')}`;
 
-    return { canCancel, deadlineStr, hoursLeft };
-  }, [workshop]);
+    return { canCancel, deadlineStr, hoursLeft: 24 };
+  }, [workshop, userRegistration]);
 
   // Handle open registration flow
   const handleOpenRegister = () => {
@@ -97,45 +119,41 @@ function WorkshopDetailPage() {
     try {
       const result = await registerWorkshop({
         workshopId: workshop.id,
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        department: formData.department,
-        note: formData.note,
         isWaitlistAccept: isWaitlist,
       });
 
       setShowRegisterModal(false);
       setShowWaitlistPrompt(false);
-      loadData();
+      await loadData();
 
       if (result.status === 'waitlist') {
         setActionSuccess({
           title: 'Đã vào Danh sách chờ!',
-          message: `Bạn đang ở vị trí #${result.waitlistPosition} trong danh sách chờ. Khi có người hủy vé, hệ thống sẽ tự động đôn bạn lên vé chính thức.`,
+          message: `Bạn đang ở vị trí #${result.waitlistPosition || 1} trong danh sách chờ. Khi có người hủy vé, hệ thống sẽ tự động đôn bạn lên vé chính thức.`,
           type: 'waitlist',
         });
       } else {
         setActionSuccess({
           title: 'Đăng ký Workshop thành công!',
-          message: `Mã vé của bạn là: ${result.ticketCode}. Vui lòng lưu lại mã vé hoặc sử dụng mã QR tại sự kiện để điểm danh check-in.`,
+          message: `Vé của bạn đã được xác nhận (Mã vé: ${result.ticketCode}). Bạn có thể dùng mã QR để check-in tại sự kiện.`,
           type: 'confirmed',
         });
       }
     } catch (err) {
-      if (err.code === 'DUPLICATE_REGISTRATION') {
+      const msg = err.userMessage || err.response?.data?.detail || err.message || 'Đăng ký không thành công.';
+      if (msg.includes('BR-01') || msg.includes('đã có lượt đăng ký') || msg.includes('trùng')) {
         setActionError({
-          title: 'Cảnh báo trùng đăng ký',
-          message: err.message,
+          title: 'Cảnh báo trùng đăng ký (BR-01)',
+          message: msg,
           type: 'duplicate',
         });
-      } else if (err.code === 'WORKSHOP_FULL') {
+      } else if (msg.includes('BR-02') || msg.includes('hết chỗ') || msg.includes('đầy')) {
         setShowRegisterModal(false);
         setShowWaitlistPrompt(true);
       } else {
         setActionError({
           title: 'Đăng ký không thành công',
-          message: err.message || 'Có lỗi xảy ra trong quá trình đăng ký.',
+          message: msg,
           type: 'general',
         });
       }
@@ -151,27 +169,20 @@ function WorkshopDetailPage() {
     setActionError(null);
 
     try {
-      const res = await cancelRegistration(userRegistration.id, cancelReason);
+      await cancelRegistration(userRegistration.id, cancelReason);
       setShowCancelModal(false);
-      loadData();
+      await loadData();
 
-      if (res.promotedUser) {
-        setActionSuccess({
-          title: 'Hủy đăng ký thành công',
-          message: `Bạn đã hủy vé thành công.`,
-          type: 'canceled',
-        });
-      } else {
-        setActionSuccess({
-          title: 'Hủy đăng ký thành công',
-          message: 'Lượt đăng ký của bạn đã được hủy thành công.',
-          type: 'canceled',
-        });
-      }
+      setActionSuccess({
+        title: 'Hủy đăng ký thành công',
+        message: 'Lượt đăng ký của bạn đã được hủy thành công trên hệ thống. Chỗ trống đã được nhường lại.',
+        type: 'canceled',
+      });
     } catch (err) {
+      const msg = err.userMessage || err.response?.data?.detail || err.message || 'Không thể hủy đăng ký.';
       setActionError({
         title: 'Không thể hủy đăng ký',
-        message: err.message,
+        message: msg,
         type: 'cutoff_exceeded',
       });
     } finally {
