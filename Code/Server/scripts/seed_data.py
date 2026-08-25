@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.stdout.reconfigure(encoding='utf-8')
 
 from app.core.audit import log_audit_action
-from app.core.database import SessionLocal
+from app.core.database import Base, SessionLocal, engine
 from app.core.security import get_password_hash
 from app.models.attendance import Attendance
 from app.models.registration import Registration
@@ -18,6 +18,8 @@ from app.models.workshop import Workshop
 
 def seed():
     print("🌱 Đang bắt đầu seed dữ liệu mẫu cho hệ thống...")
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 

@@ -44,18 +44,21 @@ def register_for_workshop(
 
     # BR-15: Kiểm tra khung thời gian mở/đóng đăng ký
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    if workshop.registration_close_at:
-        if now > workshop.registration_close_at:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Sự kiện đã đóng cổng đăng ký lúc {workshop.registration_close_at.strftime('%H:%M %d/%m/%Y')} (BR-15).",
-            )
-    else:
-        if now >= workshop.start_at:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Sự kiện đã bắt đầu, không thể đăng ký thêm (BR-08).",
-            )
+    if workshop.registration_open_at and now < workshop.registration_open_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cổng đăng ký chưa mở (mở lúc {workshop.registration_open_at.strftime('%H:%M %d/%m/%Y')}) theo quy tắc BR-15.",
+        )
+    if workshop.registration_close_at and now > workshop.registration_close_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Sự kiện đã đóng cổng đăng ký lúc {workshop.registration_close_at.strftime('%H:%M %d/%m/%Y')} (BR-15).",
+        )
+    if not workshop.registration_close_at and now >= workshop.start_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Sự kiện đã bắt đầu, không thể đăng ký thêm (BR-08).",
+        )
 
     # BR-01: Chống đăng ký trùng (1 email/user = 1 vé)
     existing_reg = (
@@ -63,11 +66,10 @@ def register_for_workshop(
         .filter(
             Registration.workshop_id == workshop_id,
             Registration.user_id == current_user.user_id,
-            Registration.status.in_(["confirmed", "waitlist", "attended"]),
         )
         .first()
     )
-    if existing_reg:
+    if existing_reg and existing_reg.status in ["confirmed", "waitlist", "attended"]:
         status_text = "Đã xác nhận" if existing_reg.status in ["confirmed", "attended"] else "Danh sách chờ"
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -97,26 +99,45 @@ def register_for_workshop(
         )
         next_pos = current_max_pos + 1
 
-        reg = Registration(
-            workshop_id=workshop_id,
-            user_id=current_user.user_id,
-            status="waitlist",
-            waitlist_position=next_pos,
-            registered_at=now,
-            confirmed_at=None,
-        )
+        if existing_reg:
+            reg = existing_reg
+            reg.status = "waitlist"
+            reg.waitlist_position = next_pos
+            reg.registered_at = now
+            reg.cancelled_at = None
+            reg.cancel_reason = None
+            reg.confirmed_at = None
+        else:
+            reg = Registration(
+                workshop_id=workshop_id,
+                user_id=current_user.user_id,
+                status="waitlist",
+                waitlist_position=next_pos,
+                registered_at=now,
+                confirmed_at=None,
+            )
+            db.add(reg)
     else:
         # Xác nhận đăng ký chính thức
-        reg = Registration(
-            workshop_id=workshop_id,
-            user_id=current_user.user_id,
-            status="confirmed",
-            waitlist_position=None,
-            registered_at=now,
-            confirmed_at=now,
-        )
+        if existing_reg:
+            reg = existing_reg
+            reg.status = "confirmed"
+            reg.waitlist_position = None
+            reg.registered_at = now
+            reg.cancelled_at = None
+            reg.cancel_reason = None
+            reg.confirmed_at = now
+        else:
+            reg = Registration(
+                workshop_id=workshop_id,
+                user_id=current_user.user_id,
+                status="confirmed",
+                waitlist_position=None,
+                registered_at=now,
+                confirmed_at=now,
+            )
+            db.add(reg)
 
-    db.add(reg)
     db.commit()
     db.refresh(reg)
 
