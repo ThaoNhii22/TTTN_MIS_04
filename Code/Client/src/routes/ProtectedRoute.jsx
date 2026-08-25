@@ -1,11 +1,20 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { isAuthenticated } from '../services/auth';
+import { useAuth } from '../context/AuthContext';
 
-function ProtectedRoute() {
+function ProtectedRoute({ allowedRoles = null }) {
   const location = useLocation();
-  const authenticated = isAuthenticated();
+  const { isAuthenticated, role, isLoading } = useAuth();
 
-  if (!authenticated) {
+  if (isLoading) {
+    return (
+      <div className="state-card state-card--loading" style={{ margin: '80px auto', textAlign: 'center' }}>
+        <div className="state-card__spinner" />
+        <h2 style={{ marginTop: '16px', fontSize: '18px', color: '#6d4336' }}>Đang xác thực tài khoản...</h2>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return (
       <Navigate
         to="/login"
@@ -13,6 +22,10 @@ function ProtectedRoute() {
         state={{ from: location }}
       />
     );
+  }
+
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;
