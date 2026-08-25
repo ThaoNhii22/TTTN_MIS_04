@@ -12,7 +12,7 @@ function AdminReviewPage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('Cần bổ sung chi tiết nội dung và diễn giả');
 
-  // Force Cancel Modal (UC-21)
+  // Force Cancel Modal
   const [showForceCancelModal, setShowForceCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('Quản trị viên hủy bỏ sự kiện theo yêu cầu quản lý');
 
@@ -40,11 +40,11 @@ function AdminReviewPage() {
   }, [statusFilter]);
 
   const handleApprove = async (workshopId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn PHÊ DUYỆT Workshop này và công bố mở đăng ký (BR-06)?')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn PHÊ DUYỆT Workshop này và công bố mở đăng ký?')) return;
     setIsProcessing(true);
     try {
       await reviewWorkshop(workshopId, { action: 'approve' });
-      setAlertMessage({ type: 'success', text: 'Đã phê duyệt Workshop thành công! Sự kiện đã chuyển sang Published.' });
+      setAlertMessage({ type: 'success', text: 'Đã phê duyệt Workshop thành công. Sự kiện đã chuyển sang Đã công bố.' });
       fetchWorkshops();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -65,7 +65,7 @@ function AdminReviewPage() {
       });
       setShowRejectModal(false);
       setSelectedWorkshop(null);
-      setAlertMessage({ type: 'success', text: 'Đã từ chối Workshop và chuyển về trạng thái Bản nháp (Draft) kèm lý do.' });
+      setAlertMessage({ type: 'success', text: 'Đã từ chối Workshop và chuyển về trạng thái Bản nháp kèm lý do.' });
       fetchWorkshops();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -83,7 +83,7 @@ function AdminReviewPage() {
       await cancelWorkshop(selectedWorkshop.workshop_id, cancelReason);
       setShowForceCancelModal(false);
       setSelectedWorkshop(null);
-      setAlertMessage({ type: 'success', text: 'Quản trị viên đã cưỡng chế hủy Workshop (UC-21, BR-13)!' });
+      setAlertMessage({ type: 'success', text: 'Quản trị viên đã cưỡng chế hủy Workshop.' });
       fetchWorkshops();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -97,8 +97,7 @@ function AdminReviewPage() {
     <section className="admin-review-page">
       <div className="home-page__header">
         <div>
-          <p className="home-page__eyebrow">ADMIN APPROVAL (UC-06, UC-21, BR-06)</p>
-          <h1>Xét duyệt & Kiểm soát Workshop</h1>
+          <h1>Xét duyệt và Kiểm soát Workshop</h1>
           <p className="home-page__subtitle">
             Kiểm duyệt các Workshop do Ban tổ chức gửi lên trước khi công bố ra toàn hệ thống.
           </p>
@@ -107,7 +106,6 @@ function AdminReviewPage() {
 
       {alertMessage && (
         <div className={`alert-banner alert-banner--${alertMessage.type}`} style={{ marginBottom: '20px' }}>
-          <span>{alertMessage.type === 'success' ? '✅' : '⚠️'}</span>
           <div>{alertMessage.text}</div>
         </div>
       )}
@@ -115,8 +113,8 @@ function AdminReviewPage() {
       {/* Filter Tabs */}
       <div className="filter-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
         {[
-          { key: 'pending', label: '⏳ Chờ phê duyệt (Pending)' },
-          { key: 'published', label: '✅ Đã công bố (Published)' },
+          { key: 'pending', label: 'Chờ phê duyệt' },
+          { key: 'published', label: 'Đã công bố' },
           { key: 'all', label: 'Tất cả trạng thái' },
         ].map((tab) => (
           <button
@@ -137,9 +135,9 @@ function AdminReviewPage() {
         </div>
       ) : workshops.length === 0 ? (
         <div className="workshop-empty">
-          <div className="workshop-empty__icon">✨</div>
+          <div className="workshop-empty__icon">W</div>
           <h2>Không có Workshop nào cần xử lý</h2>
-          <p>Hiện không có sự kiện nào trong danh mục "{statusFilter}".</p>
+          <p>Hiện không có sự kiện nào trong danh mục này.</p>
         </div>
       ) : (
         <div className="admin-table-wrapper" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #ebdcd5', overflow: 'hidden' }}>
@@ -149,7 +147,7 @@ function AdminReviewPage() {
                 <th style={{ padding: '14px 16px' }}>Workshop</th>
                 <th style={{ padding: '14px 16px' }}>Trạng thái</th>
                 <th style={{ padding: '14px 16px' }}>Thời gian sự kiện</th>
-                <th style={{ padding: '14px 16px' }}>Quota</th>
+                <th style={{ padding: '14px 16px' }}>Số lượng chỗ</th>
                 <th style={{ padding: '14px 16px' }}>Hành động xét duyệt</th>
               </tr>
             </thead>
@@ -166,7 +164,7 @@ function AdminReviewPage() {
                       {w.description?.slice(0, 100)}...
                     </p>
                     <div style={{ fontSize: '12px', color: '#886255', marginTop: '4px' }}>
-                      📍 {w.location}
+                      Địa điểm: {w.location}
                     </div>
                   </td>
 
@@ -195,7 +193,7 @@ function AdminReviewPage() {
                             onClick={() => handleApprove(w.workshop_id)}
                             disabled={isProcessing}
                           >
-                            ✓ Duyệt (Approve)
+                            Duyệt
                           </button>
                           <button
                             type="button"
@@ -207,7 +205,7 @@ function AdminReviewPage() {
                             }}
                             disabled={isProcessing}
                           >
-                            ✕ Từ chối (Reject)
+                            Từ chối
                           </button>
                         </>
                       )}
@@ -223,7 +221,7 @@ function AdminReviewPage() {
                           }}
                           disabled={isProcessing}
                         >
-                          Cưỡng chế Hủy (UC-21)
+                          Cưỡng chế Hủy
                         </button>
                       )}
 
@@ -247,12 +245,12 @@ function AdminReviewPage() {
       {showRejectModal && selectedWorkshop && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h2>Từ chối Workshop (UC-06)</h2>
+            <h2>Từ chối Workshop</h2>
             <p>Workshop: <strong>{selectedWorkshop.title}</strong></p>
 
             <form onSubmit={handleReject}>
               <div className="form-group" style={{ marginTop: '14px' }}>
-                <label>Lý do từ chối (Gửi lại Ban tổ chức) *</label>
+                <label>Lý do từ chối gửi lại Ban tổ chức *</label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
@@ -284,11 +282,11 @@ function AdminReviewPage() {
         </div>
       )}
 
-      {/* Modal Cưỡng chế Hủy Workshop (UC-21) */}
+      {/* Modal Cưỡng chế Hủy Workshop */}
       {showForceCancelModal && selectedWorkshop && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h2>Quản trị viên Cưỡng chế Hủy Workshop (UC-21)</h2>
+            <h2>Quản trị viên Cưỡng chế Hủy Workshop</h2>
             <p>Sự kiện: <strong>{selectedWorkshop.title}</strong></p>
 
             <form onSubmit={handleForceCancel}>
@@ -303,7 +301,7 @@ function AdminReviewPage() {
               </div>
 
               <small style={{ color: '#c53030', display: 'block', margin: '8px 0' }}>
-                * Hành động này sẽ được ghi vết bắt buộc vào Nhật ký Audit Logs (BR-10).
+                Hành động này sẽ được ghi vết vào Nhật ký hoạt động hệ thống.
               </small>
 
               <div className="modal-actions">

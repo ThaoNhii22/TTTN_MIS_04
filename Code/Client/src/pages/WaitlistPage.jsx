@@ -62,7 +62,6 @@ function WaitlistPage() {
     <div className="waitlist-page">
       <div className="waitlist-page__header">
         <div>
-          <p className="home-page__eyebrow">WAITLIST MANAGEMENT (BR-02 & BR-03)</p>
           <h1>Danh sách chờ của bạn</h1>
           <p className="waitlist-page__subtitle">
             Theo dõi vị trí hàng đợi. Khi có người hủy vé chính thức, hệ thống sẽ tự động đôn người đầu danh sách lên vé chính thức.
@@ -76,7 +75,6 @@ function WaitlistPage() {
 
       {actionAlert && (
         <div className={`alert-banner alert-banner--${actionAlert.type}`} style={{ marginBottom: '20px' }}>
-          <span>{actionAlert.type === 'success' ? '✅' : '⚠️'}</span>
           <div>{actionAlert.message}</div>
         </div>
       )}
@@ -88,7 +86,7 @@ function WaitlistPage() {
         </div>
       ) : waitlistEntries.length === 0 ? (
         <div className="workshop-empty">
-          <div className="workshop-empty__icon">⏳</div>
+          <div className="workshop-empty__icon">W</div>
           <h2>Bạn hiện không ở trong danh sách chờ nào</h2>
           <p>Khi đăng ký một workshop đã kín chỗ, bạn có thể chọn vào danh sách chờ.</p>
           <Link to="/workshops" className="home-page__primary-button" style={{ marginTop: '16px' }}>
@@ -110,8 +108,8 @@ function WaitlistPage() {
                     {item.workshop_title}
                   </Link>
                 </h3>
-                <p>📍 Địa điểm: {item.workshop_location}</p>
-                <p>📅 Thời gian sự kiện: {new Date(item.workshop_start_at).toLocaleString('vi-VN')}</p>
+                <p>Địa điểm: {item.workshop_location}</p>
+                <p>Thời gian sự kiện: {new Date(item.workshop_start_at).toLocaleString('vi-VN')}</p>
                 <p style={{ fontSize: '12px', color: '#886255' }}>
                   Ghi danh lúc: {new Date(item.registered_at).toLocaleString('vi-VN')}
                 </p>

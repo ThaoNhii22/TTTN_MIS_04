@@ -25,7 +25,7 @@ function WorkshopDetailPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('Bận lịch đột xuất');
 
-  // Survey Modal State (UC-16)
+  // Survey Modal State
   const [showSurveyModal, setShowSurveyModal] = useState(false);
   const [surveyRating, setSurveyRating] = useState(5);
   const [surveyFeedback, setSurveyFeedback] = useState('');
@@ -73,9 +73,9 @@ function WorkshopDetailPage() {
 
       setShowRegisterModal(false);
       if (result.status === 'confirmed') {
-        setSuccessMessage('🎉 Đăng ký thành công! Bạn đã được cấp vé tham dự chính thức.');
+        setSuccessMessage('Đăng ký thành công. Bạn đã được cấp vé tham dự chính thức.');
       } else if (result.status === 'waitlist') {
-        setSuccessMessage(`⏳ Bạn đã được thêm vào Danh sách chờ (Vị trí #${result.waitlist_position}).`);
+        setSuccessMessage(`Bạn đã được thêm vào Danh sách chờ ở vị trí #${result.waitlist_position}.`);
       }
       fetchWorkshopData();
     } catch (err) {
@@ -121,7 +121,7 @@ function WorkshopDetailPage() {
       });
       setShowSurveyModal(false);
       setSurveySubmitted(true);
-      setSuccessMessage('Cảm ơn bạn đã gửi đánh giá khảo sát thành công! ⭐');
+      setSuccessMessage('Cảm ơn bạn đã gửi đánh giá khảo sát thành công.');
     } catch (err) {
       const detail = err.response?.data?.detail;
       setErrorMessage(typeof detail === 'string' ? detail : 'Gửi khảo sát thất bại.');
@@ -160,14 +160,12 @@ function WorkshopDetailPage() {
 
       {successMessage && (
         <div className="alert-banner alert-banner--success" style={{ marginBottom: '20px' }}>
-          <span>✅</span>
           <div>{successMessage}</div>
         </div>
       )}
 
       {errorMessage && (
         <div className="alert-banner alert-banner--error" style={{ marginBottom: '20px' }}>
-          <span>⚠️</span>
           <div>{errorMessage}</div>
         </div>
       )}
@@ -181,14 +179,14 @@ function WorkshopDetailPage() {
                 {workshop.status.toUpperCase()}
               </span>
               {workshop.is_full && (
-                <span className="status-tag status-tag--full">ĐÃ ĐỦ CHỖ</span>
+                <span className="status-tag status-tag--full">ĐÃ HẾT CHỖ</span>
               )}
             </div>
 
             <h1>{workshop.title}</h1>
 
             <div className="detail-organizer">
-              <span>Đơn vị tổ chức: <strong>{workshop.organizer?.full_name || 'Ban tổ chức'}</strong> ({workshop.organizer?.email})</span>
+              <span>Đơn vị tổ chức: <strong>{workshop.organizer?.full_name || 'Ban tổ chức'}</strong> - {workshop.organizer?.email}</span>
             </div>
           </div>
 
@@ -200,22 +198,22 @@ function WorkshopDetailPage() {
           </div>
 
           <div className="detail-section">
-            <h2>Thông tin lịch trình & Điểm danh</h2>
+            <h2>Thông tin lịch trình và điểm danh</h2>
             <div className="info-grid">
               <div className="info-item">
-                <span className="info-label">📅 Thời gian bắt đầu:</span>
+                <span className="info-label">Thời gian bắt đầu:</span>
                 <strong>{new Date(workshop.start_at).toLocaleString('vi-VN')}</strong>
               </div>
               <div className="info-item">
-                <span className="info-label">🏁 Thời gian kết thúc:</span>
+                <span className="info-label">Thời gian kết thúc:</span>
                 <strong>{new Date(workshop.end_at).toLocaleString('vi-VN')}</strong>
               </div>
               <div className="info-item">
-                <span className="info-label">📍 Địa điểm tổ chức:</span>
+                <span className="info-label">Địa điểm tổ chức:</span>
                 <strong>{workshop.location}</strong>
               </div>
               <div className="info-item">
-                <span className="info-label">⏰ Khung giờ Check-in:</span>
+                <span className="info-label">Khung giờ điểm danh:</span>
                 <strong>
                   {workshop.checkin_start_at ? new Date(workshop.checkin_start_at).toLocaleTimeString('vi-VN') : '--'} - {workshop.checkin_end_at ? new Date(workshop.checkin_end_at).toLocaleTimeString('vi-VN') : '--'}
                 </strong>
@@ -227,7 +225,7 @@ function WorkshopDetailPage() {
           {myRegistration && myRegistration.status !== 'cancelled' && (
             <div className="user-ticket-card">
               <div className="user-ticket-card__header">
-                <h3>🎟️ Vé tham gia của bạn</h3>
+                <h3>Vé tham gia của bạn</h3>
                 <span className={`status-tag status-tag--${myRegistration.status}`}>
                   {myRegistration.status === 'confirmed' && 'Xác nhận tham gia'}
                   {myRegistration.status === 'waitlist' && `Hàng đợi #${myRegistration.waitlist_position}`}
@@ -241,12 +239,12 @@ function WorkshopDetailPage() {
 
                 {myRegistration.qr_payload && (
                   <div className="qr-code-box">
-                    <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>Mã QR Check-in cá nhân:</p>
+                    <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>Mã QR điểm danh cá nhân:</p>
                     <div className="qr-display-badge">
                       <code>{myRegistration.qr_payload}</code>
                     </div>
                     <small style={{ display: 'block', marginTop: '6px', color: '#7a5b50' }}>
-                      (Xuất trình mã này tại bàn đón tiếp để quét QR điểm danh)
+                      Xuất trình mã này tại bàn đón tiếp để quét QR điểm danh
                     </small>
                   </div>
                 )}
@@ -268,7 +266,7 @@ function WorkshopDetailPage() {
                       className="home-page__primary-button"
                       onClick={() => setShowSurveyModal(true)}
                     >
-                      ⭐ {surveySubmitted ? 'Đã gửi khảo sát' : 'Làm khảo sát đánh giá'}
+                      {surveySubmitted ? 'Đã gửi khảo sát' : 'Làm khảo sát đánh giá'}
                     </button>
                   )}
                 </div>
@@ -291,13 +289,13 @@ function WorkshopDetailPage() {
 
             <p style={{ fontSize: '13px', color: '#7a5b50', margin: '8px 0' }}>
               {workshop.is_full
-                ? 'Workshop đã kín chỗ chính thức. Bạn có thể đăng ký vào Hàng đợi (Waitlist).'
+                ? 'Workshop đã hết chỗ chính thức. Bạn có thể đăng ký vào Hàng đợi.'
                 : `Còn lại ${remaining} chỗ trống.`}
             </p>
 
             {workshop.waitlist_count > 0 && (
               <div className="waitlist-indicator">
-                ⏳ Hiện có <strong>{workshop.waitlist_count}</strong> người trong danh sách chờ.
+                Hiện có <strong>{workshop.waitlist_count}</strong> người trong danh sách chờ.
               </div>
             )}
 
@@ -312,13 +310,13 @@ function WorkshopDetailPage() {
                   setShowRegisterModal(true);
                 }}
               >
-                {workshop.is_full ? '⏳ Đăng ký vào Danh sách chờ' : '🎟️ Đăng ký tham gia ngay'}
+                {workshop.is_full ? 'Đăng ký vào Danh sách chờ' : 'Đăng ký tham gia ngay'}
               </button>
             )}
 
             {workshop.status !== 'published' && (
               <div className="alert-banner alert-banner--warning" style={{ marginTop: '16px' }}>
-                Workshop hiện không mở đăng ký (Trạng thái: {workshop.status}).
+                Workshop hiện không mở đăng ký.
               </div>
             )}
           </div>
@@ -333,9 +331,9 @@ function WorkshopDetailPage() {
             <p><strong>{workshop.title}</strong></p>
 
             <div className="modal-info-box">
-              <p>📍 Địa điểm: {workshop.location}</p>
-              <p>📅 Thời gian: {new Date(workshop.start_at).toLocaleString('vi-VN')}</p>
-              <p>👤 Người đăng ký: {user?.full_name} ({user?.email})</p>
+              <p>Địa điểm: {workshop.location}</p>
+              <p>Thời gian: {new Date(workshop.start_at).toLocaleString('vi-VN')}</p>
+              <p>Người đăng ký: {user?.full_name} - {user?.email}</p>
             </div>
 
             {workshop.is_full && (
@@ -346,7 +344,7 @@ function WorkshopDetailPage() {
                     checked={acceptWaitlist}
                     onChange={(e) => setAcceptWaitlist(e.target.checked)}
                   />
-                  <span>Tôi đồng ý ghi danh vào <strong>Danh sách chờ (Waitlist)</strong> khi có người hủy vé.</span>
+                  <span>Tôi đồng ý ghi danh vào <strong>Danh sách chờ</strong> khi có người hủy vé.</span>
                 </label>
               </div>
             )}
@@ -391,10 +389,6 @@ function WorkshopDetailPage() {
               />
             </div>
 
-            <small style={{ color: '#7a5b50', display: 'block', margin: '8px 0' }}>
-              * Theo quy tắc BR-03, chỗ trống của bạn sẽ tự động được chuyển cho người đầu tiên trong Danh sách chờ.
-            </small>
-
             <div className="modal-actions">
               <button
                 type="button"
@@ -417,16 +411,16 @@ function WorkshopDetailPage() {
         </div>
       )}
 
-      {/* Modal Khảo sát Đánh giá (UC-16) */}
+      {/* Modal Khảo sát Đánh giá */}
       {showSurveyModal && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h2>Đánh giá & Khảo sát Workshop (UC-16)</h2>
+            <h2>Đánh giá và Khảo sát Workshop</h2>
             <p><strong>{workshop.title}</strong></p>
 
             <form onSubmit={handleSubmitSurvey}>
               <div className="form-group" style={{ margin: '16px 0' }}>
-                <label>Mức độ hài lòng chung (1 đến 5 sao):</label>
+                <label>Mức độ hài lòng chung từ 1 đến 5 sao:</label>
                 <div className="star-rating-selector">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -443,7 +437,7 @@ function WorkshopDetailPage() {
               </div>
 
               <div className="form-group">
-                <label>Ý kiến đóng góp & Phản hồi:</label>
+                <label>Ý kiến đóng góp và Phản hồi:</label>
                 <textarea
                   value={surveyFeedback}
                   onChange={(e) => setSurveyFeedback(e.target.value)}

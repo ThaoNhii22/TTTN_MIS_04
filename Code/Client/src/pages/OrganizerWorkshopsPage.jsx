@@ -120,7 +120,7 @@ function OrganizerWorkshopsPage() {
         quota: Number(formData.quota),
       });
       setShowCreateModal(false);
-      setAlertMessage({ type: 'success', text: 'Tạo bản nháp Workshop thành công (UC-03, BR-07)!' });
+      setAlertMessage({ type: 'success', text: 'Tạo bản nháp Workshop thành công.' });
       fetchMyWorkshops();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -141,7 +141,7 @@ function OrganizerWorkshopsPage() {
       });
       setShowEditModal(false);
       setSelectedWorkshop(null);
-      setAlertMessage({ type: 'success', text: 'Cập nhật thông tin Workshop thành công (UC-04)!' });
+      setAlertMessage({ type: 'success', text: 'Cập nhật thông tin Workshop thành công.' });
       fetchMyWorkshops();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -155,7 +155,7 @@ function OrganizerWorkshopsPage() {
     if (!window.confirm('Bạn có chắc chắn muốn gửi Workshop này cho Quản trị viên xét duyệt?')) return;
     try {
       await submitWorkshopForApproval(workshopId);
-      setAlertMessage({ type: 'success', text: 'Đã gửi Workshop đi xét duyệt (UC-05 - Pending Approval)!' });
+      setAlertMessage({ type: 'success', text: 'Đã gửi Workshop đi xét duyệt.' });
       fetchMyWorkshops();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -171,7 +171,7 @@ function OrganizerWorkshopsPage() {
       await cancelWorkshop(selectedWorkshop.workshop_id, cancelReason);
       setShowCancelModal(false);
       setSelectedWorkshop(null);
-      setAlertMessage({ type: 'success', text: 'Đã hủy Workshop thành công. Toàn bộ đăng ký liên quan đã được tự động hủy (BR-13).' });
+      setAlertMessage({ type: 'success', text: 'Đã hủy Workshop thành công. Toàn bộ đăng ký liên quan đã được tự động hủy.' });
       fetchMyWorkshops();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -181,7 +181,6 @@ function OrganizerWorkshopsPage() {
     }
   };
 
-  // Open Attendees Modal (UC-11)
   const openAttendeesModal = async (w) => {
     setSelectedWorkshop(w);
     setShowAttendeesModal(true);
@@ -196,7 +195,6 @@ function OrganizerWorkshopsPage() {
     }
   };
 
-  // Open Live Attendance Modal (UC-13)
   const openAttendanceModal = async (w) => {
     setSelectedWorkshop(w);
     setShowAttendanceModal(true);
@@ -211,7 +209,6 @@ function OrganizerWorkshopsPage() {
     }
   };
 
-  // Open Survey Analytics Modal (UC-17)
   const openSurveyModal = async (w) => {
     setSelectedWorkshop(w);
     setShowSurveyModal(true);
@@ -230,7 +227,6 @@ function OrganizerWorkshopsPage() {
     <section className="organizer-page">
       <div className="home-page__header">
         <div>
-          <p className="home-page__eyebrow">ORGANIZER WORKSPACE (UC-03 to UC-07, UC-11, UC-13, UC-17)</p>
           <h1>Quản lý Workshop của bạn</h1>
           <p className="home-page__subtitle">
             Tạo mới, chỉnh sửa, gửi duyệt, quản lý danh sách đăng ký, điểm danh và xem kết quả khảo sát.
@@ -238,13 +234,12 @@ function OrganizerWorkshopsPage() {
         </div>
 
         <button type="button" className="home-page__primary-button" onClick={openCreateModal}>
-          + Tạo Workshop Mới (UC-03)
+          + Tạo Workshop Mới
         </button>
       </div>
 
       {alertMessage && (
         <div className={`alert-banner alert-banner--${alertMessage.type}`} style={{ marginBottom: '20px' }}>
-          <span>{alertMessage.type === 'success' ? '✅' : '⚠️'}</span>
           <div>{alertMessage.text}</div>
         </div>
       )}
@@ -256,9 +251,8 @@ function OrganizerWorkshopsPage() {
         </div>
       ) : workshops.length === 0 ? (
         <div className="workshop-empty">
-          <div className="workshop-empty__icon">📅</div>
+          <div className="workshop-empty__icon">W</div>
           <h2>Bạn chưa tạo Workshop nào</h2>
-          <p>Bấm nút "Tạo Workshop Mới" ở trên để bắt đầu khởi tạo sự kiện của bạn.</p>
         </div>
       ) : (
         <div className="organizer-table-wrapper" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #ebdcd5', overflow: 'hidden' }}>
@@ -268,7 +262,7 @@ function OrganizerWorkshopsPage() {
                 <th style={{ padding: '14px 16px' }}>Tiêu đề Workshop</th>
                 <th style={{ padding: '14px 16px' }}>Trạng thái</th>
                 <th style={{ padding: '14px 16px' }}>Thời gian</th>
-                <th style={{ padding: '14px 16px' }}>Chỗ (Đã đăng ký / Quota)</th>
+                <th style={{ padding: '14px 16px' }}>Đã đăng ký / Giới hạn</th>
                 <th style={{ padding: '14px 16px' }}>Thao tác quản lý</th>
               </tr>
             </thead>
@@ -281,10 +275,10 @@ function OrganizerWorkshopsPage() {
                         {w.title}
                       </Link>
                     </strong>
-                    <div style={{ fontSize: '12px', color: '#886255', marginTop: '4px' }}>📍 {w.location}</div>
+                    <div style={{ fontSize: '12px', color: '#886255', marginTop: '4px' }}>Địa điểm: {w.location}</div>
                     {w.rejection_reason && (
                       <div style={{ fontSize: '12px', color: '#c53030', marginTop: '4px' }}>
-                        ⚠️ Lý do từ chối: {w.rejection_reason}
+                        Lý do từ chối: {w.rejection_reason}
                       </div>
                     )}
                   </td>
@@ -303,7 +297,7 @@ function OrganizerWorkshopsPage() {
                     <strong>{w.confirmed_count}/{w.quota}</strong>
                     {w.waitlist_count > 0 && (
                       <span style={{ fontSize: '11px', color: '#b7791f', display: 'block' }}>
-                        ⏳ {w.waitlist_count} trong waitlist
+                        {w.waitlist_count} trong danh sách chờ
                       </span>
                     )}
                   </td>
@@ -319,7 +313,7 @@ function OrganizerWorkshopsPage() {
                             style={{ fontSize: '12px', padding: '5px 10px' }}
                             onClick={() => openEditModal(w)}
                           >
-                            ✏️ Sửa
+                            Sửa
                           </button>
                           <button
                             type="button"
@@ -327,7 +321,7 @@ function OrganizerWorkshopsPage() {
                             style={{ fontSize: '12px', padding: '5px 10px' }}
                             onClick={() => handleSubmitApproval(w.workshop_id)}
                           >
-                            🚀 Gửi duyệt
+                            Gửi duyệt
                           </button>
                         </>
                       )}
@@ -341,7 +335,7 @@ function OrganizerWorkshopsPage() {
                             style={{ fontSize: '12px', padding: '5px 10px' }}
                             onClick={() => openAttendeesModal(w)}
                           >
-                            👥 Đăng ký ({w.confirmed_count + w.waitlist_count})
+                            Đăng ký: {w.confirmed_count + w.waitlist_count}
                           </button>
                           <button
                             type="button"
@@ -349,7 +343,7 @@ function OrganizerWorkshopsPage() {
                             style={{ fontSize: '12px', padding: '5px 10px' }}
                             onClick={() => openAttendanceModal(w)}
                           >
-                            📋 Điểm danh ({w.attended_count})
+                            Điểm danh: {w.attended_count}
                           </button>
                           <button
                             type="button"
@@ -357,7 +351,7 @@ function OrganizerWorkshopsPage() {
                             style={{ fontSize: '12px', padding: '5px 10px' }}
                             onClick={() => openSurveyModal(w)}
                           >
-                            ⭐ Khảo sát
+                            Khảo sát
                           </button>
                         </>
                       )}
@@ -373,7 +367,7 @@ function OrganizerWorkshopsPage() {
                             setShowCancelModal(true);
                           }}
                         >
-                          Hủy sự kiện
+                          Hủy
                         </button>
                       )}
                     </div>
@@ -385,11 +379,11 @@ function OrganizerWorkshopsPage() {
         </div>
       )}
 
-      {/* Modal Tạo Workshop (UC-03) */}
+      {/* Modal Tạo Workshop Mới */}
       {showCreateModal && (
         <div className="modal-backdrop">
           <div className="modal-content modal-content--large">
-            <h2>Tạo Workshop Mới (Khởi tạo Bản nháp - BR-07)</h2>
+            <h2>Tạo Workshop Mới</h2>
             <form onSubmit={handleCreateSubmit}>
               <div className="form-group">
                 <label>Tiêu đề Workshop *</label>
@@ -397,23 +391,22 @@ function OrganizerWorkshopsPage() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Ví dụ: AI & Machine Learning in Practice"
+                  placeholder="Ví dụ: Lập trình Python Nâng cao"
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label>Mô tả chi tiết *</label>
+                <label>Mô tả chi tiết</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Mục tiêu, nội dung giảng dạy, đối tượng tham gia..."
-                  rows="4"
-                  required
+                  placeholder="Nội dung, mục tiêu và yêu cầu tham gia..."
+                  rows="3"
                 />
               </div>
 
-              <div className="form-row-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
                   <label>Địa điểm tổ chức *</label>
                   <input
@@ -424,7 +417,7 @@ function OrganizerWorkshopsPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Giới hạn số lượng chỗ (Quota) *</label>
+                  <label>Giới hạn số lượng chỗ *</label>
                   <input
                     type="number"
                     min="1"
@@ -435,7 +428,7 @@ function OrganizerWorkshopsPage() {
                 </div>
               </div>
 
-              <div className="form-row-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
                   <label>Thời gian bắt đầu *</label>
                   <input
@@ -456,6 +449,27 @@ function OrganizerWorkshopsPage() {
                 </div>
               </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label>Thời gian mở đăng ký *</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.registration_open_at}
+                    onChange={(e) => setFormData({ ...formData, registration_open_at: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Thời gian đóng đăng ký *</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.registration_close_at}
+                    onChange={(e) => setFormData({ ...formData, registration_close_at: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="modal-actions">
                 <button
                   type="button"
@@ -470,7 +484,7 @@ function OrganizerWorkshopsPage() {
                   className="home-page__primary-button"
                   disabled={isProcessing}
                 >
-                  {isProcessing ? 'Đang tạo...' : 'Lưu Bản nháp (Create Draft)'}
+                  {isProcessing ? 'Đang tạo...' : 'Lưu Bản nháp'}
                 </button>
               </div>
             </form>
@@ -478,14 +492,14 @@ function OrganizerWorkshopsPage() {
         </div>
       )}
 
-      {/* Modal Chỉnh sửa Workshop (UC-04) */}
+      {/* Modal Chỉnh sửa Workshop */}
       {showEditModal && selectedWorkshop && (
         <div className="modal-backdrop">
           <div className="modal-content modal-content--large">
-            <h2>Chỉnh sửa Workshop (UC-04)</h2>
+            <h2>Chỉnh sửa Workshop #{selectedWorkshop.workshop_id}</h2>
             <form onSubmit={handleEditSubmit}>
               <div className="form-group">
-                <label>Tiêu đề Workshop</label>
+                <label>Tiêu đề Workshop *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -499,12 +513,11 @@ function OrganizerWorkshopsPage() {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows="4"
-                  required
+                  rows="3"
                 />
               </div>
 
-              <div className="form-row-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
                   <label>Địa điểm</label>
                   <input
@@ -515,12 +528,33 @@ function OrganizerWorkshopsPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Giới hạn Quota</label>
+                  <label>Giới hạn số lượng chỗ</label>
                   <input
                     type="number"
                     min="1"
                     value={formData.quota}
                     onChange={(e) => setFormData({ ...formData, quota: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label>Thời gian bắt đầu</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.start_at}
+                    onChange={(e) => setFormData({ ...formData, start_at: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Thời gian kết thúc</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.end_at}
+                    onChange={(e) => setFormData({ ...formData, end_at: e.target.value })}
                     required
                   />
                 </div>
@@ -540,7 +574,7 @@ function OrganizerWorkshopsPage() {
                   className="home-page__primary-button"
                   disabled={isProcessing}
                 >
-                  {isProcessing ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  {isProcessing ? 'Đang cập nhật...' : 'Cập nhật Thay đổi'}
                 </button>
               </div>
             </form>
@@ -548,11 +582,11 @@ function OrganizerWorkshopsPage() {
         </div>
       )}
 
-      {/* Modal Xem Danh sách Đăng ký & Waitlist (UC-11) */}
+      {/* Modal Xem Danh sách Đăng ký */}
       {showAttendeesModal && selectedWorkshop && (
         <div className="modal-backdrop">
           <div className="modal-content modal-content--large">
-            <h2>Danh sách Đăng ký & Waitlist (UC-11)</h2>
+            <h2>Danh sách Đăng ký và Danh sách chờ</h2>
             <p>Workshop: <strong>{selectedWorkshop.title}</strong></p>
 
             {loadingAttendees ? (
@@ -568,7 +602,7 @@ function OrganizerWorkshopsPage() {
                       <th style={{ padding: '8px 12px' }}>Họ và tên</th>
                       <th style={{ padding: '8px 12px' }}>Email</th>
                       <th style={{ padding: '8px 12px' }}>Trạng thái</th>
-                      <th style={{ padding: '8px 12px' }}>Vị trí Waitlist</th>
+                      <th style={{ padding: '8px 12px' }}>Vị trí Danh sách chờ</th>
                       <th style={{ padding: '8px 12px' }}>Thời gian đăng ký</th>
                     </tr>
                   </thead>
@@ -603,11 +637,11 @@ function OrganizerWorkshopsPage() {
         </div>
       )}
 
-      {/* Modal Bảng Điểm danh Thời gian thực (UC-13) */}
+      {/* Modal Bảng Điểm danh Thời gian thực */}
       {showAttendanceModal && selectedWorkshop && (
         <div className="modal-backdrop">
           <div className="modal-content modal-content--large">
-            <h2>Bảng Điểm danh Sự kiện (UC-13)</h2>
+            <h2>Bảng Điểm danh Sự kiện</h2>
             <p>Workshop: <strong>{selectedWorkshop.title}</strong></p>
 
             {loadingAttendance ? (
@@ -619,11 +653,11 @@ function OrganizerWorkshopsPage() {
                 <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#fbf4f0', textAlign: 'left' }}>
-                      <th style={{ padding: '8px 12px' }}>Mã Attendance</th>
+                      <th style={{ padding: '8px 12px' }}>Mã điểm danh</th>
                       <th style={{ padding: '8px 12px' }}>Người tham gia</th>
                       <th style={{ padding: '8px 12px' }}>Email</th>
                       <th style={{ padding: '8px 12px' }}>Phương thức</th>
-                      <th style={{ padding: '8px 12px' }}>Thời gian Check-in</th>
+                      <th style={{ padding: '8px 12px' }}>Thời gian check-in</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -656,11 +690,11 @@ function OrganizerWorkshopsPage() {
         </div>
       )}
 
-      {/* Modal Phân tích Khảo sát (UC-17) */}
+      {/* Modal Phân tích Khảo sát */}
       {showSurveyModal && selectedWorkshop && (
         <div className="modal-backdrop">
           <div className="modal-content modal-content--large">
-            <h2>Kết quả Khảo sát & Đánh giá (UC-17)</h2>
+            <h2>Kết quả Khảo sát và Đánh giá</h2>
             <p>Workshop: <strong>{selectedWorkshop.title}</strong></p>
 
             {loadingSurvey ? (
@@ -673,7 +707,7 @@ function OrganizerWorkshopsPage() {
                   <div style={{ padding: '16px', background: '#fdf7f4', borderRadius: '8px', border: '1px solid #ebdcd5' }}>
                     <span style={{ fontSize: '12px', color: '#886255' }}>Điểm đánh giá trung bình:</span>
                     <h3 style={{ fontSize: '28px', color: '#c2410c', margin: '6px 0' }}>
-                      {surveyData.average_rating} / 5.0 ⭐
+                      {surveyData.average_rating} / 5.0
                     </h3>
                   </div>
                   <div style={{ padding: '16px', background: '#fdf7f4', borderRadius: '8px', border: '1px solid #ebdcd5' }}>
@@ -684,7 +718,7 @@ function OrganizerWorkshopsPage() {
                   </div>
                 </div>
 
-                <h3>Danh sách ý kiến đóng góp từ học viên:</h3>
+                <h3>Danh sách ý kiến đóng góp từ người tham gia:</h3>
                 {surveyData.feedbacks.length === 0 ? (
                   <p style={{ color: '#7a5b50', fontSize: '13px' }}>Chưa có ý kiến nhận xét chi tiết nào.</p>
                 ) : (
@@ -692,7 +726,7 @@ function OrganizerWorkshopsPage() {
                     {surveyData.feedbacks.map((fb, idx) => (
                       <div key={idx} style={{ padding: '10px', background: '#fcfcfc', borderBottom: '1px solid #f0e6e2', fontSize: '13px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <strong>{fb.user_name || 'Học viên ẩn danh'} ({fb.rating}★)</strong>
+                          <strong>{fb.user_name || 'Người tham gia ẩn danh'} - {fb.rating} sao</strong>
                           <span style={{ fontSize: '11px', color: '#886255' }}>{new Date(fb.submitted_at).toLocaleString('vi-VN')}</span>
                         </div>
                         <p style={{ margin: 0, color: '#4a3832' }}>"{fb.feedback || 'Không có ghi chú'}"</p>
@@ -716,11 +750,11 @@ function OrganizerWorkshopsPage() {
         </div>
       )}
 
-      {/* Modal Hủy Sự kiện (UC-07) */}
+      {/* Modal Hủy Sự kiện */}
       {showCancelModal && selectedWorkshop && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h2>Hủy Workshop (UC-07)</h2>
+            <h2>Hủy Workshop</h2>
             <p>Hủy sự kiện: <strong>{selectedWorkshop.title}</strong></p>
 
             <form onSubmit={handleCancelWorkshop}>
@@ -736,7 +770,7 @@ function OrganizerWorkshopsPage() {
               </div>
 
               <small style={{ color: '#c53030', display: 'block', margin: '8px 0' }}>
-                ⚠️ Cảnh báo: Việc hủy workshop sẽ tự động hủy toàn bộ vé đã đăng ký và gửi thông báo hệ thống (BR-13).
+                Cảnh báo: Việc hủy workshop sẽ tự động hủy toàn bộ vé đã đăng ký và gửi thông báo hệ thống.
               </small>
 
               <div className="modal-actions">

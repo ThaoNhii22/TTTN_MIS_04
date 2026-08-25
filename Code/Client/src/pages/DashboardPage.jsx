@@ -45,8 +45,7 @@ function DashboardPage() {
     <section className="dashboard-page">
       <div className="home-page__header">
         <div>
-          <p className="home-page__eyebrow">EXECUTIVE KPI DASHBOARD (UC-18, UC-19)</p>
-          <h1>Bảng Điều khiển & Chỉ số KPI</h1>
+          <h1>Bảng Điều khiển và Chỉ số KPI</h1>
           <p className="home-page__subtitle">
             {role === 'admin'
               ? 'Tổng hợp số liệu toàn diện hệ thống quản lý Workshop nội bộ theo thời gian thực.'
@@ -55,16 +54,15 @@ function DashboardPage() {
         </div>
 
         <button type="button" className="btn-secondary" onClick={fetchStats}>
-          ⟳ Cập nhật số liệu
+          Cập nhật số liệu
         </button>
       </div>
 
       {/* Top Level 3 KPI Metric Cards */}
       <div className="kpi-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '28px' }}>
         <div className="kpi-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #ebdcd5' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', color: '#886255', fontWeight: 'bold' }}>TỶ LỆ LẤP ĐẦY QUOTA</span>
-            <span style={{ fontSize: '24px' }}>📈</span>
+          <div>
+            <span style={{ fontSize: '13px', color: '#886255', fontWeight: 'bold' }}>TỶ LỆ LẤP ĐẦY</span>
           </div>
           <h2 style={{ fontSize: '36px', color: '#c2410c', margin: '12px 0 6px' }}>{stats.average_fill_rate}%</h2>
           <p style={{ fontSize: '12px', color: '#7a5b50', margin: 0 }}>
@@ -73,9 +71,8 @@ function DashboardPage() {
         </div>
 
         <div className="kpi-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #ebdcd5' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
             <span style={{ fontSize: '13px', color: '#886255', fontWeight: 'bold' }}>TỶ LỆ THAM DỰ THỰC TẾ</span>
-            <span style={{ fontSize: '24px' }}>🎯</span>
           </div>
           <h2 style={{ fontSize: '36px', color: '#2b6cb0', margin: '12px 0 6px' }}>{stats.average_attendance_rate}%</h2>
           <p style={{ fontSize: '12px', color: '#7a5b50', margin: 0 }}>
@@ -84,13 +81,12 @@ function DashboardPage() {
         </div>
 
         <div className="kpi-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #ebdcd5' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
             <span style={{ fontSize: '13px', color: '#886255', fontWeight: 'bold' }}>ĐIỂM HÀI LÒNG TRUNG BÌNH</span>
-            <span style={{ fontSize: '24px' }}>⭐</span>
           </div>
           <h2 style={{ fontSize: '36px', color: '#d97706', margin: '12px 0 6px' }}>{stats.average_satisfaction_score} / 5.0</h2>
           <p style={{ fontSize: '12px', color: '#7a5b50', margin: 0 }}>
-            Khảo sát đánh giá trải nghiệm thực tế từ học viên sau workshop.
+            Khảo sát đánh giá trải nghiệm thực tế từ người tham dự sau workshop.
           </p>
         </div>
       </div>
@@ -99,26 +95,26 @@ function DashboardPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '28px' }}>
         {/* Workshop status distribution */}
         <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #ebdcd5' }}>
-          <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>📊 Cơ cấu Trạng thái Workshop (Tổng: {stats.total_workshops})</h3>
+          <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Cơ cấu Trạng thái Workshop: Tổng số {stats.total_workshops}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Đang mở (Published)</span>
+              <span>Đang mở</span>
               <strong>{stats.published_workshops}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Chờ xét duyệt (Pending)</span>
+              <span>Chờ xét duyệt</span>
               <strong style={{ color: '#b7791f' }}>{stats.pending_workshops}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Bản nháp (Draft)</span>
+              <span>Bản nháp</span>
               <strong style={{ color: '#718096' }}>{stats.draft_workshops}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Đã hoàn thành (Completed)</span>
+              <span>Đã hoàn thành</span>
               <strong style={{ color: '#2b6cb0' }}>{stats.completed_workshops}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Đã hủy (Cancelled)</span>
+              <span>Đã hủy</span>
               <strong style={{ color: '#e53e3e' }}>{stats.cancelled_workshops}</strong>
             </div>
           </div>
@@ -126,7 +122,7 @@ function DashboardPage() {
 
         {/* Registration distribution */}
         <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #ebdcd5' }}>
-          <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>🎟️ Tổng hợp Đăng ký (Tổng: {stats.total_registrations})</h3>
+          <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Tổng hợp Đăng ký: Tổng số {stats.total_registrations}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Vé chính thức đã cấp</span>
@@ -137,7 +133,7 @@ function DashboardPage() {
               <strong style={{ color: '#2f855a' }}>{stats.total_attended}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Đang trong Danh sách chờ (Waitlist)</span>
+              <span>Đang trong Danh sách chờ</span>
               <strong style={{ color: '#b7791f' }}>{stats.total_waitlist}</strong>
             </div>
             {role === 'admin' && (
@@ -152,15 +148,15 @@ function DashboardPage() {
 
       {/* Recent Workshops Activity */}
       <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #ebdcd5', padding: '20px' }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>📅 Các Workshop Gần Đây</h3>
+        <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Các Workshop Gần Đây</h3>
         <div className="table-responsive">
           <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#fbf4f0', textAlign: 'left', borderBottom: '1px solid #ebdcd5' }}>
                 <th style={{ padding: '10px 14px' }}>Tiêu đề Workshop</th>
                 <th style={{ padding: '10px 14px' }}>Trạng thái</th>
-                <th style={{ padding: '10px 14px' }}>Đã đăng ký / Quota</th>
-                <th style={{ padding: '10px 14px' }}>Hàng đợi (Waitlist)</th>
+                <th style={{ padding: '10px 14px' }}>Đã đăng ký / Giới hạn</th>
+                <th style={{ padding: '10px 14px' }}>Hàng đợi</th>
                 <th style={{ padding: '10px 14px' }}>Đã điểm danh</th>
               </tr>
             </thead>

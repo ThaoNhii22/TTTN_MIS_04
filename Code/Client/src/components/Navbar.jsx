@@ -18,7 +18,7 @@ function Navbar() {
         return { text: 'Ban tổ chức', className: 'role-badge--organizer' };
       case 'participant':
       default:
-        return { text: 'Học viên', className: 'role-badge--participant' };
+        return { text: 'Người tham gia', className: 'role-badge--participant' };
     }
   };
 

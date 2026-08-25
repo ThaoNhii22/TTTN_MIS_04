@@ -59,7 +59,6 @@ function WorkshopPage() {
     <section className="workshop-page">
       <div className="workshop-page__hero">
         <div>
-          <p className="home-page__eyebrow">WORKSHOP DIRECTORY (UC-08)</p>
           <h1>Khám phá Workshop</h1>
           <p>
             Tìm kiếm những Workshop phù hợp với kỹ năng, đam mê và định hướng phát triển của bạn.
@@ -88,13 +87,13 @@ function WorkshopPage() {
           className="filter-select"
         >
           <option value="all">Tất cả trạng thái</option>
-          <option value="published">Đang mở (Published)</option>
-          <option value="completed">Đã kết thúc (Completed)</option>
+          <option value="published">Đang mở</option>
+          <option value="completed">Đã kết thúc</option>
           {(role === 'admin' || role === 'organizer') && (
             <>
-              <option value="pending">Chờ duyệt (Pending)</option>
-              <option value="draft">Bản nháp (Draft)</option>
-              <option value="cancelled">Đã hủy (Cancelled)</option>
+              <option value="pending">Chờ duyệt</option>
+              <option value="draft">Bản nháp</option>
+              <option value="cancelled">Đã hủy</option>
             </>
           )}
         </select>
@@ -127,7 +126,7 @@ function WorkshopPage() {
                 <div className="workshop-card__cover">
                   <span className={`status-tag ${statusInfo.class}`}>{statusInfo.label}</span>
                   {w.is_full && (
-                    <span className="status-tag status-tag--full">Đã đủ chỗ</span>
+                    <span className="status-tag status-tag--full">Đã hết chỗ</span>
                   )}
                 </div>
 
@@ -137,11 +136,11 @@ function WorkshopPage() {
 
                   <div className="workshop-card__meta">
                     <div>
-                      <span>📅</span>
+                      <span>Thời gian:</span>
                       <span>{new Date(w.start_at).toLocaleString('vi-VN')}</span>
                     </div>
                     <div>
-                      <span>📍</span>
+                      <span>Địa điểm:</span>
                       <span>{w.location}</span>
                     </div>
                   </div>
@@ -157,9 +156,9 @@ function WorkshopPage() {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: '#7a5b50' }}>
-                      <span>{w.is_full ? 'Hàng đợi (Waitlist)' : `Còn ${remaining} chỗ`}</span>
+                      <span>{w.is_full ? 'Hàng đợi' : `Còn ${remaining} chỗ`}</span>
                       {w.waitlist_count > 0 && (
-                        <span>⏳ {w.waitlist_count} người chờ</span>
+                        <span>{w.waitlist_count} người chờ</span>
                       )}
                     </div>
                   </div>

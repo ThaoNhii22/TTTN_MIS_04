@@ -40,15 +40,14 @@ function AuditLogsPage() {
     <section className="audit-logs-page">
       <div className="home-page__header">
         <div>
-          <p className="home-page__eyebrow">SECURITY & AUDIT LOGS (UC-20, BR-10)</p>
           <h1>Nhật ký Hoạt động Hệ thống</h1>
           <p className="home-page__subtitle">
-            Dữ liệu nhật ký máy chủ bất biến (Read-only / Immutable) ghi vết toàn bộ hành vi người dùng và thay đổi dữ liệu quan trọng.
+            Dữ liệu nhật ký máy chủ bất biến ghi vết toàn bộ hành vi người dùng và thay đổi dữ liệu quan trọng.
           </p>
         </div>
 
         <button type="button" className="btn-secondary" onClick={fetchLogs}>
-          ⟳ Làm mới Nhật ký
+          Làm mới Nhật ký
         </button>
       </div>
 
@@ -59,7 +58,7 @@ function AuditLogsPage() {
           onChange={(e) => setActionFilter(e.target.value)}
           className="filter-select"
         >
-          <option value="">Tất cả hành động (Actions)</option>
+          <option value="">Tất cả hành động</option>
           <option value="CREATE_USER">CREATE_USER</option>
           <option value="UPDATE_ROLE">UPDATE_ROLE</option>
           <option value="UPDATE_STATUS">UPDATE_STATUS</option>
@@ -81,7 +80,7 @@ function AuditLogsPage() {
           onChange={(e) => setEntityFilter(e.target.value)}
           className="filter-select"
         >
-          <option value="">Tất cả Thực thể (Entities)</option>
+          <option value="">Tất cả Thực thể</option>
           <option value="Workshops">Workshops</option>
           <option value="Users">Users</option>
           <option value="Registrations">Registrations</option>
@@ -97,7 +96,7 @@ function AuditLogsPage() {
         </div>
       ) : logs.length === 0 ? (
         <div className="workshop-empty">
-          <div className="workshop-empty__icon">📜</div>
+          <div className="workshop-empty__icon">W</div>
           <h2>Không có bản ghi nhật ký nào</h2>
           <p>Không tìm thấy bản ghi theo bộ lọc đã chọn.</p>
         </div>
@@ -106,10 +105,10 @@ function AuditLogsPage() {
           <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#fbf4f0', textAlign: 'left', borderBottom: '1px solid #ebdcd5' }}>
-                <th style={{ padding: '12px 14px' }}>Thời gian (Timestamp)</th>
-                <th style={{ padding: '12px 14px' }}>Người thực hiện (Actor)</th>
-                <th style={{ padding: '12px 14px' }}>Hành động (Action)</th>
-                <th style={{ padding: '12px 14px' }}>Thực thể (Target)</th>
+                <th style={{ padding: '12px 14px' }}>Thời gian</th>
+                <th style={{ padding: '12px 14px' }}>Người thực hiện</th>
+                <th style={{ padding: '12px 14px' }}>Hành động</th>
+                <th style={{ padding: '12px 14px' }}>Thực thể</th>
                 <th style={{ padding: '12px 14px' }}>Địa chỉ IP</th>
                 <th style={{ padding: '12px 14px' }}>Chi tiết thay đổi</th>
               </tr>
@@ -147,7 +146,7 @@ function AuditLogsPage() {
                       style={{ fontSize: '11px', padding: '4px 8px' }}
                       onClick={() => setSelectedLog(log)}
                     >
-                      🔍 Xem Diff JSON
+                      Xem chi tiết JSON
                     </button>
                   </td>
                 </tr>
@@ -163,21 +162,21 @@ function AuditLogsPage() {
           <div className="modal-content modal-content--large">
             <h2>Chi tiết Nhật ký Audit Log #{selectedLog.audit_log_id}</h2>
             <div style={{ margin: '14px 0', fontSize: '13px', lineHeight: '1.6' }}>
-              <p>👤 Người thực hiện: <strong>{selectedLog.actor_name}</strong> ({selectedLog.actor_email})</p>
-              <p>⚡ Hành động: <code>{selectedLog.action}</code> trên <strong>{selectedLog.target_entity}</strong> #{selectedLog.target_id}</p>
-              <p>🕒 Thời gian: {new Date(selectedLog.timestamp).toLocaleString('vi-VN')} | 🌐 IP: {selectedLog.ip_address}</p>
+              <p>Người thực hiện: <strong>{selectedLog.actor_name}</strong> - {selectedLog.actor_email}</p>
+              <p>Hành động: <code>{selectedLog.action}</code> trên <strong>{selectedLog.target_entity}</strong> #{selectedLog.target_id}</p>
+              <p>Thời gian: {new Date(selectedLog.timestamp).toLocaleString('vi-VN')} - IP: {selectedLog.ip_address}</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', margin: '16px 0' }}>
               <div>
-                <h4 style={{ fontSize: '13px', marginBottom: '6px', color: '#c53030' }}>Giá trị cũ (Old Value):</h4>
+                <h4 style={{ fontSize: '13px', marginBottom: '6px', color: '#c53030' }}>Giá trị cũ:</h4>
                 <pre style={{ padding: '12px', background: '#fdf7f4', borderRadius: '6px', fontSize: '11px', overflowX: 'auto', border: '1px solid #ebdcd5' }}>
                   {JSON.stringify(selectedLog.old_value, null, 2) || 'null'}
                 </pre>
               </div>
 
               <div>
-                <h4 style={{ fontSize: '13px', marginBottom: '6px', color: '#2f855a' }}>Giá trị mới (New Value):</h4>
+                <h4 style={{ fontSize: '13px', marginBottom: '6px', color: '#2f855a' }}>Giá trị mới:</h4>
                 <pre style={{ padding: '12px', background: '#f6ffed', borderRadius: '6px', fontSize: '11px', overflowX: 'auto', border: '1px solid #b7eb8f' }}>
                   {JSON.stringify(selectedLog.new_value, null, 2) || 'null'}
                 </pre>

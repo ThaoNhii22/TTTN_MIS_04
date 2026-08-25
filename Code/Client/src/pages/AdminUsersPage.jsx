@@ -53,7 +53,7 @@ function AdminUsersPage() {
       await createInternalUser(formData);
       setShowCreateModal(false);
       setFormData({ full_name: '', email: '', password: '', role: 'participant' });
-      setAlertMessage({ type: 'success', text: 'Cấp tài khoản nội bộ mới thành công (UC-14, BR-10)!' });
+      setAlertMessage({ type: 'success', text: 'Cấp tài khoản nội bộ mới thành công.' });
       fetchUsers();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -66,7 +66,7 @@ function AdminUsersPage() {
   const handleRoleChange = async (userId, newRole) => {
     try {
       await updateUserRole(userId, newRole);
-      setAlertMessage({ type: 'success', text: 'Cập nhật phân quyền vai trò thành công (Ghi Audit Log)!' });
+      setAlertMessage({ type: 'success', text: 'Cập nhật phân quyền vai trò thành công.' });
       fetchUsers();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -81,7 +81,7 @@ function AdminUsersPage() {
 
     try {
       await updateUserStatus(user.user_id, newStatus);
-      setAlertMessage({ type: 'success', text: `Đã ${actionText} tài khoản thành công (UC-15)!` });
+      setAlertMessage({ type: 'success', text: `Đã ${actionText} tài khoản thành công.` });
       fetchUsers();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -93,21 +93,19 @@ function AdminUsersPage() {
     <section className="admin-users-page">
       <div className="home-page__header">
         <div>
-          <p className="home-page__eyebrow">USER MANAGEMENT & RBAC (UC-14, UC-15)</p>
-          <h1>Quản lý Tài khoản & Phân quyền</h1>
+          <h1>Quản lý Tài khoản và Phân quyền</h1>
           <p className="home-page__subtitle">
-            Cấp tài khoản nội bộ, phân quyền vai trò (Admin, Organizer, Participant) và kiểm soát trạng thái hoạt động.
+            Cấp tài khoản nội bộ, phân quyền vai trò và kiểm soát trạng thái hoạt động.
           </p>
         </div>
 
         <button type="button" className="home-page__primary-button" onClick={() => setShowCreateModal(true)}>
-          + Cấp Tài khoản Mới (UC-14)
+          + Cấp Tài khoản Mới
         </button>
       </div>
 
       {alertMessage && (
         <div className={`alert-banner alert-banner--${alertMessage.type}`} style={{ marginBottom: '20px' }}>
-          <span>{alertMessage.type === 'success' ? '✅' : '⚠️'}</span>
           <div>{alertMessage.text}</div>
         </div>
       )}
@@ -117,7 +115,7 @@ function AdminUsersPage() {
         <form className="workshop-search" onSubmit={handleSearch}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-            <path d="M16 16L20 20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M16 16L20 20" stroke="currentColor" strokeWidth="1.8" />
           </svg>
           <input
             type="text"
@@ -130,15 +128,15 @@ function AdminUsersPage() {
 
         <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="filter-select">
           <option value="">Tất cả vai trò</option>
-          <option value="admin">Quản trị viên (Admin)</option>
-          <option value="organizer">Ban tổ chức (Organizer)</option>
-          <option value="participant">Học viên (Participant)</option>
+          <option value="admin">Quản trị viên</option>
+          <option value="organizer">Ban tổ chức</option>
+          <option value="participant">Người tham gia</option>
         </select>
 
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="filter-select">
           <option value="">Tất cả trạng thái</option>
-          <option value="active">Hoạt động (Active)</option>
-          <option value="locked">Bị khóa (Locked)</option>
+          <option value="active">Hoạt động</option>
+          <option value="locked">Khóa</option>
         </select>
       </div>
 
@@ -149,7 +147,7 @@ function AdminUsersPage() {
         </div>
       ) : users.length === 0 ? (
         <div className="workshop-empty">
-          <div className="workshop-empty__icon">👤</div>
+          <div className="workshop-empty__icon">W</div>
           <h2>Không tìm thấy người dùng phù hợp</h2>
           <p>Hãy thử thay đổi tiêu chí tìm kiếm.</p>
         </div>
@@ -160,7 +158,7 @@ function AdminUsersPage() {
               <tr style={{ background: '#fbf4f0', textAlign: 'left', borderBottom: '1px solid #ebdcd5' }}>
                 <th style={{ padding: '14px 16px' }}>Họ và tên</th>
                 <th style={{ padding: '14px 16px' }}>Email đăng nhập</th>
-                <th style={{ padding: '14px 16px' }}>Vai trò (Role)</th>
+                <th style={{ padding: '14px 16px' }}>Vai trò</th>
                 <th style={{ padding: '14px 16px' }}>Trạng thái</th>
                 <th style={{ padding: '14px 16px' }}>Ngày tạo</th>
                 <th style={{ padding: '14px 16px' }}>Thao tác</th>
@@ -183,9 +181,9 @@ function AdminUsersPage() {
                       className="filter-select"
                       style={{ padding: '4px 8px', fontSize: '13px' }}
                     >
-                      <option value="admin">Quản trị viên (Admin)</option>
-                      <option value="organizer">Ban tổ chức (Organizer)</option>
-                      <option value="participant">Học viên (Participant)</option>
+                      <option value="admin">Quản trị viên</option>
+                      <option value="organizer">Ban tổ chức</option>
+                      <option value="participant">Người tham gia</option>
                     </select>
                   </td>
 
@@ -206,7 +204,7 @@ function AdminUsersPage() {
                       style={{ fontSize: '12px', padding: '6px 12px' }}
                       onClick={() => handleStatusToggle(u)}
                     >
-                      {u.status === 'active' ? '🔒 Khóa tài khoản' : '🔓 Mở khóa'}
+                      {u.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa'}
                     </button>
                   </td>
                 </tr>
@@ -216,11 +214,11 @@ function AdminUsersPage() {
         </div>
       )}
 
-      {/* Modal Cấp Tài khoản Mới (UC-14) */}
+      {/* Modal Cấp Tài khoản Mới */}
       {showCreateModal && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h2>Cấp Tài khoản Nội bộ Mới (UC-14)</h2>
+            <h2>Cấp Tài khoản Nội bộ Mới</h2>
             <form onSubmit={handleCreateUser}>
               <div className="form-group">
                 <label>Họ và tên *</label>
@@ -256,16 +254,16 @@ function AdminUsersPage() {
               </div>
 
               <div className="form-group">
-                <label>Phân quyền Vai trò *</label>
+                <label>Phân quyền Vai trò</label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="filter-select"
                   style={{ width: '100%' }}
                 >
-                  <option value="participant">Học viên (Participant)</option>
-                  <option value="organizer">Ban tổ chức (Organizer)</option>
-                  <option value="admin">Quản trị viên (Admin)</option>
+                  <option value="participant">Người tham gia</option>
+                  <option value="organizer">Ban tổ chức</option>
+                  <option value="admin">Quản trị viên</option>
                 </select>
               </div>
 

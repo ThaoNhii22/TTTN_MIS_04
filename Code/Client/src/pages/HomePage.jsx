@@ -16,11 +16,9 @@ function HomePage() {
   useEffect(() => {
     async function loadHomeData() {
       try {
-        // 1. Load published upcoming workshops
         const workshopsData = await getWorkshops({ status: 'published' });
         setUpcomingWorkshops(workshopsData);
 
-        // 2. Load role-specific data
         if (role === 'participant') {
           const myRegs = await getMyRegistrations();
           setMyRegistrationsCount(myRegs.filter((r) => r.status === 'confirmed' || r.status === 'attended').length);
@@ -44,12 +42,11 @@ function HomePage() {
     <section className="home-page">
       <div className="home-page__header">
         <div>
-          <p className="home-page__eyebrow">WORKSHOP MANAGEMENT SYSTEM (TTTN_MIS_04)</p>
           <h1>
-            Xin chào, {user?.full_name || 'Bạn'} <span>👋</span>
+            Xin chào, {user?.full_name || 'Bạn'}
           </h1>
           <p className="home-page__subtitle">
-            {role === 'admin' && 'Bảng điều phối quản trị hệ thống, xét duyệt sự kiện và theo dõi Audit Logs.'}
+            {role === 'admin' && 'Bảng điều phối quản trị hệ thống, xét duyệt sự kiện và theo dõi nhật ký hoạt động.'}
             {role === 'organizer' && 'Quản lý các Workshop do bạn tổ chức, theo dõi đăng ký và điểm danh.'}
             {role === 'participant' && 'Khám phá Workshop bổ ích, theo dõi vé tham gia và danh sách chờ của bạn.'}
           </p>
@@ -63,12 +60,12 @@ function HomePage() {
           )}
           {role === 'admin' && (
             <Link to="/admin/reviews" className="home-page__primary-button">
-              ⚖️ Xét duyệt Workshop
+              Xét duyệt Workshop
             </Link>
           )}
           {role === 'participant' && (
             <Link to="/workshops" className="home-page__primary-button">
-              🔍 Tìm Workshop
+              Tìm Workshop
             </Link>
           )}
         </div>
@@ -86,8 +83,8 @@ function HomePage() {
             <h2>{nextWorkshop.title}</h2>
 
             <div className="dashboard-card__info">
-              <span>📅 {new Date(nextWorkshop.start_at).toLocaleString('vi-VN')}</span>
-              <span>📍 {nextWorkshop.location}</span>
+              <span>Thời gian: {new Date(nextWorkshop.start_at).toLocaleString('vi-VN')}</span>
+              <span>Địa điểm: {nextWorkshop.location}</span>
             </div>
 
             <div className="dashboard-card__countdown">
@@ -117,15 +114,13 @@ function HomePage() {
         {/* Dynamic Metric Card based on Role */}
         {role === 'participant' ? (
           <div className="dashboard-card dashboard-card--attendance">
-            <div className="dashboard-card__icon">🎟️</div>
             <p className="dashboard-card__label">Vé tham dự của bạn</p>
             <strong className="dashboard-card__number">{myRegistrationsCount}</strong>
             <span className="dashboard-card__muted">Workshop đã đăng ký</span>
           </div>
         ) : (
           <div className="dashboard-card dashboard-card--attendance">
-            <div className="dashboard-card__icon">📊</div>
-            <p className="dashboard-card__label">Tỷ lệ lấp đầy Quota</p>
+            <p className="dashboard-card__label">Tỷ lệ lấp đầy</p>
             <strong className="dashboard-card__number">
               {dashboardStats ? `${dashboardStats.average_fill_rate}%` : '--'}
             </strong>
@@ -139,7 +134,6 @@ function HomePage() {
         <div className="home-page__section">
           <div className="home-page__section-header">
             <div>
-              <p className="home-page__eyebrow">WAITLIST</p>
               <h2>Danh sách chờ của bạn</h2>
             </div>
             <Link to="/waitlist" className="text-link">
@@ -170,23 +164,20 @@ function HomePage() {
       <div className="home-page__section">
         <div className="home-page__section-header">
           <div>
-            <p className="home-page__eyebrow">SHORTCUTS</p>
             <h2>Truy cập nhanh</h2>
           </div>
         </div>
 
         <div className="shortcut-grid">
           <Link to="/check-in" className="shortcut-card">
-            <div className="shortcut-card__icon">📱</div>
             <div>
               <h3>Mã QR Điểm danh</h3>
-              <p>Quét hoặc nhập mã Check-in</p>
+              <p>Quét hoặc nhập mã điểm danh</p>
             </div>
             <span>→</span>
           </Link>
 
           <Link to="/workshops" className="shortcut-card">
-            <div className="shortcut-card__icon">📅</div>
             <div>
               <h3>Khám phá Workshop</h3>
               <p>Xem các Workshop đang mở</p>
@@ -196,7 +187,6 @@ function HomePage() {
 
           {role === 'participant' && (
             <Link to="/my-tickets" className="shortcut-card">
-              <div className="shortcut-card__icon">🎟️</div>
               <div>
                 <h3>Vé của tôi</h3>
                 <p>Xem mã QR và trạng thái đăng ký</p>
@@ -207,7 +197,6 @@ function HomePage() {
 
           {role === 'organizer' && (
             <Link to="/organizer/workshops" className="shortcut-card">
-              <div className="shortcut-card__icon">⚙️</div>
               <div>
                 <h3>Quản lý Workshop</h3>
                 <p>Tạo mới, điểm danh, khảo sát</p>
@@ -218,7 +207,6 @@ function HomePage() {
 
           {role === 'admin' && (
             <Link to="/admin/reviews" className="shortcut-card">
-              <div className="shortcut-card__icon">⚖️</div>
               <div>
                 <h3>Xét duyệt sự kiện</h3>
                 <p>Phê duyệt các Workshop chờ duyệt</p>

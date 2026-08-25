@@ -14,6 +14,7 @@ import AdminReviewPage from '../pages/AdminReviewPage';
 import AdminUsersPage from '../pages/AdminUsersPage';
 import DashboardPage from '../pages/DashboardPage';
 import AuditLogsPage from '../pages/AuditLogsPage';
+import ForbiddenPage from '../pages/ForbiddenPage';
 
 function AppRouter() {
   return (
@@ -22,6 +23,9 @@ function AppRouter() {
         <Route path="/login" element={<LoginPage />} />
 
         <Route element={<MainLayout />}>
+          {/* Public / Generic Error Routes */}
+          <Route path="/403" element={<ForbiddenPage />} />
+
           {/* All Authenticated Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<HomePage />} />

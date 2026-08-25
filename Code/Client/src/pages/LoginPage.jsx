@@ -37,29 +37,6 @@ function LoginPage() {
     }
   };
 
-  const handleQuickLogin = (quickEmail, quickPassword) => {
-    setEmail(quickEmail);
-    setPassword(quickPassword);
-    setErrorMessage(null);
-    setLoading(true);
-
-    login(quickEmail, quickPassword)
-      .then(() => {
-        navigate(from, { replace: true });
-      })
-      .catch((err) => {
-        const detail = err.response?.data?.detail;
-        setErrorMessage(
-          typeof detail === 'string'
-            ? detail
-            : 'Đăng nhập nhanh thất bại.'
-        );
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
   return (
     <main className="login-page">
       <div className="login-card">
@@ -69,13 +46,12 @@ function LoginPage() {
           <h1>Đăng nhập Hệ thống</h1>
 
           <p>
-            Hệ thống Quản lý Workshop Nội Bộ (TTTN_MIS_04)
+            Hệ thống Quản lý Workshop Nội bộ
           </p>
         </div>
 
         {errorMessage && (
           <div className="alert-banner alert-banner--error" style={{ marginBottom: '16px' }}>
-            <span>⚠️</span>
             <div>{errorMessage}</div>
           </div>
         )}
@@ -109,34 +85,6 @@ function LoginPage() {
             {loading ? 'Đang xác thực...' : 'Đăng nhập'}
           </button>
         </form>
-
-        {/* Quick Demo Accounts */}
-        <div className="quick-login-section">
-          <p className="quick-login-title">⚡ Đăng nhập nhanh tài khoản mẫu (Demo)</p>
-          <div className="quick-login-buttons">
-            <button
-              type="button"
-              className="quick-login-btn quick-login-btn--admin"
-              onClick={() => handleQuickLogin('admin@workshop.edu.vn', 'Admin@123')}
-            >
-              👑 Quản trị viên (Admin)
-            </button>
-            <button
-              type="button"
-              className="quick-login-btn quick-login-btn--organizer"
-              onClick={() => handleQuickLogin('organizer@workshop.edu.vn', 'Organizer@123')}
-            >
-              🏢 Ban tổ chức (Organizer)
-            </button>
-            <button
-              type="button"
-              className="quick-login-btn quick-login-btn--user"
-              onClick={() => handleQuickLogin('user@workshop.edu.vn', 'User@123')}
-            >
-              🎓 Học viên (Participant)
-            </button>
-          </div>
-        </div>
       </div>
     </main>
   );

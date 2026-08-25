@@ -46,7 +46,7 @@ function MyTicketsPage() {
       await cancelRegistration(selectedReg.registration_id, cancelReason);
       setShowCancelModal(false);
       setSelectedReg(null);
-      setActionMessage({ type: 'success', text: 'Đã hủy vé tham gia thành công. Chỗ trống đã được nhường cho người tiếp theo.' });
+      setActionMessage({ type: 'success', text: 'Đã hủy vé tham gia thành công.' });
       fetchMyTickets();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -69,7 +69,7 @@ function MyTicketsPage() {
       });
       setShowSurveyModal(false);
       setSelectedReg(null);
-      setActionMessage({ type: 'success', text: 'Đã gửi khảo sát thành công! Cảm ơn bạn đã đóng góp ý kiến.' });
+      setActionMessage({ type: 'success', text: 'Đã gửi khảo sát thành công. Cảm ơn bạn đã đóng góp ý kiến.' });
       fetchMyTickets();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -91,8 +91,7 @@ function MyTicketsPage() {
     <section className="my-tickets-page">
       <div className="home-page__header">
         <div>
-          <p className="home-page__eyebrow">MY REGISTRATIONS (UC-11)</p>
-          <h1>Vé & Lịch sử Đăng ký của bạn</h1>
+          <h1>Vé và Lịch sử Đăng ký của bạn</h1>
           <p className="home-page__subtitle">
             Xem danh sách vé tham gia, mã QR check-in và gửi khảo sát đánh giá sau khi tham dự.
           </p>
@@ -104,7 +103,6 @@ function MyTicketsPage() {
 
       {actionMessage && (
         <div className={`alert-banner alert-banner--${actionMessage.type}`} style={{ marginBottom: '20px' }}>
-          <span>{actionMessage.type === 'success' ? '✅' : '⚠️'}</span>
           <div>{actionMessage.text}</div>
         </div>
       )}
@@ -114,7 +112,7 @@ function MyTicketsPage() {
         {[
           { key: 'all', label: 'Tất cả' },
           { key: 'confirmed', label: 'Vé chính thức' },
-          { key: 'waitlist', label: 'Hàng đợi (Waitlist)' },
+          { key: 'waitlist', label: 'Hàng đợi' },
           { key: 'attended', label: 'Đã tham dự' },
           { key: 'cancelled', label: 'Đã hủy' },
         ].map((tab) => (
@@ -136,7 +134,7 @@ function MyTicketsPage() {
         </div>
       ) : filteredTickets.length === 0 ? (
         <div className="workshop-empty">
-          <div className="workshop-empty__icon">🎟️</div>
+          <div className="workshop-empty__icon">W</div>
           <h2>Không có lượt đăng ký nào</h2>
           <p>Bạn chưa có vé hoặc lượt đăng ký nào trong mục này.</p>
           <Link to="/workshops" className="home-page__primary-button" style={{ marginTop: '16px' }}>
@@ -165,9 +163,9 @@ function MyTicketsPage() {
                 </h3>
 
                 <div className="ticket-meta" style={{ margin: '12px 0', fontSize: '13px', color: '#6d4336' }}>
-                  <p>📅 Thời gian: {new Date(t.workshop_start_at).toLocaleString('vi-VN')}</p>
-                  <p>📍 Địa điểm: {t.workshop_location}</p>
-                  <p>🕒 Đăng ký lúc: {new Date(t.registered_at).toLocaleString('vi-VN')}</p>
+                  <p>Thời gian: {new Date(t.workshop_start_at).toLocaleString('vi-VN')}</p>
+                  <p>Địa điểm: {t.workshop_location}</p>
+                  <p>Đăng ký lúc: {new Date(t.registered_at).toLocaleString('vi-VN')}</p>
                 </div>
 
                 {t.qr_payload && (
@@ -190,7 +188,7 @@ function MyTicketsPage() {
                         setShowCancelModal(true);
                       }}
                     >
-                      Hủy vé (BR-11)
+                      Hủy vé
                     </button>
                   )}
 
@@ -204,7 +202,7 @@ function MyTicketsPage() {
                         setShowSurveyModal(true);
                       }}
                     >
-                      ⭐ Đánh giá khảo sát
+                      Đánh giá khảo sát
                     </button>
                   )}
 
@@ -226,7 +224,7 @@ function MyTicketsPage() {
       {showCancelModal && selectedReg && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h2>Xác nhận Hủy Vé (UC-10)</h2>
+            <h2>Xác nhận Hủy Vé</h2>
             <p>Hủy đăng ký cho: <strong>{selectedReg.workshop_title}</strong></p>
 
             <div className="form-group" style={{ marginTop: '14px' }}>
@@ -239,10 +237,6 @@ function MyTicketsPage() {
                 required
               />
             </div>
-
-            <small style={{ color: '#7a5b50', display: 'block', margin: '8px 0' }}>
-              * Theo quy tắc BR-03, chỗ trống của bạn sẽ tự động được chuyển cho người đầu tiên trong Danh sách chờ.
-            </small>
 
             <div className="modal-actions">
               <button
@@ -270,7 +264,7 @@ function MyTicketsPage() {
       {showSurveyModal && selectedReg && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h2>Khảo sát & Đánh giá Workshop (UC-16)</h2>
+            <h2>Khảo sát và Đánh giá Workshop</h2>
             <p><strong>{selectedReg.workshop_title}</strong></p>
 
             <form onSubmit={handleSurveySubmit}>
@@ -292,7 +286,7 @@ function MyTicketsPage() {
               </div>
 
               <div className="form-group">
-                <label>Ý kiến nhận xét & Đóng góp:</label>
+                <label>Ý kiến nhận xét và Đóng góp:</label>
                 <textarea
                   value={surveyFeedback}
                   onChange={(e) => setSurveyFeedback(e.target.value)}

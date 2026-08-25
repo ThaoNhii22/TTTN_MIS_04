@@ -41,7 +41,7 @@ function CheckInPage() {
   const handleExecuteCheckIn = async (codeToVerify) => {
     const code = (codeToVerify || manualCode).trim();
     if (!code) {
-      setCheckInError('Vui lòng nhập hoặc quét mã QR / mã điểm danh.');
+      setCheckInError('Vui lòng nhập hoặc quét mã QR.');
       return;
     }
 
@@ -72,10 +72,9 @@ function CheckInPage() {
     <div className="checkin-page">
       <div className="checkin-page__header">
         <div>
-          <p className="home-page__eyebrow">ATTENDANCE & CHECK-IN (UC-12, UC-13)</p>
           <h1>Điểm danh Workshop</h1>
           <p className="checkin-page__subtitle">
-            Quét mã QR cá nhân hoặc nhập mã điểm danh sự kiện theo quy tắc BR-04, BR-05, BR-14.
+            Quét mã QR cá nhân hoặc nhập mã điểm danh sự kiện.
           </p>
         </div>
 
@@ -89,7 +88,7 @@ function CheckInPage() {
               setCheckInError(null);
             }}
           >
-            🎟️ Vé của tôi
+            Vé của tôi
           </button>
           <button
             type="button"
@@ -100,18 +99,17 @@ function CheckInPage() {
               setCheckInError(null);
             }}
           >
-            📷 Quét / Nhập mã
+            Quét và Nhập mã
           </button>
         </div>
       </div>
 
       {checkInResult && (
         <div className="alert-banner alert-banner--success" style={{ marginBottom: '20px' }}>
-          <span>✅</span>
           <div>
             <strong>{checkInResult.message}</strong>
             <p style={{ margin: '4px 0 0', fontSize: '13px' }}>
-              Workshop: <strong>{checkInResult.workshop_title}</strong> | Người tham dự: <strong>{checkInResult.user_name}</strong> ({checkInResult.user_email})
+              Workshop: <strong>{checkInResult.workshop_title}</strong> - Người tham dự: <strong>{checkInResult.user_name}</strong> - {checkInResult.user_email}
             </p>
             <small>Thời gian ghi nhận: {new Date(checkInResult.checkin_at).toLocaleString('vi-VN')}</small>
           </div>
@@ -120,7 +118,6 @@ function CheckInPage() {
 
       {checkInError && (
         <div className="alert-banner alert-banner--error" style={{ marginBottom: '20px' }}>
-          <span>⚠️</span>
           <div>{checkInError}</div>
         </div>
       )}
@@ -135,9 +132,9 @@ function CheckInPage() {
             </div>
           ) : myTickets.length === 0 ? (
             <div className="workshop-empty">
-              <div className="workshop-empty__icon">🎟️</div>
+              <div className="workshop-empty__icon">W</div>
               <h2>Bạn chưa có vé tham dự chính thức</h2>
-              <p>Hãy đăng ký một Workshop để nhận mã QR Check-in điểm danh.</p>
+              <p>Hãy đăng ký một Workshop để nhận mã QR điểm danh.</p>
               <Link to="/workshops" className="home-page__primary-button" style={{ marginTop: '16px' }}>
                 Tìm Workshop
               </Link>
@@ -155,10 +152,10 @@ function CheckInPage() {
 
                   <h3>{ticket.workshop_title}</h3>
                   <p style={{ fontSize: '13px', color: '#6d4336', margin: '8px 0' }}>
-                    📅 {new Date(ticket.workshop_start_at).toLocaleString('vi-VN')}
+                    Thời gian: {new Date(ticket.workshop_start_at).toLocaleString('vi-VN')}
                   </p>
                   <p style={{ fontSize: '13px', color: '#6d4336' }}>
-                    📍 {ticket.workshop_location}
+                    Địa điểm: {ticket.workshop_location}
                   </p>
 
                   {ticket.qr_payload && (
@@ -176,7 +173,7 @@ function CheckInPage() {
                           onClick={() => handleExecuteCheckIn(ticket.qr_payload)}
                           disabled={isProcessing}
                         >
-                          {isProcessing ? 'Đang gửi...' : '⚡ Tự động Điểm danh với vé này'}
+                          {isProcessing ? 'Đang gửi...' : 'Tự động Điểm danh với vé này'}
                         </button>
                       )}
                     </div>
@@ -192,7 +189,7 @@ function CheckInPage() {
       {activeTab === 'scanner' && (
         <div className="checkin-scanner-tab">
           <div className="scanner-card" style={{ maxWidth: '540px', margin: '0 auto', background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #ebdcd5' }}>
-            <h2>Nhập mã điểm danh / Quét QR</h2>
+            <h2>Nhập mã điểm danh hoặc Quét QR</h2>
             <p style={{ color: '#7a5b50', fontSize: '13px', marginBottom: '20px' }}>
               Nhập chuỗi mã QR cá nhân của người tham gia hoặc mã check-in workshop để xác thực điểm danh.
             </p>
@@ -208,7 +205,7 @@ function CheckInPage() {
                 <textarea
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
-                  placeholder="Ví dụ: TTTN_MIS_04|WS-1|1|user@workshop.edu.vn hoặc CHECKIN-123456"
+                  placeholder="Nhập chuỗi mã QR hoặc mã check-in"
                   rows="3"
                   required
                 />
@@ -220,18 +217,17 @@ function CheckInPage() {
                 style={{ width: '100%', justifyContent: 'center', marginTop: '14px' }}
                 disabled={isProcessing}
               >
-                {isProcessing ? 'Đang xác thực...' : '✓ Xác nhận Điểm danh (UC-12)'}
+                {isProcessing ? 'Đang xác thực...' : 'Xác nhận Điểm danh'}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Attendance History Section (UC-13) */}
+      {/* Attendance History Section */}
       <div className="home-page__section" style={{ marginTop: '40px' }}>
         <div className="home-page__section-header">
           <div>
-            <p className="home-page__eyebrow">HISTORY (UC-13)</p>
             <h2>Lịch sử điểm danh của bạn</h2>
           </div>
         </div>
