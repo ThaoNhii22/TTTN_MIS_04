@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   getUserWaitlistEntries,
@@ -18,23 +18,45 @@ function WaitlistPage() {
   const [actionAlert, setActionAlert] = useState(null);
 
   // Load waitlist entries for current participant
-  const loadData = () => {
+  const loadData = useCallback(async () => {
     try {
-      const entries = getUserWaitlistEntries('sinhvien@workshop.edu.vn');
+      const entries = await getUserWaitlistEntries();
       setWaitlistEntries(entries);
     } catch {
       setActionAlert({
         type: 'error',
         title: 'Lỗi tải dữ liệu',
-        message: 'Không thể tải danh sách chờ. Vui lòng thử lại.',
+        message: 'Không thể tải danh sách chờ từ máy chủ. Vui lòng thử lại.',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadData();
+    let ignore = false;
+    async function load() {
+      try {
+        const entries = await getUserWaitlistEntries();
+        if (!ignore) {
+          setWaitlistEntries(entries);
+          setLoading(false);
+        }
+      } catch {
+        if (!ignore) {
+          setActionAlert({
+            type: 'error',
+            title: 'Lỗi tải dữ liệu',
+            message: 'Không thể tải danh sách chờ từ máy chủ. Vui lòng thử lại.',
+          });
+          setLoading(false);
+        }
+      }
+    }
+    load();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // Filter entries
@@ -57,7 +79,7 @@ function WaitlistPage() {
       setShowCancelModal(false);
       setSelectedEntry(null);
       setCancelReason('');
-      loadData();
+      await loadData();
 
       setActionAlert({
         type: 'success',
@@ -68,7 +90,7 @@ function WaitlistPage() {
       setActionAlert({
         type: 'error',
         title: 'Thao tác không thành công',
-        message: err.message || 'Không thể rút khỏi danh sách chờ.',
+        message: err.userMessage || err.message || 'Không thể rút khỏi danh sách chờ.',
       });
     } finally {
       setIsProcessing(false);

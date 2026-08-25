@@ -3,7 +3,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import get_client_ip, get_current_user, require_roles, verify_workshop_organizer_or_admin
+from app.core.deps import (
+    get_client_ip,
+    get_current_user,
+    get_optional_current_user,
+    require_roles,
+    verify_workshop_organizer_or_admin,
+)
 from app.models.user import User
 from app.models.workshop import Workshop
 from app.schemas.workshop import (
@@ -65,7 +71,7 @@ def list_workshops(
     search: Optional[str] = Query(None, description="Tìm kiếm theo tiêu đề hoặc địa điểm"),
     my_organized: bool = Query(False, description="Chỉ lấy Workshop do mình tổ chức (dành cho Organizer)"),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ):
     """
     Use Case 08: Xem danh sách Workshop.
@@ -77,8 +83,8 @@ def list_workshops(
 
     if my_organized and current_user:
         query = query.filter(Workshop.organizer_id == current_user.user_id)
-    elif current_user.role == "participant":
-        # Participant chỉ xem được published hoặc đã kết thúc
+    elif not current_user or current_user.role == "participant":
+        # Khách hoặc Participant chỉ xem được published hoặc đã kết thúc
         if status_filter:
             query = query.filter(Workshop.status == status_filter)
         else:
