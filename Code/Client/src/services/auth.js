@@ -1,7 +1,36 @@
 import api from './api';
 
 const TOKEN_KEY = 'accessToken';
-const USER_KEY = 'authUser';
+const USER_KEY = 'currentUser';
+
+export async function loginApi(email, password) {
+  const response = await api.post('/auth/login', {
+    email: email.trim().toLowerCase(),
+    password,
+  });
+  const data = response.data;
+  setToken(data.access_token);
+  setStoredUser(data.user);
+  return data;
+}
+
+export async function logoutApi() {
+  try {
+    await api.post('/auth/logout');
+  } catch (err) {
+    // Ignore network error on logout
+    console.warn('Logout API error:', err);
+  } finally {
+    removeToken();
+    removeStoredUser();
+  }
+}
+
+export async function getMeApi() {
+  const response = await api.get('/auth/me');
+  setStoredUser(response.data);
+  return response.data;
+}
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -11,7 +40,11 @@ export function setToken(token) {
   localStorage.setItem(TOKEN_KEY, token);
 }
 
-export function getUser() {
+export function removeToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getStoredUser() {
   const data = localStorage.getItem(USER_KEY);
   if (!data) return null;
   try {
@@ -21,16 +54,11 @@ export function getUser() {
   }
 }
 
-export function setUser(user) {
-  if (user) {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(USER_KEY);
-  }
+export function setStoredUser(user) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
-export function removeToken() {
-  localStorage.removeItem(TOKEN_KEY);
+export function removeStoredUser() {
   localStorage.removeItem(USER_KEY);
 }
 
@@ -39,49 +67,6 @@ export function isAuthenticated() {
 }
 
 export function getUserRole() {
-  const user = getUser();
-  return user?.role || 'participant';
+  const user = getStoredUser();
+  return user ? user.role : null;
 }
-
-/**
- * Đăng nhập qua API FastAPI (UC-01)
- * @param {string} email
- * @param {string} password
- * @returns {Promise<{access_token: string, user: object}>}
- */
-export async function login(email, password) {
-  const response = await api.post('/auth/login', {
-    email: email.trim(),
-    password,
-  });
-
-  const { access_token, user } = response.data;
-  setToken(access_token);
-  setUser(user);
-  return { access_token, user };
-}
-
-/**
- * Đăng xuất qua API FastAPI (UC-02)
- */
-export async function logout() {
-  try {
-    if (isAuthenticated()) {
-      await api.post('/auth/logout');
-    }
-  } catch {
-    // Bỏ qua lỗi nếu token đã hết hạn
-  } finally {
-    removeToken();
-  }
-}
-
-/**
- * Lấy thông tin tài khoản hiện tại từ API (GET /auth/me)
- */
-export async function getProfile() {
-  const response = await api.get('/auth/me');
-  const user = response.data;
-  setUser(user);
-  return user;
-}

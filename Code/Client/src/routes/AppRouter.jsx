@@ -6,8 +6,15 @@ import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from './ProtectedRoute';
 import WorkshopPage from '../pages/WorkshopPage';
 import WorkshopDetailPage from '../pages/WorkshopDetailPage';
+import MyTicketsPage from '../pages/MyTicketsPage';
 import WaitlistPage from '../pages/WaitlistPage';
 import CheckInPage from '../pages/CheckInPage';
+import OrganizerWorkshopsPage from '../pages/OrganizerWorkshopsPage';
+import AdminReviewPage from '../pages/AdminReviewPage';
+import AdminUsersPage from '../pages/AdminUsersPage';
+import DashboardPage from '../pages/DashboardPage';
+import AuditLogsPage from '../pages/AuditLogsPage';
+import ForbiddenPage from '../pages/ForbiddenPage';
 
 function AppRouter() {
   return (
@@ -16,28 +23,30 @@ function AppRouter() {
         <Route path="/login" element={<LoginPage />} />
 
         <Route element={<MainLayout />}>
+          {/* Public / Generic Error Routes */}
+          <Route path="/403" element={<ForbiddenPage />} />
+
+          {/* All Authenticated Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/workshops" element={<WorkshopPage />} />
+            <Route path="/workshops/:id" element={<WorkshopDetailPage />} />
+            <Route path="/my-tickets" element={<MyTicketsPage />} />
+            <Route path="/waitlist" element={<WaitlistPage />} />
+            <Route path="/check-in" element={<CheckInPage />} />
+          </Route>
 
-            <Route
-              path="/workshops"
-              element={<WorkshopPage />}
-            />
+          {/* Organizer & Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['organizer', 'admin']} />}>
+            <Route path="/organizer/workshops" element={<OrganizerWorkshopsPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+          </Route>
 
-            <Route
-              path="/workshops/:id"
-              element={<WorkshopDetailPage />}
-            />
-
-            <Route
-              path="/waitlist"
-              element={<WaitlistPage />}
-            />
-
-            <Route
-              path="/check-in"
-              element={<CheckInPage />}
-            />
+          {/* Admin Only Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="/admin/reviews" element={<AdminReviewPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
           </Route>
 
           <Route

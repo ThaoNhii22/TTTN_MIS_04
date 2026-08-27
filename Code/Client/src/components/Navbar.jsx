@@ -1,36 +1,36 @@
-import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { getUser, logout } from '../services/auth';
+import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
   const navigate = useNavigate();
-  const [currentUser] = useState(() => getUser());
+  const { user, role, logout, isAuthenticated } = useAuth();
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  const getRoleLabel = (role) => {
-    if (role === 'admin') return 'Quản trị viên';
-    if (role === 'organizer') return 'Ban Tổ chức';
-    return 'Sinh viên';
+  const getRoleLabel = (r) => {
+    switch (r) {
+      case 'admin':
+        return { text: 'Quản trị viên', className: 'role-badge--admin' };
+      case 'organizer':
+        return { text: 'Ban tổ chức', className: 'role-badge--organizer' };
+      case 'participant':
+      default:
+        return { text: 'Người tham gia', className: 'role-badge--participant' };
+    }
   };
 
-  const getRoleBadgeStyle = (role) => {
-    if (role === 'admin') {
-      return { backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #f87171' };
-    }
-    if (role === 'organizer') {
-      return { backgroundColor: '#e0e7ff', color: '#3730a3', border: '1px solid #818cf8' };
-    }
-    return { backgroundColor: '#dcfce7', color: '#166534', border: '1px solid #4ade80' };
-  };
+  const roleInfo = getRoleLabel(role);
 
   return (
     <header className="navbar">
       <div className="navbar__brand">
-        <NavLink to="/">Workshop Management</NavLink>
+        <NavLink to="/">
+          <span className="navbar__logo-badge">W</span>
+          <span className="navbar__title">Workshop MIS</span>
+        </NavLink>
       </div>
 
       <nav className="navbar__menu">
@@ -52,14 +52,87 @@ function Navbar() {
           Workshop
         </NavLink>
 
-        <NavLink
-          to="/waitlist"
-          className={({ isActive }) =>
-            isActive ? 'navbar__link active' : 'navbar__link'
-          }
-        >
-          Waitlist
-        </NavLink>
+        {/* Participant Links */}
+        {role === 'participant' && (
+          <>
+            <NavLink
+              to="/my-tickets"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Vé của tôi
+            </NavLink>
+            <NavLink
+              to="/waitlist"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Waitlist
+            </NavLink>
+          </>
+        )}
+
+        {/* Organizer Links */}
+        {role === 'organizer' && (
+          <>
+            <NavLink
+              to="/organizer/workshops"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Quản lý Workshop
+            </NavLink>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Dashboard KPI
+            </NavLink>
+          </>
+        )}
+
+        {/* Admin Links */}
+        {role === 'admin' && (
+          <>
+            <NavLink
+              to="/admin/reviews"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Xét duyệt
+            </NavLink>
+            <NavLink
+              to="/admin/users"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Quản lý User
+            </NavLink>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Dashboard KPI
+            </NavLink>
+            <NavLink
+              to="/admin/audit-logs"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Audit Logs
+            </NavLink>
+          </>
+        )}
 
         <NavLink
           to="/check-in"
@@ -67,37 +140,23 @@ function Navbar() {
             isActive ? 'navbar__link active' : 'navbar__link'
           }
         >
-          Check-in
+          Check-in QR
         </NavLink>
 
-        {currentUser ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px' }}>
-            <div style={{ textAlign: 'right', lineHeight: '1.2' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937' }}>
-                {currentUser.full_name || currentUser.email}
-              </div>
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: '999px',
-                  display: 'inline-block',
-                  marginTop: '2px',
-                  ...getRoleBadgeStyle(currentUser.role),
-                }}
-              >
-                {getRoleLabel(currentUser.role)}
-              </span>
+        {/* User Info & Actions */}
+        {isAuthenticated && user && (
+          <div className="navbar__user-section">
+            <div className="navbar__user-info">
+              <span className="navbar__user-name">{user.full_name}</span>
+              <span className={`role-badge ${roleInfo.className}`}>{roleInfo.text}</span>
             </div>
 
-            {/* Nút Đăng xuất */}
             <button
               className="navbar__icon-button navbar__icon-button--logout"
               type="button"
               onClick={handleLogout}
               aria-label="Đăng xuất"
-              title="Đăng xuất khỏi hệ thống"
+              title="Đăng xuất"
             >
               <svg
                 className="navbar__icon"
@@ -127,35 +186,6 @@ function Navbar() {
               </svg>
             </button>
           </div>
-        ) : (
-          <button
-            className="navbar__icon-button"
-            type="button"
-            onClick={() => navigate('/login')}
-            aria-label="Đăng nhập"
-            title="Đăng nhập"
-          >
-            <svg
-              className="navbar__icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="12"
-                cy="8"
-                r="4"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              />
-              <path
-                d="M4.5 20C5.3 16.9 8.2 15 12 15C15.8 15 18.7 16.9 19.5 20"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
         )}
       </nav>
     </header>

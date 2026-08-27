@@ -1,11 +1,17 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { isAuthenticated } from '../services/auth';
+import { useAuth } from '../context/AuthContext';
+import ForbiddenPage from '../pages/ForbiddenPage';
+import LoadingSpinner from '../components/LoadingSpinner';
 
-function ProtectedRoute() {
+function ProtectedRoute({ allowedRoles = null }) {
   const location = useLocation();
-  const authenticated = isAuthenticated();
+  const { isAuthenticated, role, isLoading } = useAuth();
 
-  if (!authenticated) {
+  if (isLoading) {
+    return <LoadingSpinner message="Đang xác thực tài khoản..." size="large" />;
+  }
+
+  if (!isAuthenticated) {
     return (
       <Navigate
         to="/login"
@@ -13,6 +19,10 @@ function ProtectedRoute() {
         state={{ from: location }}
       />
     );
+  }
+
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return <ForbiddenPage requiredRoles={allowedRoles} />;
   }
 
   return <Outlet />;

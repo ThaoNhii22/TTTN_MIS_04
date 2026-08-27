@@ -465,6 +465,7 @@ class TestMandatory16Cases:
     def test_13_admin_locks_self_fails(self, tokens):
         db = SessionLocal()
         admin_user = db.query(User).filter(User.email == "admin@workshop.edu.vn").first()
+        assert admin_user is not None
         admin_id = admin_user.user_id
         db.close()
 
