@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.audit import log_audit_action
@@ -28,7 +29,22 @@ def register_for_workshop(
     accept_waitlist: bool = True,
     ip_address: Optional[str] = None,
 ) -> Registration:
-    workshop = db.query(Workshop).filter(Workshop.workshop_id == workshop_id).first()
+    # ─────────────────────────────────────────────────────────────────────────
+    # FIX RACE CONDITION (BR-01/BR-02): Dùng SELECT ... FOR UPDATE để khóa dòng
+    # Workshop tại tầng InnoDB, buộc tất cả request đồng thời phải xếp hàng.
+    #
+    # Vấn đề cũ (TOCTOU): SELECT COUNT(*) thường → Thread A và Thread B cùng
+    # thấy "còn chỗ" → cả 2 đều INSERT confirmed → vỡ quota.
+    #
+    # Giải pháp: .with_for_update() giữ Row Lock suốt transaction, đảm bảo chỉ
+    # 1 request tại một thời điểm có thể đọc-đếm-ghi vào workshop này.
+    # ─────────────────────────────────────────────────────────────────────────
+    workshop = (
+        db.query(Workshop)
+        .filter(Workshop.workshop_id == workshop_id)
+        .with_for_update()  # InnoDB Row Lock — ngăn race condition
+        .first()
+    )
     if not workshop:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -75,6 +91,7 @@ def register_for_workshop(
         )
 
     # BR-02: Kiểm soát số lượng vé và Danh sách chờ
+    # Lưu ý: get_workshop_stats() được gọi SAU khi đã có Row Lock → đếm chính xác
     stats = get_workshop_stats(db, workshop)
     is_full = stats["is_full"]
 
@@ -117,7 +134,16 @@ def register_for_workshop(
         )
 
     db.add(reg)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Lớp bảo vệ thứ 2: Bắt UNIQUE constraint (workshop_id, user_id) từ tầng DB
+        # Trường hợp hiếm bypass qua app-level check (vd: 2 tab trình duyệt cùng submit)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Bạn đã đăng ký Workshop này rồi (BR-01). Vui lòng kiểm tra lại.",
+        )
     db.refresh(reg)
 
     # BR-10: Ghi Audit Log
@@ -145,7 +171,17 @@ def cancel_registration_by_user(
     current_user: User,
     ip_address: Optional[str] = None,
 ) -> Registration:
-    reg = db.query(Registration).filter(Registration.registration_id == registration_id).first()
+    # ─────────────────────────────────────────────────────────────────────────
+    # FIX RACE CONDITION (BUG #4): Khóa dòng Registration trước khi hủy.
+    # Ngăn trường hợp 2 request hủy cùng 1 vé → cả 2 đều trigger promote_waitlist
+    # → đôn 2 người cho 1 slot trống.
+    # ─────────────────────────────────────────────────────────────────────────
+    reg = (
+        db.query(Registration)
+        .filter(Registration.registration_id == registration_id)
+        .with_for_update()  # Row Lock — ngăn concurrent cancel cùng vé
+        .first()
+    )
     if not reg:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

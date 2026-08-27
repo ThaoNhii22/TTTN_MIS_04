@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.audit import log_audit_action
@@ -93,6 +94,23 @@ def process_checkin(
             detail="Không tìm thấy lượt đăng ký hợp lệ để điểm danh.",
         )
 
+    # ─────────────────────────────────────────────────────────────────────────
+    # FIX RACE CONDITION (BR-14): Khóa dòng Registration trước khi kiểm tra và ghi
+    # điểm danh. Ngăn 2 request đồng thời quét cùng 1 mã QR:
+    #   - Cũ: SELECT EXISTS → False (cả 2 thread) → cả 2 INSERT → Duplicate Attendance
+    #   - Mới: with_for_update() giữ Row Lock → chỉ 1 request xử lý tại 1 thời điểm
+    #
+    # Kết hợp 2 lớp bảo vệ:
+    #   1. with_for_update() — ngăn race ở tầng app (chính)
+    #   2. IntegrityError catch — bắt UNIQUE(registration_id) ở tầng DB (defense in depth)
+    # ─────────────────────────────────────────────────────────────────────────
+    target_registration = (
+        db.query(Registration)
+        .filter(Registration.registration_id == target_registration.registration_id)
+        .with_for_update()  # InnoDB Row Lock
+        .first()
+    )
+
     # Kiểm tra trạng thái vé: Phải là confirmed
     if target_registration.status == "waitlist":
         raise HTTPException(
@@ -105,7 +123,7 @@ def process_checkin(
             detail="Lượt đăng ký này đã bị hủy, không thể điểm danh.",
         )
 
-    # BR-14: Chống điểm danh trùng
+    # BR-14: Chống điểm danh trùng — kiểm tra tầng app (SAU KHI đã có Row Lock)
     existing_attendance = (
         db.query(Attendance)
         .filter(Attendance.registration_id == target_registration.registration_id)
@@ -127,7 +145,16 @@ def process_checkin(
     target_registration.status = "attended"
 
     db.add(attendance)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Lớp bảo vệ thứ 2: Bắt UNIQUE(registration_id) constraint từ tầng DB
+        # Trường hợp hiếm hơn nhưng vẫn có thể xảy ra ở tầng connection pool
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Lượt đăng ký này đã được điểm danh rồi (BR-14). Vui lòng kiểm tra lại.",
+        )
     db.refresh(attendance)
 
     # BR-10: Audit Log

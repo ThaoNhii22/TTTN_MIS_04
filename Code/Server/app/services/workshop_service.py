@@ -334,6 +334,8 @@ def promote_waitlist_entries(
         return []
 
     # Lấy danh sách Waitlist xếp theo thứ tự FIFO
+    # FIX RACE CONDITION (BUG #3): Dùng with_for_update() để khóa các dòng waitlist
+    # đang được đôn. Ngăn 2 cancel đồng thời cùng gọi promote và đôn 1 người lên 2 lần.
     waitlist_candidates = (
         db.query(Registration)
         .filter(
@@ -341,6 +343,7 @@ def promote_waitlist_entries(
             Registration.status == "waitlist",
         )
         .order_by(Registration.waitlist_position.asc(), Registration.registered_at.asc())
+        .with_for_update()  # Row Lock — ngăn concurrent promote cùng waitlist
         .limit(available_slots)
         .all()
     )
