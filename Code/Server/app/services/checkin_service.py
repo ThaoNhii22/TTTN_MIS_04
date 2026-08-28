@@ -17,7 +17,25 @@ def process_checkin(
     current_user: User,
     ip_address: Optional[str] = None,
 ) -> Attendance:
-    workshop = db.query(Workshop).filter(Workshop.workshop_id == checkin_in.workshop_id).first()
+    # Tìm Workshop tương ứng
+    workshop: Optional[Workshop] = None
+    if checkin_in.workshop_id:
+        workshop = db.query(Workshop).filter(Workshop.workshop_id == checkin_in.workshop_id).first()
+    elif checkin_in.qr_payload and checkin_in.qr_payload.strip().startswith("TTTN_MIS_04|"):
+        parts = checkin_in.qr_payload.strip().split("|")
+        if len(parts) >= 2:
+            try:
+                ws_id = int(parts[1])
+                workshop = db.query(Workshop).filter(Workshop.workshop_id == ws_id).first()
+            except ValueError:
+                pass
+    elif checkin_in.checkin_code:
+        workshop = db.query(Workshop).filter(Workshop.checkin_code == checkin_in.checkin_code.strip()).first()
+    elif checkin_in.registration_id:
+        reg_temp = db.query(Registration).filter(Registration.registration_id == checkin_in.registration_id).first()
+        if reg_temp:
+            workshop = reg_temp.workshop
+
     if not workshop:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

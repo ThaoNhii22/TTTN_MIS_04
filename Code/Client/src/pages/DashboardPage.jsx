@@ -8,21 +8,30 @@ function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchStats = async () => {
-    setLoading(true);
-    try {
-      const data = await getDashboardStats();
-      setStats(data);
-    } catch (err) {
-      console.error('Error fetching dashboard stats:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    let ignore = false;
+    async function loadStats() {
+      setLoading(true);
+      try {
+        const data = await getDashboardStats();
+        if (!ignore) {
+          setStats(data);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    loadStats();
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
 
   if (loading) {
     return (
@@ -53,7 +62,7 @@ function DashboardPage() {
           </p>
         </div>
 
-        <button type="button" className="btn-secondary" onClick={fetchStats}>
+        <button type="button" className="btn-secondary" onClick={() => setReloadKey((k) => k + 1)}>
           Cập nhật số liệu
         </button>
       </div>

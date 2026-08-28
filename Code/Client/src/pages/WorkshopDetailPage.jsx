@@ -8,11 +8,12 @@ import { submitSurvey } from '../services/surveyService';
 function WorkshopDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, role, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const [workshop, setWorkshop] = useState(null);
   const [loading, setLoading] = useState(true);
   const [myRegistration, setMyRegistration] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Registration Modal State
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -31,28 +32,39 @@ function WorkshopDetailPage() {
   const [surveyFeedback, setSurveyFeedback] = useState('');
   const [surveySubmitted, setSurveySubmitted] = useState(false);
 
-  const fetchWorkshopData = async () => {
-    setLoading(true);
-    try {
-      const data = await getWorkshopById(id);
-      setWorkshop(data);
-
-      if (isAuthenticated) {
-        const myRegs = await getMyRegistrations();
-        const found = myRegs.find((r) => r.workshop_id === Number(id));
-        setMyRegistration(found || null);
-      }
-    } catch (err) {
-      console.error('Error fetching workshop detail:', err);
-      setErrorMessage('Không tìm thấy thông tin Workshop.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchWorkshopData();
-  }, [id, isAuthenticated]);
+    let ignore = false;
+    async function loadDetail() {
+      setLoading(true);
+      try {
+        const data = await getWorkshopById(id);
+        if (!ignore) {
+          setWorkshop(data);
+        }
+
+        if (isAuthenticated) {
+          const myRegs = await getMyRegistrations();
+          const found = myRegs.find((r) => r.workshop_id === Number(id));
+          if (!ignore) {
+            setMyRegistration(found || null);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching workshop detail:', err);
+        if (!ignore) {
+          setErrorMessage('Không tìm thấy thông tin Workshop.');
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    loadDetail();
+    return () => {
+      ignore = true;
+    };
+  }, [id, isAuthenticated, reloadKey]);
 
   const handleRegister = async (e) => {
     if (e) e.preventDefault();
@@ -77,7 +89,7 @@ function WorkshopDetailPage() {
       } else if (result.status === 'waitlist') {
         setSuccessMessage(`Bạn đã được thêm vào Danh sách chờ ở vị trí #${result.waitlist_position}.`);
       }
-      fetchWorkshopData();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setErrorMessage(typeof detail === 'string' ? detail : 'Đăng ký không thành công.');
@@ -97,7 +109,7 @@ function WorkshopDetailPage() {
       await cancelRegistration(myRegistration.registration_id, cancelReason);
       setShowCancelModal(false);
       setSuccessMessage('Đã hủy đăng ký vé thành công.');
-      fetchWorkshopData();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setErrorMessage(typeof detail === 'string' ? detail : 'Hủy đăng ký thất bại.');

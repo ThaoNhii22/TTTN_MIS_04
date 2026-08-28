@@ -13,26 +13,37 @@ function WaitlistPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionAlert, setActionAlert] = useState(null);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const data = await getMyRegistrations();
-      const waitlists = data.filter((r) => r.status === 'waitlist');
-      setWaitlistEntries(waitlists);
-    } catch (err) {
-      console.error('Error fetching waitlists:', err);
-      setActionAlert({
-        type: 'error',
-        message: 'Không thể tải danh sách chờ. Vui lòng thử lại.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    let ignore = false;
+    async function fetchWaitlists() {
+      setLoading(true);
+      try {
+        const data = await getMyRegistrations();
+        if (!ignore) {
+          const waitlists = data.filter((r) => r.status === 'waitlist');
+          setWaitlistEntries(waitlists);
+        }
+      } catch (err) {
+        console.error('Error fetching waitlists:', err);
+        if (!ignore) {
+          setActionAlert({
+            type: 'error',
+            message: 'Không thể tải danh sách chờ. Vui lòng thử lại.',
+          });
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    fetchWaitlists();
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
 
   const handleLeaveWaitlist = async () => {
     if (!selectedEntry) return;
@@ -46,7 +57,7 @@ function WaitlistPage() {
         type: 'success',
         message: `Đã rút khỏi Danh sách chờ cho Workshop "${selectedEntry.workshop_title}".`,
       });
-      loadData();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setActionAlert({

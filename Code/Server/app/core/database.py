@@ -26,7 +26,10 @@ def create_db_engine():
         return engine_instance
     except Exception as e:
         logger.warning(f"⚠️ Không thể kết nối MySQL ({e}). Tự động fallback sang SQLite cục bộ (tttn_mis_04.db).")
-        sqlite_url = "sqlite:///./tttn_mis_04.db"
+        import os
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        db_path = os.path.join(base_dir, "tttn_mis_04.db")
+        sqlite_url = f"sqlite:///{db_path}"
         return create_engine(sqlite_url, connect_args={"check_same_thread": False})
 
 

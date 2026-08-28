@@ -1,3 +1,4 @@
+from datetime import timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -42,6 +43,7 @@ def list_audit_logs(
     for log in logs:
         actor_name = log.actor.full_name if log.actor else None
         actor_email = log.actor.email if log.actor else None
+        ts = log.timestamp.replace(tzinfo=timezone.utc) if (log.timestamp and log.timestamp.tzinfo is None) else log.timestamp
         results.append({
             "audit_log_id": log.audit_log_id,
             "actor_id": log.actor_id,
@@ -52,7 +54,7 @@ def list_audit_logs(
             "target_id": log.target_id,
             "old_value": log.old_value,
             "new_value": log.new_value,
-            "timestamp": log.timestamp,
+            "timestamp": ts,
             "ip_address": log.ip_address,
         })
     return results

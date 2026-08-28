@@ -21,21 +21,30 @@ function MyTicketsPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionMessage, setActionMessage] = useState(null);
 
-  const fetchMyTickets = async () => {
-    setLoading(true);
-    try {
-      const data = await getMyRegistrations();
-      setRegistrations(data);
-    } catch (err) {
-      console.error('Error fetching my tickets:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    fetchMyTickets();
-  }, []);
+    let ignore = false;
+    async function loadTickets() {
+      setLoading(true);
+      try {
+        const data = await getMyRegistrations();
+        if (!ignore) {
+          setRegistrations(data);
+        }
+      } catch (err) {
+        console.error('Error fetching my tickets:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    loadTickets();
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
 
   const handleCancel = async (e) => {
     if (e) e.preventDefault();
@@ -47,7 +56,7 @@ function MyTicketsPage() {
       setShowCancelModal(false);
       setSelectedReg(null);
       setActionMessage({ type: 'success', text: 'Đã hủy vé tham gia thành công.' });
-      fetchMyTickets();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setActionMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Không thể hủy vé.' });
@@ -70,7 +79,7 @@ function MyTicketsPage() {
       setShowSurveyModal(false);
       setSelectedReg(null);
       setActionMessage({ type: 'success', text: 'Đã gửi khảo sát thành công. Cảm ơn bạn đã đóng góp ý kiến.' });
-      fetchMyTickets();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setActionMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Gửi khảo sát thất bại.' });
