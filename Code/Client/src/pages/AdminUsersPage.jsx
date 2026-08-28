@@ -20,30 +20,40 @@ function AdminUsersPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (searchTerm.trim()) params.search = searchTerm.trim();
-      if (roleFilter) params.role = roleFilter;
-      if (statusFilter) params.status_filter = statusFilter;
-
-      const data = await getUsers(params);
-      setUsers(data);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    fetchUsers();
-  }, [roleFilter, statusFilter]);
+    let ignore = false;
+    async function loadUsers() {
+      setLoading(true);
+      try {
+        const params = {};
+        if (appliedSearch.trim()) params.search = appliedSearch.trim();
+        if (roleFilter) params.role = roleFilter;
+        if (statusFilter) params.status_filter = statusFilter;
+
+        const data = await getUsers(params);
+        if (!ignore) {
+          setUsers(data);
+        }
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    loadUsers();
+    return () => {
+      ignore = true;
+    };
+  }, [roleFilter, statusFilter, appliedSearch, reloadKey]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchUsers();
+    setAppliedSearch(searchTerm);
   };
 
   const handleCreateUser = async (e) => {
@@ -54,7 +64,7 @@ function AdminUsersPage() {
       setShowCreateModal(false);
       setFormData({ full_name: '', email: '', password: '', role: 'participant' });
       setAlertMessage({ type: 'success', text: 'Cấp tài khoản nội bộ mới thành công.' });
-      fetchUsers();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Cấp tài khoản thất bại.' });
@@ -67,7 +77,7 @@ function AdminUsersPage() {
     try {
       await updateUserRole(userId, newRole);
       setAlertMessage({ type: 'success', text: 'Cập nhật phân quyền vai trò thành công.' });
-      fetchUsers();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Đổi vai trò thất bại.' });
@@ -82,7 +92,7 @@ function AdminUsersPage() {
     try {
       await updateUserStatus(user.user_id, newStatus);
       setAlertMessage({ type: 'success', text: `Đã ${actionText} tài khoản thành công.` });
-      fetchUsers();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Thao tác thất bại.' });

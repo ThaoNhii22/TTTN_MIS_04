@@ -19,25 +19,34 @@ function AdminReviewPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
 
-  const fetchWorkshops = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (statusFilter !== 'all') {
-        params.status = statusFilter;
-      }
-      const data = await getWorkshops(params);
-      setWorkshops(data);
-    } catch (err) {
-      console.error('Error fetching workshops for review:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    fetchWorkshops();
-  }, [statusFilter]);
+    let ignore = false;
+    async function loadWorkshops() {
+      setLoading(true);
+      try {
+        const params = {};
+        if (statusFilter !== 'all') {
+          params.status = statusFilter;
+        }
+        const data = await getWorkshops(params);
+        if (!ignore) {
+          setWorkshops(data);
+        }
+      } catch (err) {
+        console.error('Error fetching workshops for review:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    loadWorkshops();
+    return () => {
+      ignore = true;
+    };
+  }, [statusFilter, reloadKey]);
 
   const handleApprove = async (workshopId) => {
     if (!window.confirm('Bạn có chắc chắn muốn PHÊ DUYỆT Workshop này và công bố mở đăng ký?')) return;
@@ -45,7 +54,7 @@ function AdminReviewPage() {
     try {
       await reviewWorkshop(workshopId, { action: 'approve' });
       setAlertMessage({ type: 'success', text: 'Đã phê duyệt Workshop thành công. Sự kiện đã chuyển sang Đã công bố.' });
-      fetchWorkshops();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Phê duyệt thất bại.' });
@@ -66,7 +75,7 @@ function AdminReviewPage() {
       setShowRejectModal(false);
       setSelectedWorkshop(null);
       setAlertMessage({ type: 'success', text: 'Đã từ chối Workshop và chuyển về trạng thái Bản nháp kèm lý do.' });
-      fetchWorkshops();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Từ chối thất bại.' });
@@ -84,7 +93,7 @@ function AdminReviewPage() {
       setShowForceCancelModal(false);
       setSelectedWorkshop(null);
       setAlertMessage({ type: 'success', text: 'Quản trị viên đã cưỡng chế hủy Workshop.' });
-      fetchWorkshops();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Cưỡng chế hủy thất bại.' });

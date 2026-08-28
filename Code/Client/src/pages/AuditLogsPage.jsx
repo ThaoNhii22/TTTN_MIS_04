@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAuditLogs } from '../services/auditLogService';
+import { formatDateTime } from '../utils/dateUtils';
 
 function AuditLogsPage() {
   const [logs, setLogs] = useState([]);
@@ -8,26 +9,35 @@ function AuditLogsPage() {
   const [entityFilter, setEntityFilter] = useState('');
   const [selectedLog, setSelectedLog] = useState(null);
 
-  const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (actionFilter) params.action = actionFilter;
-      if (entityFilter) params.target_entity = entityFilter;
-      params.limit = 100;
-
-      const data = await getAuditLogs(params);
-      setLogs(data);
-    } catch (err) {
-      console.error('Error fetching audit logs:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    fetchLogs();
-  }, [actionFilter, entityFilter]);
+    let ignore = false;
+    async function loadLogs() {
+      setLoading(true);
+      try {
+        const params = {};
+        if (actionFilter) params.action = actionFilter;
+        if (entityFilter) params.target_entity = entityFilter;
+        params.limit = 100;
+
+        const data = await getAuditLogs(params);
+        if (!ignore) {
+          setLogs(data);
+        }
+      } catch (err) {
+        console.error('Error fetching audit logs:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    loadLogs();
+    return () => {
+      ignore = true;
+    };
+  }, [actionFilter, entityFilter, reloadKey]);
 
   const getActionBadgeClass = (action) => {
     if (action.includes('CREATE') || action.includes('APPROVE') || action.includes('REGISTER')) return 'status-tag--published';
@@ -46,7 +56,7 @@ function AuditLogsPage() {
           </p>
         </div>
 
-        <button type="button" className="btn-secondary" onClick={fetchLogs}>
+        <button type="button" className="btn-secondary" onClick={() => setReloadKey((k) => k + 1)}>
           Làm mới Nhật ký
         </button>
       </div>

@@ -38,6 +38,15 @@ function HomePage() {
 
   const nextWorkshop = upcomingWorkshops.length > 0 ? upcomingWorkshops[0] : null;
 
+  if (loading) {
+    return (
+      <div className="state-card state-card--loading" style={{ margin: '80px auto', textAlign: 'center' }}>
+        <div className="state-card__spinner" />
+        <p style={{ marginTop: '16px' }}>Đang tải thông tin trang chủ...</p>
+      </div>
+    );
+  }
+
   return (
     <section className="home-page">
       <div className="home-page__header">

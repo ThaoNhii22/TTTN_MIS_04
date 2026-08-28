@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class CheckinRequest(BaseModel):
-    workshop_id: int = Field(..., description="Mã Workshop")
+    workshop_id: Optional[int] = Field(None, description="Mã Workshop (tùy chọn, tự động trích xuất nếu có trong mã QR/mã sự kiện)")
     checkin_code: Optional[str] = Field(None, description="Mã điểm danh nhập tay hoặc từ mã QR")
     qr_payload: Optional[str] = Field(None, description="Chuỗi payload giải mã từ mã QR")
     registration_id: Optional[int] = Field(None, description="Mã lượt đăng ký cần điểm danh (dành cho Organizer điểm danh thủ công)")

@@ -192,6 +192,7 @@ def update_workshop(
 
     # BR-12: Thay đổi Quota sau công bố
     if update_in.quota is not None and update_in.quota != workshop.quota:
+        old_quota = workshop.quota
         stats = get_workshop_stats(db, workshop)
         confirmed_count = stats["confirmed_count"]
 
@@ -200,6 +201,18 @@ def update_workshop(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Không thể giảm Quota ({update_in.quota}) nhỏ hơn số lượng đã xác nhận ({confirmed_count}) theo quy tắc BR-12.",
             )
+
+        # Ghi Audit Log riêng cho hành động thay đổi Quota (Task 25)
+        log_audit_action(
+            db=db,
+            actor_id=actor.user_id,
+            action="UPDATE_QUOTA",
+            target_entity="Workshops",
+            target_id=workshop.workshop_id,
+            old_value={"quota": old_quota},
+            new_value={"quota": update_in.quota},
+            ip_address=ip_address,
+        )
 
         # Nếu tăng Quota và có người trong Waitlist -> Kích hoạt đôn Waitlist theo BR-03, BR-12
         added_slots = update_in.quota - workshop.quota
