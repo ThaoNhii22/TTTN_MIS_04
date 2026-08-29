@@ -8,34 +8,42 @@ function WorkshopPage() {
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const fetchWorkshops = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (statusFilter !== 'all') {
-        params.status = statusFilter;
-      }
-      if (searchTerm.trim()) {
-        params.search = searchTerm.trim();
-      }
-      const data = await getWorkshops(params);
-      setWorkshops(data);
-    } catch (err) {
-      console.error('Error fetching workshops:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchWorkshops();
-  }, [statusFilter]);
+    let ignore = false;
+    async function loadWorkshops() {
+      setLoading(true);
+      try {
+        const params = {};
+        if (statusFilter !== 'all') {
+          params.status = statusFilter;
+        }
+        if (appliedSearch.trim()) {
+          params.search = appliedSearch.trim();
+        }
+        const data = await getWorkshops(params);
+        if (!ignore) {
+          setWorkshops(data);
+        }
+      } catch (err) {
+        console.error('Error fetching workshops:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    loadWorkshops();
+    return () => {
+      ignore = true;
+    };
+  }, [statusFilter, appliedSearch]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchWorkshops();
+    setAppliedSearch(searchTerm);
   };
 
   const getStatusBadge = (status) => {

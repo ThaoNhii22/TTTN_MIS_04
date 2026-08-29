@@ -1,11 +1,12 @@
 import api from './api';
 
-export async function checkInParticipant({ qr_payload, checkin_code, workshop_id, checkin_method = 'QR_SCAN' }) {
+export async function checkInParticipant({ qr_payload, checkin_code, workshop_id, checkin_method = 'qr' }) {
+  const normalizedMethod = checkin_method.toLowerCase().includes('manual') ? 'manual' : 'qr';
   const response = await api.post('/attendance/check-in', {
     qr_payload: qr_payload || null,
     checkin_code: checkin_code || null,
-    workshop_id: workshop_id || null,
-    checkin_method,
+    workshop_id: workshop_id ? Number(workshop_id) : null,
+    checkin_method: normalizedMethod,
   });
   return response.data;
 }

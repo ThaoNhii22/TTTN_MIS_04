@@ -61,10 +61,32 @@ function CheckInPage() {
       setLoading(false);
     }
   };
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    let ignore = false;
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const myRegs = await getMyRegistrations();
+        const history = await getMyAttendanceHistory();
+        if (!ignore) {
+          setMyTickets(myRegs.filter((r) => r.status === 'confirmed' || r.status === 'attended'));
+          setAttendanceLogs(history);
+        }
+      } catch (err) {
+        console.error('Error loading check-in data:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    fetchData();
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
 
   // Cleanup camera on unmount
   useEffect(() => {
@@ -90,13 +112,13 @@ function CheckInPage() {
       const payload = {
         qr_payload: code.includes('|') ? code : null,
         checkin_code: !code.includes('|') ? code : null,
-        checkin_method: code.includes('|') ? 'QR_SCAN' : 'MANUAL_CODE',
+        checkin_method: code.includes('|') ? 'qr' : 'manual',
       };
 
       const result = await checkInParticipant(payload);
       setCheckInResult(result);
       setManualCode('');
-      loadData();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setCheckInError(typeof detail === 'string' ? detail : 'Điểm danh không thành công.');

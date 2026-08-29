@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import {
   cancelWorkshop,
   createWorkshop,
@@ -13,9 +12,9 @@ import { getWorkshopAttendanceList } from '../services/attendanceService';
 import { getWorkshopSurveys } from '../services/surveyService';
 
 function OrganizerWorkshopsPage() {
-  const { user } = useAuth();
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Modals & Action States
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -58,21 +57,28 @@ function OrganizerWorkshopsPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
 
-  const fetchMyWorkshops = async () => {
-    setLoading(true);
-    try {
-      const data = await getWorkshops({ my_organized: true });
-      setWorkshops(data);
-    } catch (err) {
-      console.error('Error fetching organized workshops:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchMyWorkshops();
-  }, []);
+    let ignore = false;
+    async function loadWorkshops() {
+      setLoading(true);
+      try {
+        const data = await getWorkshops({ my_organized: true });
+        if (!ignore) {
+          setWorkshops(data);
+        }
+      } catch (err) {
+        console.error('Error fetching organized workshops:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    loadWorkshops();
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
 
   const toLocalDatetimeInput = (dateInput) => {
     if (!dateInput) return '';
@@ -146,7 +152,7 @@ function OrganizerWorkshopsPage() {
       });
       setShowCreateModal(false);
       setAlertMessage({ type: 'success', text: 'Tạo bản nháp Workshop thành công.' });
-      fetchMyWorkshops();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Không thể tạo workshop.' });
@@ -167,7 +173,7 @@ function OrganizerWorkshopsPage() {
       setShowEditModal(false);
       setSelectedWorkshop(null);
       setAlertMessage({ type: 'success', text: 'Cập nhật thông tin Workshop thành công.' });
-      fetchMyWorkshops();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Cập nhật thất bại.' });
@@ -181,7 +187,7 @@ function OrganizerWorkshopsPage() {
     try {
       await submitWorkshopForApproval(workshopId);
       setAlertMessage({ type: 'success', text: 'Đã gửi Workshop đi xét duyệt.' });
-      fetchMyWorkshops();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Gửi xét duyệt thất bại.' });
@@ -197,7 +203,7 @@ function OrganizerWorkshopsPage() {
       setShowCancelModal(false);
       setSelectedWorkshop(null);
       setAlertMessage({ type: 'success', text: 'Đã hủy Workshop thành công. Toàn bộ đăng ký liên quan đã được tự động hủy.' });
-      fetchMyWorkshops();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
       setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Hủy Workshop thất bại.' });
