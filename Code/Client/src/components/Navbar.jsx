@@ -28,7 +28,6 @@ function Navbar() {
     <header className="navbar">
       <div className="navbar__brand">
         <NavLink to="/">
-          <span className="navbar__logo-badge">W</span>
           <span className="navbar__title">Workshop MIS</span>
         </NavLink>
       </div>

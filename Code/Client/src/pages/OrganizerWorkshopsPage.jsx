@@ -74,10 +74,35 @@ function OrganizerWorkshopsPage() {
     fetchMyWorkshops();
   }, []);
 
+  const toLocalDatetimeInput = (dateInput) => {
+    if (!dateInput) return '';
+    if (typeof dateInput === 'string' && !dateInput.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateInput)) {
+      return dateInput.slice(0, 16);
+    }
+    const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const openCreateModal = () => {
-    const tomorrow = new Date(Date.now() + 24 * 3600 * 1000);
-    const startStr = new Date(tomorrow.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 16);
-    const endStr = new Date(tomorrow.getTime() + 12 * 3600 * 1000).toISOString().slice(0, 16);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+
+    const endTomorrow = new Date(tomorrow);
+    endTomorrow.setHours(12, 0, 0, 0);
+
+    const startStr = toLocalDatetimeInput(tomorrow);
+    const endStr = toLocalDatetimeInput(endTomorrow);
+    const nowStr = toLocalDatetimeInput(new Date());
+
+    const checkinStart = new Date(tomorrow.getTime() - 45 * 60 * 1000);
+    const checkinEnd = new Date(tomorrow.getTime() + 60 * 60 * 1000);
 
     setFormData({
       title: '',
@@ -85,11 +110,11 @@ function OrganizerWorkshopsPage() {
       location: 'Phòng Hội thảo A101',
       start_at: startStr,
       end_at: endStr,
-      registration_open_at: new Date().toISOString().slice(0, 16),
+      registration_open_at: nowStr,
       registration_close_at: startStr,
       quota: 40,
-      checkin_start_at: new Date(new Date(startStr).getTime() - 45 * 60 * 1000).toISOString().slice(0, 16),
-      checkin_end_at: new Date(new Date(startStr).getTime() + 60 * 60 * 1000).toISOString().slice(0, 16),
+      checkin_start_at: toLocalDatetimeInput(checkinStart),
+      checkin_end_at: toLocalDatetimeInput(checkinEnd),
     });
     setShowCreateModal(true);
   };
@@ -97,16 +122,16 @@ function OrganizerWorkshopsPage() {
   const openEditModal = (w) => {
     setSelectedWorkshop(w);
     setFormData({
-      title: w.title,
+      title: w.title || '',
       description: w.description || '',
-      location: w.location,
-      start_at: w.start_at ? new Date(w.start_at).toISOString().slice(0, 16) : '',
-      end_at: w.end_at ? new Date(w.end_at).toISOString().slice(0, 16) : '',
-      registration_open_at: w.registration_open_at ? new Date(w.registration_open_at).toISOString().slice(0, 16) : '',
-      registration_close_at: w.registration_close_at ? new Date(w.registration_close_at).toISOString().slice(0, 16) : '',
-      quota: w.quota,
-      checkin_start_at: w.checkin_start_at ? new Date(w.checkin_start_at).toISOString().slice(0, 16) : '',
-      checkin_end_at: w.checkin_end_at ? new Date(w.checkin_end_at).toISOString().slice(0, 16) : '',
+      location: w.location || '',
+      start_at: toLocalDatetimeInput(w.start_at),
+      end_at: toLocalDatetimeInput(w.end_at),
+      registration_open_at: toLocalDatetimeInput(w.registration_open_at),
+      registration_close_at: toLocalDatetimeInput(w.registration_close_at),
+      quota: w.quota || 30,
+      checkin_start_at: toLocalDatetimeInput(w.checkin_start_at),
+      checkin_end_at: toLocalDatetimeInput(w.checkin_end_at),
     });
     setShowEditModal(true);
   };
@@ -555,6 +580,27 @@ function OrganizerWorkshopsPage() {
                     type="datetime-local"
                     value={formData.end_at}
                     onChange={(e) => setFormData({ ...formData, end_at: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label>Thời gian mở đăng ký</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.registration_open_at}
+                    onChange={(e) => setFormData({ ...formData, registration_open_at: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Thời gian đóng đăng ký</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.registration_close_at}
+                    onChange={(e) => setFormData({ ...formData, registration_close_at: e.target.value })}
                     required
                   />
                 </div>

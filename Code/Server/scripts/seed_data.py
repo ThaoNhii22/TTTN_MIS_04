@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta, timezone
 import os
 import sys
+from typing import cast
 
 # Thêm thư mục Server vào sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')  # type: ignore[union-attr]
 
 from app.core.audit import log_audit_action
 from app.core.database import Base, SessionLocal, engine
@@ -34,14 +36,14 @@ def seed():
                 "status": "active",
             },
             {
-                "full_name": "Nguyễn Hải Nam (P.CTSV)",
+                "full_name": "Nguyễn Hải Nam",
                 "email": "organizer@workshop.edu.vn",
                 "password": "Organizer@123",
                 "role": "organizer",
                 "status": "active",
             },
             {
-                "full_name": "Trần Minh Tuấn (CLB CNTT)",
+                "full_name": "Trần Minh Tuấn",
                 "email": "organizer2@workshop.edu.vn",
                 "password": "Organizer@123",
                 "role": "organizer",
@@ -115,93 +117,93 @@ def seed():
         workshops_data = [
             {
                 "organizer_id": organizer_1.user_id,
-                "title": "UI/UX Design Workshop: Từ Ý Tưởng Đến Prototyping",
-                "description": "Khám phá các nguyên tắc thiết kế trải nghiệm người dùng và xây dựng giao diện bằng Figma chuẩn Design Thinking.",
+                "title": "ERP trong Doanh nghiệp: Triển khai và Quản trị SAP",
+                "description": "Tổng quan về hệ thống hoạch định nguồn lực doanh nghiệp ERP, quy trình triển khai SAP S/4HANA, tích hợp module FI, MM, SD và quản trị vận hành trong môi trường doanh nghiệp thực tế.",
                 "location": "Phòng A203, Tòa nhà Trung tâm Công nghệ",
                 "start_at": now + timedelta(days=3, hours=2),
                 "end_at": now + timedelta(days=3, hours=5),
                 "registration_open_at": now - timedelta(days=2),
                 "registration_close_at": now + timedelta(days=2),
                 "quota": 40,
-                "checkin_code": "WS-CHECKIN-UIUX2026",
+                "checkin_code": "WS-CHECKIN-ERP2026",
                 "checkin_start_at": now + timedelta(days=3, hours=1, minutes=30),
                 "checkin_end_at": now + timedelta(days=3, hours=2, minutes=30),
                 "status": "published",
             },
             {
                 "organizer_id": organizer_2.user_id,
-                "title": "Python for Data Analysis & Visualization",
-                "description": "Thực hành phân tích và trực quan hóa dữ liệu thực tế bằng Python, Pandas, Matplotlib và Seaborn.",
-                "location": "Lab B302, Khoa Công nghệ Thông tin",
+                "title": "Phân tích Dữ liệu Kinh doanh với Power BI",
+                "description": "Thực hành xây dựng dashboard kinh doanh, phân tích KPI và trực quan hóa dữ liệu bằng Power BI Desktop và Power BI Service. Áp dụng DAX, Power Query và mô hình dữ liệu hình sao trong MIS.",
+                "location": "Lab B302, Khoa Hệ thống Thông tin Quản lý",
                 "start_at": now + timedelta(days=6, hours=4),
                 "end_at": now + timedelta(days=6, hours=7),
                 "registration_open_at": now - timedelta(days=1),
                 "registration_close_at": now + timedelta(days=5),
                 "quota": 2,  # Quota nhỏ để demo tính năng Full & Waitlist
-                "checkin_code": "WS-CHECKIN-PYDATA26",
+                "checkin_code": "WS-CHECKIN-POWERBI26",
                 "checkin_start_at": now + timedelta(days=6, hours=3, minutes=30),
                 "checkin_end_at": now + timedelta(days=6, hours=4, minutes=30),
                 "status": "published",
             },
             {
                 "organizer_id": organizer_1.user_id,
-                "title": "React Advanced: Kiến Trúc Xây Dựng Dự Án Lớn",
-                "description": "Tìm hiểu kiến trúc dự án React quy mô lớn, tối ưu hóa re-render, Custom Hooks và bảo mật JWT.",
-                "location": "Lab B301, Khoa Công nghệ Thông tin",
+                "title": "Thiết kế Cơ sở Dữ liệu Quan hệ và Tối ưu Truy vấn SQL",
+                "description": "Nâng cao kỹ năng thiết kế CSDL chuẩn hóa 3NF/BCNF, viết stored procedure, index tuning và tối ưu hóa truy vấn SQL Server phục vụ hệ thống thông tin quản lý doanh nghiệp.",
+                "location": "Lab B301, Khoa Hệ thống Thông tin Quản lý",
                 "start_at": now + timedelta(days=9, hours=1),
                 "end_at": now + timedelta(days=9, hours=4),
                 "registration_open_at": now - timedelta(hours=12),
-                "registration_close_at": None,  # Demo BR-15 không giới hạn close_at
+                "registration_close_at": None,
                 "quota": 30,
-                "checkin_code": "WS-CHECKIN-REACT26",
+                "checkin_code": "WS-CHECKIN-SQL2026",
                 "checkin_start_at": now + timedelta(days=9, hours=0, minutes=30),
                 "checkin_end_at": now + timedelta(days=9, hours=1, minutes=30),
                 "status": "published",
             },
             {
                 "organizer_id": organizer_2.user_id,
-                "title": "AI & Machine Learning in Practice 2026",
-                "description": "Ứng dụng GenAI và LLM trong phát triển phần mềm doanh nghiệp.",
-                "location": "Hội trường C",
-                "start_at": now + timedelta(days=15),
-                "end_at": now + timedelta(days=15, hours=3),
+                "title": "An toàn Thông tin và Bảo mật Hệ thống Quản lý",
+                "description": "Các nguy cơ bảo mật trong hệ thống thông tin doanh nghiệp, giải pháp phòng thủ ISO/IEC 27001, mã hóa dữ liệu, xác thực đa lớp và audit trail trong môi trường MIS.",
+                "location": "Hội trường C, Tòa nhà Trung tâm Công nghệ",
+                "start_at": now + timedelta(days=14),
+                "end_at": now + timedelta(days=14, hours=3),
                 "registration_open_at": None,
                 "registration_close_at": None,
                 "quota": 50,
-                "checkin_code": "WS-CHECKIN-AI2026",
-                "checkin_start_at": now + timedelta(days=15, minutes=-30),
-                "checkin_end_at": now + timedelta(days=15, minutes=30),
-                "status": "pending",  # Demo trạng thái chờ Admin duyệt (UC-06)
+                "checkin_code": "WS-CHECKIN-SEC2026",
+                "checkin_start_at": now + timedelta(days=14, minutes=-30),
+                "checkin_end_at": now + timedelta(days=14, minutes=30),
+                "status": "pending",
             },
             {
                 "organizer_id": organizer_1.user_id,
-                "title": "Kỹ năng Thuyết trình & Làm chủ Sân khấu",
-                "description": "Rèn luyện sự tự tin, ngôn ngữ cơ thể và kỹ thuật trình bày ấn tượng.",
-                "location": "Hội trường B",
-                "start_at": now + timedelta(days=20),
-                "end_at": now + timedelta(days=20, hours=3),
+                "title": "Quản lý Dự án Công nghệ Thông tin theo Agile/Scrum",
+                "description": "Phương pháp quản lý dự án CNTT linh hoạt theo Agile, tổ chức sprint, sử dụng Jira và công cụ quản lý backlog. Thực hành vai trò Product Owner, Scrum Master và phân tích yêu cầu hệ thống.",
+                "location": "Hội trường B, Khu A",
+                "start_at": now + timedelta(days=21, hours=8),
+                "end_at": now + timedelta(days=21, hours=11),
                 "registration_open_at": None,
                 "registration_close_at": None,
                 "quota": 60,
-                "checkin_code": "WS-CHECKIN-SPEAK26",
-                "checkin_start_at": now + timedelta(days=20, minutes=-30),
-                "checkin_end_at": now + timedelta(days=20, minutes=30),
-                "status": "draft",  # Demo trạng thái Nháp (UC-03, UC-04, UC-05)
+                "checkin_code": "WS-CHECKIN-AGILE26",
+                "checkin_start_at": now + timedelta(days=21, hours=7, minutes=30),
+                "checkin_end_at": now + timedelta(days=21, hours=8, minutes=30),
+                "status": "draft",
             },
             {
                 "organizer_id": organizer_2.user_id,
-                "title": "Career Orientation & CV Masterclass 2026",
-                "description": "Định hướng nghề nghiệp, viết CV chuẩn ATS và kỹ thuật phỏng vấn chuyên nghiệp.",
-                "location": "Hội trường A",
+                "title": "Chuyển đổi Số và Chiến lược Ứng dụng MIS trong Doanh nghiệp",
+                "description": "Thực trạng chuyển đổi số tại Việt Nam, lộ trình ứng dụng hệ thống thông tin quản lý MIS, CRM, SCM và lợi ích đo lường được trong doanh nghiệp vừa và nhỏ.",
+                "location": "Hội trường A, Tòa nhà Chính",
                 "start_at": now - timedelta(days=2, hours=4),
                 "end_at": now - timedelta(days=2, hours=1),
                 "registration_open_at": now - timedelta(days=10),
                 "registration_close_at": now - timedelta(days=3),
                 "quota": 50,
-                "checkin_code": "WS-CHECKIN-CAREER26",
+                "checkin_code": "WS-CHECKIN-DX2026",
                 "checkin_start_at": now - timedelta(days=2, hours=4, minutes=30),
                 "checkin_end_at": now - timedelta(days=2, hours=3, minutes=30),
-                "status": "completed",  # Đã hoàn thành (Demo Điểm danh & Khảo sát)
+                "status": "completed",
             },
         ]
 
@@ -217,25 +219,25 @@ def seed():
             else:
                 created_workshops[w["title"]] = existing
 
-        ws_uiux = created_workshops["UI/UX Design Workshop: Từ Ý Tưởng Đến Prototyping"]
-        ws_python = created_workshops["Python for Data Analysis & Visualization"]
-        ws_career = created_workshops["Career Orientation & CV Masterclass 2026"]
+        ws_erp = created_workshops["ERP trong Doanh nghiệp: Triển khai và Quản trị SAP"]
+        ws_powerbi = created_workshops["Phân tích Dữ liệu Kinh doanh với Power BI"]
+        ws_dx = created_workshops["Chuyển đổi Số và Chiến lược Ứng dụng MIS trong Doanh nghiệp"]
 
         # 3. Seed Registrations & Waitlist (Demo BR-02, BR-03)
         # Workshop Python: Quota = 2 -> user_1, user_2 confirmed; user_3, user_4 in Waitlist
         regs_data = [
-            # UI/UX Workshop
-            {"workshop_id": ws_uiux.workshop_id, "user_id": user_1.user_id, "status": "confirmed", "waitlist_position": None, "confirmed_at": now},
-            {"workshop_id": ws_uiux.workshop_id, "user_id": user_2.user_id, "status": "confirmed", "waitlist_position": None, "confirmed_at": now},
-            # Python Workshop (Full Quota = 2 + 2 Waitlist)
-            {"workshop_id": ws_python.workshop_id, "user_id": user_1.user_id, "status": "confirmed", "waitlist_position": None, "confirmed_at": now - timedelta(hours=3)},
-            {"workshop_id": ws_python.workshop_id, "user_id": user_2.user_id, "status": "confirmed", "waitlist_position": None, "confirmed_at": now - timedelta(hours=2)},
-            {"workshop_id": ws_python.workshop_id, "user_id": user_3.user_id, "status": "waitlist", "waitlist_position": 1, "confirmed_at": None},
-            {"workshop_id": ws_python.workshop_id, "user_id": user_4.user_id, "status": "waitlist", "waitlist_position": 2, "confirmed_at": None},
-            # Career Workshop (Attended + Survey)
-            {"workshop_id": ws_career.workshop_id, "user_id": user_1.user_id, "status": "attended", "waitlist_position": None, "confirmed_at": now - timedelta(days=5)},
-            {"workshop_id": ws_career.workshop_id, "user_id": user_2.user_id, "status": "attended", "waitlist_position": None, "confirmed_at": now - timedelta(days=5)},
-            {"workshop_id": ws_career.workshop_id, "user_id": user_3.user_id, "status": "attended", "waitlist_position": None, "confirmed_at": now - timedelta(days=5)},
+            # ERP Workshop
+            {"workshop_id": ws_erp.workshop_id, "user_id": user_1.user_id, "status": "confirmed", "waitlist_position": None, "confirmed_at": now},
+            {"workshop_id": ws_erp.workshop_id, "user_id": user_2.user_id, "status": "confirmed", "waitlist_position": None, "confirmed_at": now},
+            # Power BI Workshop (Full Quota = 2 + 2 Waitlist)
+            {"workshop_id": ws_powerbi.workshop_id, "user_id": user_1.user_id, "status": "confirmed", "waitlist_position": None, "confirmed_at": now - timedelta(hours=3)},
+            {"workshop_id": ws_powerbi.workshop_id, "user_id": user_2.user_id, "status": "confirmed", "waitlist_position": None, "confirmed_at": now - timedelta(hours=2)},
+            {"workshop_id": ws_powerbi.workshop_id, "user_id": user_3.user_id, "status": "waitlist", "waitlist_position": 1, "confirmed_at": None},
+            {"workshop_id": ws_powerbi.workshop_id, "user_id": user_4.user_id, "status": "waitlist", "waitlist_position": 2, "confirmed_at": None},
+            # Chuyển đổi Số Workshop (Attended + Survey)
+            {"workshop_id": ws_dx.workshop_id, "user_id": user_1.user_id, "status": "attended", "waitlist_position": None, "confirmed_at": now - timedelta(days=5)},
+            {"workshop_id": ws_dx.workshop_id, "user_id": user_2.user_id, "status": "attended", "waitlist_position": None, "confirmed_at": now - timedelta(days=5)},
+            {"workshop_id": ws_dx.workshop_id, "user_id": user_3.user_id, "status": "attended", "waitlist_position": None, "confirmed_at": now - timedelta(days=5)},
         ]
 
         created_regs = []
@@ -263,14 +265,14 @@ def seed():
         print("  🎟️ Đã tạo các bản ghi Registrations và Waitlist mẫu.")
 
         # 4. Seed Attendance & Surveys for Career Workshop
-        career_regs = [r for r in created_regs if r.workshop_id == ws_career.workshop_id and r.status == "attended"]
+        career_regs = [r for r in created_regs if r.workshop_id == ws_dx.workshop_id and r.status == "attended"]
         for reg in career_regs:
             # Attendance
             existing_att = db.query(Attendance).filter(Attendance.registration_id == reg.registration_id).first()
             if not existing_att:
                 att = Attendance(
                     registration_id=reg.registration_id,
-                    checkin_at=ws_career.start_at + timedelta(minutes=10),
+                    checkin_at=ws_dx.start_at + timedelta(minutes=10),
                     checkin_method="qr",
                 )
                 db.add(att)
@@ -283,7 +285,7 @@ def seed():
                     rating=5 if reg.user_id == user_1.user_id else 4,
                     answers={"clarity": "Rất rõ ràng", "organization": "Chu đáo", "speaker": "Tuyệt vời"},
                     feedback="Buổi chia sẻ rất bổ ích và thiết thực!",
-                    submitted_at=ws_career.end_at + timedelta(minutes=30),
+                    submitted_at=ws_dx.end_at + timedelta(minutes=30),
                 )
                 db.add(surv)
 
@@ -292,21 +294,21 @@ def seed():
         # 5. Seed Audit Logs (BR-10)
         log_audit_action(
             db=db,
-            actor_id=admin_user.user_id,
+            actor_id=cast(int, admin_user.user_id),
             action="APPROVE_WORKSHOP",
             target_entity="Workshops",
-            target_id=ws_uiux.workshop_id,
+            target_id=cast(int, ws_erp.workshop_id),
             old_value={"status": "pending"},
             new_value={"status": "published"},
             ip_address="127.0.0.1",
         )
         log_audit_action(
             db=db,
-            actor_id=organizer_2.user_id,
+            actor_id=cast(int, organizer_2.user_id),
             action="CREATE_WORKSHOP",
             target_entity="Workshops",
-            target_id=ws_python.workshop_id,
-            new_value={"title": ws_python.title, "quota": ws_python.quota},
+            target_id=cast(int, ws_powerbi.workshop_id),
+            new_value={"title": ws_powerbi.title, "quota": ws_powerbi.quota},
             ip_address="127.0.0.1",
         )
 

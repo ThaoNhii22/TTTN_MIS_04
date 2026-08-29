@@ -1,4 +1,9 @@
+import os
+import sys
 import requests  # type: ignore
+
+if hasattr(sys.stdout, "reconfigure"):
+    getattr(sys.stdout, "reconfigure")(encoding="utf-8")
 
 BASE_URL = 'http://127.0.0.1:8000/api/v1'
 

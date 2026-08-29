@@ -1,4 +1,17 @@
+import sys
 from contextlib import asynccontextmanager
+
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,9 +26,9 @@ async def lifespan(app: FastAPI):
     # Khởi tạo bảng CSDL nếu chưa tồn tại
     try:
         Base.metadata.create_all(bind=engine)
-        print("✅ Kết nối Database thành công và đã đồng bộ các bảng CSDL.")
+        print("Kết nối Database thành công và đã đồng bộ các bảng CSDL.")
     except Exception as e:
-        print(f"⚠️ Cảnh báo kết nối Database: {e}")
+        print(f"Cảnh báo kết nối Database: {e}")
     yield
 
 
