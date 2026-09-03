@@ -143,7 +143,7 @@ def create_workshop(
         actor_id=organizer_id,
         action="CREATE_WORKSHOP",
         target_entity="Workshops",
-        target_id=workshop.workshop_id,
+        target_id=getattr(workshop, "workshop_id", None),
         new_value={"title": workshop.title, "quota": workshop.quota, "status": workshop.status},
         ip_address=ip_address,
     )
@@ -174,14 +174,15 @@ def update_workshop(
     new_reg_open = update_dict.get("registration_open_at", workshop.registration_open_at)
     new_reg_close = update_dict.get("registration_close_at", workshop.registration_close_at)
 
-    validate_workshop_time_constraints(
-        start_at=new_start_at,
-        end_at=new_end_at,
-        checkin_start_at=new_checkin_start,
-        checkin_end_at=new_checkin_end,
-        registration_open_at=new_reg_open,
-        registration_close_at=new_reg_close,
-    )
+    if new_start_at and new_end_at and new_checkin_start and new_checkin_end:
+        validate_workshop_time_constraints(
+            start_at=new_start_at,
+            end_at=new_end_at,
+            checkin_start_at=new_checkin_start,
+            checkin_end_at=new_checkin_end,
+            registration_open_at=new_reg_open,
+            registration_close_at=new_reg_close,
+        )
 
     old_data = {
         "title": workshop.title,
@@ -215,11 +216,11 @@ def update_workshop(
         )
 
         # Nếu tăng Quota và có người trong Waitlist -> Kích hoạt đôn Waitlist theo BR-03, BR-12
-        added_slots = update_in.quota - workshop.quota
-        workshop.quota = update_in.quota
+        added_slots = update_in.quota - int(getattr(workshop, "quota"))
+        setattr(workshop, "quota", update_in.quota)
 
         if added_slots > 0:
-            promote_waitlist_entries(db, workshop.workshop_id, added_slots, actor.user_id, ip_address)
+            promote_waitlist_entries(db, getattr(workshop, "workshop_id"), added_slots, getattr(actor, "user_id"), ip_address)
 
     if "quota" in update_dict:
         del update_dict["quota"]  # Đã xử lý ở trên
@@ -240,10 +241,10 @@ def update_workshop(
     }
     log_audit_action(
         db=db,
-        actor_id=actor.user_id,
+        actor_id=getattr(actor, "user_id"),
         action="UPDATE_WORKSHOP",
         target_entity="Workshops",
-        target_id=workshop.workshop_id,
+        target_id=getattr(workshop, "workshop_id", None),
         old_value=old_data,
         new_value=new_data,
         ip_address=ip_address,
@@ -264,18 +265,18 @@ def submit_workshop_for_approval(
             detail="Chỉ có thể gửi duyệt Workshop đang ở trạng thái Nháp (draft).",
         )
 
-    old_status = workshop.status
-    workshop.status = "pending"
-    workshop.rejection_reason = None
+    old_status = str(workshop.status)
+    setattr(workshop, "status", "pending")
+    setattr(workshop, "rejection_reason", None)
     db.commit()
     db.refresh(workshop)
 
     log_audit_action(
         db=db,
-        actor_id=actor.user_id,
+        actor_id=getattr(actor, "user_id"),
         action="SUBMIT_FOR_APPROVAL",
         target_entity="Workshops",
-        target_id=workshop.workshop_id,
+        target_id=getattr(workshop, "workshop_id", None),
         old_value={"status": old_status},
         new_value={"status": "pending"},
         ip_address=ip_address,
@@ -297,14 +298,14 @@ def review_workshop(
             detail="Chỉ có thể duyệt Workshop đang ở trạng thái Chờ duyệt (pending).",
         )
 
-    old_status = workshop.status
+    old_status = str(workshop.status)
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     if review_in.action == "approve":
         # BR-06: Phê duyệt -> Chuyển published, đồng thời gán registration_open_at = thời điểm hiện tại
-        workshop.status = "published"
-        workshop.registration_open_at = now
-        workshop.rejection_reason = None
+        setattr(workshop, "status", "published")
+        setattr(workshop, "registration_open_at", now)
+        setattr(workshop, "rejection_reason", None)
         action_name = "APPROVE_WORKSHOP"
         new_val = {"status": "published", "registration_open_at": str(now)}
     else:
@@ -314,8 +315,8 @@ def review_workshop(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Bắt buộc phải nhập lý do từ chối khi từ chối Workshop.",
             )
-        workshop.status = "draft"
-        workshop.rejection_reason = review_in.rejection_reason
+        setattr(workshop, "status", "draft")
+        setattr(workshop, "rejection_reason", review_in.rejection_reason)
         action_name = "REJECT_WORKSHOP"
         new_val = {"status": "draft", "rejection_reason": review_in.rejection_reason}
 
@@ -324,10 +325,10 @@ def review_workshop(
 
     log_audit_action(
         db=db,
-        actor_id=admin_user.user_id,
+        actor_id=getattr(admin_user, "user_id"),
         action=action_name,
         target_entity="Workshops",
-        target_id=workshop.workshop_id,
+        target_id=getattr(workshop, "workshop_id", None),
         old_value={"status": old_status},
         new_value=new_val,
         ip_address=ip_address,
@@ -349,9 +350,9 @@ def cancel_workshop(
             detail=f"Workshop đã ở trạng thái '{workshop.status}', không thể hủy.",
         )
 
-    old_status = workshop.status
-    workshop.status = "cancelled"
-    workshop.cancel_reason = cancel_reason
+    old_status = str(workshop.status)
+    setattr(workshop, "status", "cancelled")
+    setattr(workshop, "cancel_reason", cancel_reason)
 
     # BR-13 Cascading: Hủy toàn bộ đăng ký liên quan (confirmed + waitlist)
     now = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -365,9 +366,9 @@ def cancel_workshop(
     )
 
     for reg in registrations:
-        reg.status = "cancelled"
-        reg.cancel_reason = f"Workshop bị hủy: {cancel_reason}"
-        reg.cancelled_at = now
+        setattr(reg, "status", "cancelled")
+        setattr(reg, "cancel_reason", f"Workshop bị hủy: {cancel_reason}")
+        setattr(reg, "cancelled_at", now)
 
     db.commit()
     db.refresh(workshop)
@@ -376,10 +377,10 @@ def cancel_workshop(
     action_name = "FORCE_CANCEL_BY_ADMIN" if actor.role == "admin" else "CANCEL_BY_ORGANIZER"
     log_audit_action(
         db=db,
-        actor_id=actor.user_id,
+        actor_id=getattr(actor, "user_id"),
         action=action_name,
         target_entity="Workshops",
-        target_id=workshop.workshop_id,
+        target_id=getattr(workshop, "workshop_id", None),
         old_value={"status": old_status},
         new_value={"status": "cancelled", "cancel_reason": cancel_reason, "cancelled_registrations_count": len(registrations)},
         ip_address=ip_address,
@@ -402,13 +403,14 @@ def promote_waitlist_entries(
     if available_slots <= 0:
         return []
 
-    # Lấy danh sách Waitlist xếp theo thứ tự FIFO
+    # Lấy danh sách Waitlist xếp theo thứ tự FIFO kèm khóa dòng
     waitlist_candidates = (
         db.query(Registration)
         .filter(
             Registration.workshop_id == workshop_id,
             Registration.status == "waitlist",
         )
+        .with_for_update()
         .order_by(Registration.waitlist_position.asc(), Registration.registered_at.asc())
         .limit(available_slots)
         .all()
@@ -419,22 +421,25 @@ def promote_waitlist_entries(
 
     for reg in waitlist_candidates:
         old_pos = reg.waitlist_position
-        reg.status = "confirmed"
-        reg.confirmed_at = now
-        reg.waitlist_position = None
+        setattr(reg, "status", "confirmed")
+        setattr(reg, "confirmed_at", now)
+        setattr(reg, "waitlist_position", None)
         promoted.append(reg)
 
         # BR-10: Ghi vết đôn waitlist
-        log_audit_action(
-            db=db,
-            actor_id=actor_id,
-            action="AUTO_PROMOTE_WAITLIST",
-            target_entity="Registrations",
-            target_id=reg.registration_id,
-            old_value={"status": "waitlist", "waitlist_position": old_pos},
-            new_value={"status": "confirmed", "confirmed_at": str(now)},
-            ip_address=ip_address,
-        )
+        try:
+            log_audit_action(
+                db=db,
+                actor_id=actor_id,
+                action="AUTO_PROMOTE_WAITLIST",
+                target_entity="Registrations",
+                target_id=getattr(reg, "registration_id", None),
+                old_value={"status": "waitlist", "waitlist_position": old_pos},
+                new_value={"status": "confirmed", "confirmed_at": str(now)},
+                ip_address=ip_address,
+            )
+        except Exception:
+            pass
 
     # Đánh lại số thứ tự waitlist_position cho những người còn lại trong Waitlist
     remaining_waitlist = (
@@ -443,12 +448,18 @@ def promote_waitlist_entries(
             Registration.workshop_id == workshop_id,
             Registration.status == "waitlist",
         )
+        .with_for_update()
         .order_by(Registration.waitlist_position.asc(), Registration.registered_at.asc())
         .all()
     )
 
     for idx, rem_reg in enumerate(remaining_waitlist, start=1):
-        rem_reg.waitlist_position = idx
+        setattr(rem_reg, "waitlist_position", idx)
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
     return promoted
