@@ -141,7 +141,7 @@ class TestWorkshopLifecycleAndBR:
         org2_token = get_auth_token("organizer2@workshop.edu.vn", "Organizer@123")
         workshops = client.get("/api/v1/workshops").json()
         # Find workshop owned by organizer 1
-        ws_org1 = next(w for w in workshops if "UI/UX" in w["title"])
+        ws_org1 = next((w for w in workshops if w.get("organizer_id") == 2 or "ERP" in w.get("title", "")), workshops[0])
 
         res = client.put(
             f"/api/v1/workshops/{ws_org1['workshop_id']}",
@@ -162,21 +162,21 @@ class TestWorkshopLifecycleAndBR:
 
 class TestRegistrationWaitlistAndCheckin:
     def test_br01_anti_duplicate_registration(self):
-        # user@workshop.edu.vn is already confirmed in ws_uiux
+        # user@workshop.edu.vn is already confirmed in ERP workshop
         user_token = get_auth_token("user@workshop.edu.vn", "User@123")
         workshops = client.get("/api/v1/workshops").json()
-        ws_uiux = next(w for w in workshops if "UI/UX" in w["title"])
+        ws_registered = next((w for w in workshops if "ERP" in w.get("title", "")), workshops[0])
 
         res = client.post(
             "/api/v1/registrations",
             headers=auth_headers(user_token),
-            json={"workshop_id": ws_uiux["workshop_id"], "accept_waitlist": True},
+            json={"workshop_id": ws_registered["workshop_id"], "accept_waitlist": True},
         )
         assert res.status_code == 400
         assert "BR-01" in res.json()["detail"] or "đã có lượt đăng ký" in res.json()["detail"]
 
     def test_br02_br03_waitlist_and_auto_promote(self):
-        # Python workshop has quota=2.
+        # Power BI workshop has quota=2.
         # User 1 & User 2 are confirmed. User 3 & User 4 are in waitlist (position 1, 2).
         # When User 1 cancels, User 3 should be promoted to confirmed, User 4 becomes waitlist position 1.
         db = SessionLocal()
@@ -186,11 +186,11 @@ class TestRegistrationWaitlistAndCheckin:
 
         user1_token = get_auth_token("user@workshop.edu.vn", "User@123")
         my_regs = client.get("/api/v1/registrations/my", headers=auth_headers(user1_token)).json()
-        py_reg = next((r for r in my_regs if "Python" in (r.get("workshop_title") or "") and r["status"] == "confirmed"), None)
+        pbi_reg = next((r for r in my_regs if "Power BI" in (r.get("workshop_title") or "") and r["status"] == "confirmed"), None)
 
-        if py_reg:
+        if pbi_reg:
             res_cancel = client.post(
-                f"/api/v1/registrations/{py_reg['registration_id']}/cancel",
+                f"/api/v1/registrations/{pbi_reg['registration_id']}/cancel",
                 headers=auth_headers(user1_token),
                 json={"cancel_reason": "Bận việc đột xuất"},
             )
@@ -200,21 +200,21 @@ class TestRegistrationWaitlistAndCheckin:
             # Check User 3 (nam.nt) got promoted to confirmed
             user3_token = get_auth_token("nam.nt@workshop.edu.vn", "User@123")
             user3_regs = client.get("/api/v1/registrations/my", headers=auth_headers(user3_token)).json()
-            user3_py_reg = next(r for r in user3_regs if "Python" in (r.get("workshop_title") or ""))
-            assert user3_py_reg["status"] == "confirmed"  # BR-03 Promoted!
+            user3_pbi_reg = next(r for r in user3_regs if "Power BI" in (r.get("workshop_title") or ""))
+            assert user3_pbi_reg["status"] == "confirmed"  # BR-03 Promoted!
 
     def test_br09_survey_attended_only(self):
-        # User 1 has attended registration for Career workshop -> should be able to view / submit survey
+        # User 1 has confirmed (unattended) registration for ERP workshop
         user1_token = get_auth_token("user@workshop.edu.vn", "User@123")
         my_regs = client.get("/api/v1/registrations/my", headers=auth_headers(user1_token)).json()
-        uiux_reg = next(r for r in my_regs if "UI/UX" in (r.get("workshop_title") or ""))
+        unattended_reg = next(r for r in my_regs if "ERP" in (r.get("workshop_title") or ""))
 
-        # UI/UX is not attended yet -> Survey submit must fail with 400 (BR-09)
+        # ERP is not attended yet -> Survey submit must fail with 400 (BR-09)
         res_survey_fail = client.post(
             "/api/v1/surveys",
             headers=auth_headers(user1_token),
             json={
-                "registration_id": uiux_reg["registration_id"],
+                "registration_id": unattended_reg["registration_id"],
                 "rating": 5,
                 "answers": {"useful": "yes"},
             },

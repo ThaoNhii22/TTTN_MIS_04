@@ -206,10 +206,10 @@ def update_workshop(
         # Ghi Audit Log riêng cho hành động thay đổi Quota (Task 25)
         log_audit_action(
             db=db,
-            actor_id=actor.user_id,
+            actor_id=getattr(actor, "user_id"),
             action="UPDATE_QUOTA",
             target_entity="Workshops",
-            target_id=workshop.workshop_id,
+            target_id=getattr(workshop, "workshop_id", None),
             old_value={"quota": old_quota},
             new_value={"quota": update_in.quota},
             ip_address=ip_address,
