@@ -6,8 +6,8 @@ from app.core.database import Base
 class Workshop(Base):
     __tablename__ = "WORKSHOPS"
 
-    workshop_id = Column(BigInteger, primary_key=True, autoincrement=True, comment="Mã Workshop duy nhất")
-    organizer_id = Column(BigInteger, ForeignKey("USERS.user_id", ondelete="CASCADE"), nullable=False, index=True, comment="Người tổ chức Workshop")
+    workshop_id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True, comment="Mã Workshop duy nhất")
+    organizer_id = Column(BigInteger().with_variant(Integer, "sqlite"), ForeignKey("USERS.user_id", ondelete="CASCADE"), nullable=False, index=True, comment="Người tổ chức Workshop")
     title = Column(String(200), nullable=False, comment="Tên Workshop")
     description = Column(Text, nullable=True, comment="Mô tả chi tiết Workshop")
     location = Column(String(255), nullable=True, comment="Địa điểm tổ chức")

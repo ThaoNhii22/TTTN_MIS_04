@@ -46,10 +46,15 @@ def get_workshop_stats(db: Session, workshop: Workshop) -> Dict[str, Any]:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     is_open = False
     if workshop.status == "published":
+        open_ok = True
+        close_ok = True
+        if workshop.registration_open_at:
+            open_ok = now >= workshop.registration_open_at
         if workshop.registration_close_at:
-            is_open = now <= workshop.registration_close_at
+            close_ok = now <= workshop.registration_close_at
         else:
-            is_open = now < workshop.start_at
+            close_ok = now < workshop.start_at
+        is_open = open_ok and close_ok
 
     return {
         "confirmed_count": confirmed_count,
@@ -60,22 +65,56 @@ def get_workshop_stats(db: Session, workshop: Workshop) -> Dict[str, Any]:
     }
 
 
+def validate_workshop_time_constraints(
+    start_at: datetime,
+    end_at: datetime,
+    checkin_start_at: datetime,
+    checkin_end_at: datetime,
+    registration_open_at: Optional[datetime] = None,
+    registration_close_at: Optional[datetime] = None,
+):
+    if end_at <= start_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Thời gian kết thúc sự kiện (end_at) phải sau thời gian bắt đầu (start_at).",
+        )
+    if checkin_end_at <= checkin_start_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Thời điểm kết thúc check-in phải sau thời điểm bắt đầu check-in.",
+        )
+    if checkin_end_at > end_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Thời điểm kết thúc check-in không được sau thời gian kết thúc sự kiện.",
+        )
+    if registration_open_at and registration_close_at:
+        if registration_close_at <= registration_open_at:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Thời điểm đóng đăng ký phải sau thời điểm mở đăng ký.",
+            )
+    if registration_close_at and registration_close_at > start_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Thời điểm đóng đăng ký không được sau thời gian bắt đầu sự kiện.",
+        )
+
+
 def create_workshop(
     db: Session,
     workshop_in: WorkshopCreate,
     organizer_id: int,
     ip_address: Optional[str] = None,
 ) -> Workshop:
-    if workshop_in.end_at <= workshop_in.start_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Thời gian kết thúc sự kiện phải sau thời gian bắt đầu.",
-        )
-    if workshop_in.checkin_end_at <= workshop_in.checkin_start_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Thời điểm kết thúc check-in phải sau thời điểm bắt đầu check-in.",
-        )
+    validate_workshop_time_constraints(
+        start_at=workshop_in.start_at,
+        end_at=workshop_in.end_at,
+        checkin_start_at=workshop_in.checkin_start_at,
+        checkin_end_at=workshop_in.checkin_end_at,
+        registration_open_at=workshop_in.registration_open_at,
+        registration_close_at=workshop_in.registration_close_at,
+    )
 
     checkin_code = f"WS-CHECKIN-{uuid.uuid4().hex[:8].upper()}"
 
@@ -86,7 +125,7 @@ def create_workshop(
         location=workshop_in.location,
         start_at=workshop_in.start_at,
         end_at=workshop_in.end_at,
-        registration_open_at=None,
+        registration_open_at=workshop_in.registration_open_at,
         registration_close_at=workshop_in.registration_close_at,
         quota=workshop_in.quota,
         checkin_code=checkin_code,
@@ -125,6 +164,25 @@ def update_workshop(
             detail=f"Không thể chỉnh sửa Workshop ở trạng thái '{workshop.status}'.",
         )
 
+    update_dict = update_in.model_dump(exclude_unset=True)
+
+    # Tính toán các mốc thời gian sau cập nhật để validate
+    new_start_at = update_dict.get("start_at", workshop.start_at)
+    new_end_at = update_dict.get("end_at", workshop.end_at)
+    new_checkin_start = update_dict.get("checkin_start_at", workshop.checkin_start_at)
+    new_checkin_end = update_dict.get("checkin_end_at", workshop.checkin_end_at)
+    new_reg_open = update_dict.get("registration_open_at", workshop.registration_open_at)
+    new_reg_close = update_dict.get("registration_close_at", workshop.registration_close_at)
+
+    validate_workshop_time_constraints(
+        start_at=new_start_at,
+        end_at=new_end_at,
+        checkin_start_at=new_checkin_start,
+        checkin_end_at=new_checkin_end,
+        registration_open_at=new_reg_open,
+        registration_close_at=new_reg_close,
+    )
+
     old_data = {
         "title": workshop.title,
         "quota": workshop.quota,
@@ -150,14 +208,12 @@ def update_workshop(
         if added_slots > 0:
             promote_waitlist_entries(db, workshop.workshop_id, added_slots, actor.user_id, ip_address)
 
-    # Cập nhật các trường khác
-    update_dict = update_in.model_dump(exclude_unset=True)
     if "quota" in update_dict:
         del update_dict["quota"]  # Đã xử lý ở trên
 
+    # Cập nhật các trường được set (kể cả None)
     for key, value in update_dict.items():
-        if value is not None:
-            setattr(workshop, key, value)
+        setattr(workshop, key, value)
 
     db.commit()
     db.refresh(workshop)

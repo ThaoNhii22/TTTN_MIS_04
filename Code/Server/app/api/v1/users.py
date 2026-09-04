@@ -104,6 +104,12 @@ def update_user_role(
     Use Case 14: Quản trị viên thay đổi vai trò (Role) của người dùng.
     Ghi vết nhật ký bắt buộc vào AuditLogs với action = "UPDATE_ROLE" (BR-10).
     """
+    if user_id == current_admin.user_id and role_in.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quản trị viên không thể tự hạ quyền của chính mình.",
+        )
+
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Người dùng không tồn tại.")
@@ -145,6 +151,12 @@ def update_user_status(
     Use Case 15: Khóa hoặc kích hoạt lại tài khoản người dùng.
     Ghi vết nhật ký vào AuditLogs (BR-10).
     """
+    if user_id == current_admin.user_id and status_in.status in ["locked", "inactive"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quản trị viên không thể tự khóa hoặc vô hiệu hóa tài khoản của chính mình.",
+        )
+
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Người dùng không tồn tại.")

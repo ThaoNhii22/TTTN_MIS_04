@@ -16,6 +16,7 @@ class AttendanceResponse(BaseModel):
     registration_id: int
     checkin_at: datetime
     checkin_method: str
+    status: str = "present"
     workshop_id: Optional[int] = None
     workshop_title: Optional[str] = None
     user_name: Optional[str] = None

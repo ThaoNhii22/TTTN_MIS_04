@@ -956,6 +956,7 @@
   line-height: 1.6;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .workshop-card__meta {
@@ -3315,3 +3316,638 @@
     text-align: center;
   }
 }
+
+/* =========================================================
+   NEW ENHANCED UI & RBAC STYLES (TTTN_MIS_04)
+   ========================================================= */
+
+/* Role Badges */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.role-badge--admin {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+.role-badge--organizer {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.role-badge--participant {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.navbar__user-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+.navbar__user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.navbar__user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a3832;
+}
+
+/* Status Tags */
+.status-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.status-tag--published {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.status-tag--completed {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+.status-tag--pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.status-tag--draft {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+.status-tag--cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+.status-tag--full {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+.status-tag--confirmed {
+  background: #dcfce7;
+  color: #166534;
+}
+.status-tag--waitlist {
+  background: #fef3c7;
+  color: #92400e;
+}
+.status-tag--attended {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Alert Banners */
+.alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.alert-banner--success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+.alert-banner--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+.alert-banner--warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+/* Buttons */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-secondary:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #dc2626;
+  color: #fff;
+  border: 1px solid #b91c1c;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-danger:hover {
+  background: #b91c1c;
+}
+.btn-danger-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #fff;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-danger-outline:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+/* Tab Buttons */
+.tab-btn {
+  padding: 8px 16px;
+  background: #fff;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.tab-btn.active {
+  background: #c2410c;
+  color: #fff;
+  border-color: #c2410c;
+}
+
+/* Quick Login Switcher in LoginPage */
+.quick-login-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #ebdcd5;
+}
+.quick-login-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #886255;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.quick-login-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.quick-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+.quick-login-btn--admin {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+.quick-login-btn--admin:hover {
+  background: #fecaca;
+}
+.quick-login-btn--organizer {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+.quick-login-btn--organizer:hover {
+  background: #fde68a;
+}
+.quick-login-btn--user {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+.quick-login-btn--user:hover {
+  background: #bfdbfe;
+}
+
+/* Modal Backdrops & Content */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+.modal-content--large {
+  max-width: 720px;
+}
+.modal-info-box {
+  background: #fdf7f4;
+  border: 1px solid #ebdcd5;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 14px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Star Rating Selector */
+.star-rating-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #cbd5e1;
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.15s ease;
+}
+.star-btn.active {
+  color: #f59e0b;
+}
+
+/* Ticket & QR Card */
+.ticket-card, .qr-ticket-display-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #ebdcd5;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.ticket-card__header, .qr-ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Waitlist entry */
+.waitlist-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid #ebdcd5;
+  border-radius: 12px;
+  padding: 20px;
+}
+.waitlist-entry-position {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+  padding: 12px;
+  background: #fef3c7;
+  border-radius: 8px;
+  border: 1px solid #fde68a;
+}
+.queue-number {
+  font-size: 24px;
+  font-weight: 800;
+  color: #92400e;
+}
+.waitlist-entry-details {
+  flex: 1;
+}
+.waitlist-entry-details h3 {
+  margin: 0 0 6px;
+}
+.waitlist-entry-details p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #6d4336;
+}
+
+/* Search Submit Button */
+.search-submit-btn {
+  padding: 6px 14px;
+  background: #c2410c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.search-submit-btn:hover {
+  background: #9a3412;
+}
+
+/* Custom Tables */
+.custom-table th {
+  font-size: 12px;
+  font-weight: 700;
+  color: #886255;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.custom-table td {
+  font-size: 13px;
+  color: #4a3832;
+}
+
+/* =========================================================
+   UI STATES (LOADING, SUCCESS, FAILURE, EMPTY, 403 FORBIDDEN)
+   ========================================================= */
+
+/* 1. Loading State Styles */
+.state-card--loading,
+.loading-spinner-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.custom-spinner,
+.state-card__spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(194, 65, 12, 0.15);
+  border-top-color: #c2410c;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner-wrapper--small .custom-spinner {
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
+}
+
+.loading-spinner-wrapper--large .custom-spinner {
+  width: 56px;
+  height: 56px;
+  border-width: 4px;
+}
+
+.loading-spinner-text {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #7a5b50;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-fullpage-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 247, 243, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* 2. Empty Data State Styles */
+.empty-state-container,
+.workshop-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background: #ffffff;
+  border: 1px dashed #ebdcd5;
+  border-radius: 12px;
+  text-align: center;
+  margin: 20px auto;
+  max-width: 560px;
+}
+
+.empty-state-icon-box,
+.workshop-empty__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fdf7f4;
+  border: 1px solid #ebdcd5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #9d7b70;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.empty-state-svg {
+  width: 30px;
+  height: 30px;
+  color: #c2410c;
+}
+
+.empty-state-title,
+.workshop-empty h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #4a3832;
+  margin: 0 0 8px;
+}
+
+.empty-state-description,
+.workshop-empty p {
+  font-size: 14px;
+  color: #7a5b50;
+  max-width: 420px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 3. 403 Forbidden State Styles */
+.forbidden-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 65vh;
+  padding: 30px 20px;
+}
+
+.forbidden-card {
+  background: #ffffff;
+  border: 1px solid #ebdcd5;
+  border-radius: 16px;
+  padding: 40px 32px;
+  max-width: 540px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+.forbidden-code-badge {
+  display: inline-block;
+  font-size: 32px;
+  font-weight: 900;
+  color: #991b1b;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 6px 20px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+
+.forbidden-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #4a3832;
+  margin: 0 0 10px;
+}
+
+.forbidden-description {
+  font-size: 14px;
+  color: #7a5b50;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.forbidden-role-box {
+  background: #fdf7f4;
+  border: 1px solid #ebdcd5;
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 13px;
+  color: #4a3832;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.forbidden-role-box p {
+  margin: 4px 0;
+}
+
+.forbidden-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* 4. Alert Banner & Dismissal */
+.alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  animation: fadeIn 0.2s ease;
+}
+
+.alert-banner__content {
+  flex: 1;
+}
+
+.alert-banner__close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.alert-banner__close-btn:hover {
+  opacity: 1;
+}
+
+.alert-banner--info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

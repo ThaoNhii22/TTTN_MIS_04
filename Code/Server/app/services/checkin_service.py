@@ -39,21 +39,39 @@ def process_checkin(
             detail=f"Đã hết thời gian điểm danh (Cổng check-in đóng lúc {workshop.checkin_end_at.strftime('%H:%M %d/%m/%Y')}) theo quy tắc BR-05.",
         )
 
-    # Xác định Registration cần điểm danh
+    # Xác định Registration cần điểm danh và Kiểm tra Quyền bảo mật (Bug 3 & 4)
     target_registration: Optional[Registration] = None
 
     if checkin_in.registration_id:
-        # Check-in chỉ định bởi Organizer / Admin
         target_registration = (
             db.query(Registration)
-            .filter(
-                Registration.registration_id == checkin_in.registration_id,
-                Registration.workshop_id == workshop.workshop_id,
-            )
+            .filter(Registration.registration_id == checkin_in.registration_id)
             .first()
         )
+        if not target_registration:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy lượt đăng ký theo mã chỉ định.",
+            )
+        if target_registration.workshop_id != workshop.workshop_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Lượt đăng ký này không thuộc về Workshop đã chọn.",
+            )
+        # Kiểm tra bảo mật: Participant chỉ được check-in cho chính mình
+        if current_user.role == "participant" and target_registration.user_id != current_user.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bạn không có quyền điểm danh cho người khác (Participant chỉ được check-in cho chính mình).",
+            )
+        if current_user.role == "organizer" and workshop.organizer_id != current_user.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bạn không có quyền quản lý điểm danh cho Workshop của người khác.",
+            )
+
     elif checkin_in.qr_payload:
-        # Điểm danh bằng QR Payload format: TTTN_MIS_04|{workshop_id}|{registration_id}|{email}
+        # Điểm danh bằng QR Payload format: TTTN_MIS_04|{workshop_id}|{registration_id}|{email} hoặc checkin_code
         parts = checkin_in.qr_payload.strip().split("|")
         if len(parts) >= 3 and parts[0] == "TTTN_MIS_04":
             ws_id = int(parts[1])
@@ -71,6 +89,38 @@ def process_checkin(
                 )
                 .first()
             )
+            if not target_registration:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Không tìm thấy lượt đăng ký theo mã QR.",
+                )
+            # Kiểm tra bảo mật khi Participant tự quét QR của người khác
+            if current_user.role == "participant" and target_registration.user_id != current_user.user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Bạn không có quyền điểm danh cho người khác (Participant chỉ được check-in cho chính mình).",
+                )
+            if current_user.role == "organizer" and workshop.organizer_id != current_user.user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Bạn không có quyền quản lý điểm danh cho Workshop của người khác.",
+                )
+        else:
+            # QR chứa mã checkin_code của Workshop
+            if checkin_in.qr_payload.strip() != workshop.checkin_code:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Mã QR điểm danh không chính xác (BR-04).",
+                )
+            target_registration = (
+                db.query(Registration)
+                .filter(
+                    Registration.workshop_id == workshop.workshop_id,
+                    Registration.user_id == current_user.user_id,
+                )
+                .first()
+            )
+
     elif checkin_in.checkin_code:
         # BR-04: Kiểm tra mã check-in của Workshop
         if checkin_in.checkin_code.strip() != workshop.checkin_code:
@@ -123,7 +173,7 @@ def process_checkin(
             detail="Lượt đăng ký này đã bị hủy, không thể điểm danh.",
         )
 
-    # BR-14: Chống điểm danh trùng — kiểm tra tầng app (SAU KHI đã có Row Lock)
+    # BR-14: Chống điểm danh trùng (Bug 5) — kiểm tra tầng app sau khi đã có Row Lock
     existing_attendance = (
         db.query(Attendance)
         .filter(Attendance.registration_id == target_registration.registration_id)
@@ -141,6 +191,7 @@ def process_checkin(
         registration_id=target_registration.registration_id,
         checkin_at=now,
         checkin_method=checkin_in.checkin_method,
+        status="present",
     )
     target_registration.status = "attended"
 
@@ -168,6 +219,7 @@ def process_checkin(
             "workshop_id": workshop.workshop_id,
             "registration_id": target_registration.registration_id,
             "checkin_method": checkin_in.checkin_method,
+            "status": attendance.status,
             "checkin_at": str(now),
         },
         ip_address=ip_address,
