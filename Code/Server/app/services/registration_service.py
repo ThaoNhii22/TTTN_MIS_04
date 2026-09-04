@@ -19,7 +19,7 @@ def format_qr_payload(workshop_id: int, registration_id: int, user_email: str) -
 def check_is_cancellable(workshop: Workshop) -> bool:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     cutoff_time = workshop.start_at - timedelta(hours=24)  # BR-11 Mặc định trước 24h
-    return now < cutoff_time
+    return bool(now < cutoff_time)
 
 
 def register_for_workshop(
@@ -29,20 +29,10 @@ def register_for_workshop(
     accept_waitlist: bool = True,
     ip_address: Optional[str] = None,
 ) -> Registration:
-    # ─────────────────────────────────────────────────────────────────────────
-    # FIX RACE CONDITION (BR-01/BR-02): Dùng SELECT ... FOR UPDATE để khóa dòng
-    # Workshop tại tầng InnoDB, buộc tất cả request đồng thời phải xếp hàng.
-    #
-    # Vấn đề cũ (TOCTOU): SELECT COUNT(*) thường → Thread A và Thread B cùng
-    # thấy "còn chỗ" → cả 2 đều INSERT confirmed → vỡ quota.
-    #
-    # Giải pháp: .with_for_update() giữ Row Lock suốt transaction, đảm bảo chỉ
-    # 1 request tại một thời điểm có thể đọc-đếm-ghi vào workshop này.
-    # ─────────────────────────────────────────────────────────────────────────
     workshop = (
         db.query(Workshop)
         .filter(Workshop.workshop_id == workshop_id)
-        .with_for_update()  # InnoDB Row Lock — ngăn race condition
+        .with_for_update()  # Row-lock Workshop để ngăn race condition khi nhiều người đăng ký đồng thời
         .first()
     )
     if not workshop:
@@ -83,6 +73,7 @@ def register_for_workshop(
             Registration.workshop_id == workshop_id,
             Registration.user_id == current_user.user_id,
         )
+        .with_for_update()
         .first()
     )
     if existing_reg and existing_reg.status in ["confirmed", "waitlist", "attended"]:
@@ -92,10 +83,18 @@ def register_for_workshop(
             detail=f"Bạn đã có lượt đăng ký ({status_text}) cho Workshop này rồi (BR-01 chống đăng ký trùng).",
         )
 
-    # BR-02: Kiểm soát số lượng vé và Danh sách chờ
-    # Lưu ý: get_workshop_stats() được gọi SAU khi đã có Row Lock → đếm chính xác
-    stats = get_workshop_stats(db, workshop)
-    is_full = stats["is_full"]
+    # BR-02: Kiểm soát số lượng vé và Danh sách chờ (Khóa dòng và đọc dữ liệu mới nhất - Current Read)
+    confirmed_regs = (
+        db.query(Registration)
+        .filter(
+            Registration.workshop_id == workshop_id,
+            Registration.status.in_(["confirmed", "attended"]),
+        )
+        .with_for_update()
+        .all()
+    )
+    confirmed_count = len(confirmed_regs)
+    is_full = confirmed_count >= workshop.quota
 
     if is_full and not accept_waitlist:
         raise HTTPException(
@@ -104,26 +103,27 @@ def register_for_workshop(
         )
 
     if is_full:
-        # Đưa vào Waitlist với số thứ tự tiếp theo
-        current_max_pos = (
-            db.query(func.max(Registration.waitlist_position))
+        # Đưa vào Waitlist với số thứ tự tiếp theo (Đọc có khóa dòng để lấy vị trí chính xác)
+        waitlist_regs = (
+            db.query(Registration)
             .filter(
                 Registration.workshop_id == workshop_id,
                 Registration.status == "waitlist",
             )
-            .scalar()
-            or 0
+            .with_for_update()
+            .all()
         )
+        current_max_pos = max([r.waitlist_position or 0 for r in waitlist_regs], default=0)
         next_pos = current_max_pos + 1
 
         if existing_reg:
             reg = existing_reg
-            reg.status = "waitlist"
-            reg.waitlist_position = next_pos
-            reg.registered_at = now
-            reg.cancelled_at = None
-            reg.cancel_reason = None
-            reg.confirmed_at = None
+            setattr(reg, "status", "waitlist")
+            setattr(reg, "waitlist_position", next_pos)
+            setattr(reg, "registered_at", now)
+            setattr(reg, "cancelled_at", None)
+            setattr(reg, "cancel_reason", None)
+            setattr(reg, "confirmed_at", None)
         else:
             reg = Registration(
                 workshop_id=workshop_id,
@@ -138,12 +138,12 @@ def register_for_workshop(
         # Xác nhận đăng ký chính thức
         if existing_reg:
             reg = existing_reg
-            reg.status = "confirmed"
-            reg.waitlist_position = None
-            reg.registered_at = now
-            reg.cancelled_at = None
-            reg.cancel_reason = None
-            reg.confirmed_at = now
+            setattr(reg, "status", "confirmed")
+            setattr(reg, "waitlist_position", None)
+            setattr(reg, "registered_at", now)
+            setattr(reg, "cancelled_at", None)
+            setattr(reg, "cancel_reason", None)
+            setattr(reg, "confirmed_at", now)
         else:
             reg = Registration(
                 workshop_id=workshop_id,
@@ -154,33 +154,39 @@ def register_for_workshop(
                 confirmed_at=now,
             )
             db.add(reg)
+
     try:
         db.commit()
+        db.refresh(reg)
     except IntegrityError:
-        # Lớp bảo vệ thứ 2: Bắt UNIQUE constraint (workshop_id, user_id) từ tầng DB
-        # Trường hợp hiếm bypass qua app-level check (vd: 2 tab trình duyệt cùng submit)
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Bạn đã đăng ký Workshop này rồi (BR-01). Vui lòng kiểm tra lại.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bạn đã có lượt đăng ký cho Workshop này rồi (BR-01 chống đăng ký trùng).",
         )
-    db.refresh(reg)
+    except Exception:
+        db.rollback()
+        raise
 
     # BR-10: Ghi Audit Log
-    log_audit_action(
-        db=db,
-        actor_id=current_user.user_id,
-        action="CREATE_REGISTRATION",
-        target_entity="Registrations",
-        target_id=reg.registration_id,
-        new_value={
-            "workshop_id": workshop_id,
-            "status": reg.status,
-            "waitlist_position": reg.waitlist_position,
-        },
-        ip_address=ip_address,
-    )
-    db.commit()
+    try:
+        log_audit_action(
+            db=db,
+            actor_id=getattr(current_user, "user_id"),
+            action="CREATE_REGISTRATION",
+            target_entity="Registrations",
+            target_id=getattr(reg, "registration_id", None),
+            new_value={
+                "workshop_id": workshop_id,
+                "status": reg.status,
+                "waitlist_position": reg.waitlist_position,
+            },
+            ip_address=ip_address,
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+
     return reg
 
 
@@ -191,15 +197,10 @@ def cancel_registration_by_user(
     current_user: User,
     ip_address: Optional[str] = None,
 ) -> Registration:
-    # ─────────────────────────────────────────────────────────────────────────
-    # FIX RACE CONDITION (BUG #4): Khóa dòng Registration trước khi hủy.
-    # Ngăn trường hợp 2 request hủy cùng 1 vé → cả 2 đều trigger promote_waitlist
-    # → đôn 2 người cho 1 slot trống.
-    # ─────────────────────────────────────────────────────────────────────────
     reg = (
         db.query(Registration)
         .filter(Registration.registration_id == registration_id)
-        .with_for_update()  # Row Lock — ngăn concurrent cancel cùng vé
+        .with_for_update()
         .first()
     )
     if not reg:
@@ -231,35 +232,43 @@ def cancel_registration_by_user(
             detail="Đã quá hạn chót hủy vé (trước 24 giờ khi sự kiện diễn ra) theo quy tắc BR-11.",
         )
 
-    old_status = reg.status
+    old_status = str(reg.status)
     old_pos = reg.waitlist_position
 
-    reg.status = "cancelled"
-    reg.cancelled_at = now
-    reg.cancel_reason = cancel_reason or "Người tham gia tự hủy"
-    reg.waitlist_position = None
-    db.commit()
+    setattr(reg, "status", "cancelled")
+    setattr(reg, "cancelled_at", now)
+    setattr(reg, "cancel_reason", cancel_reason or "Người tham gia tự hủy")
+    setattr(reg, "waitlist_position", None)
+
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
     # BR-10: Ghi Audit Log hủy
-    log_audit_action(
-        db=db,
-        actor_id=current_user.user_id,
-        action="CANCEL_REGISTRATION",
-        target_entity="Registrations",
-        target_id=reg.registration_id,
-        old_value={"status": old_status, "waitlist_position": old_pos},
-        new_value={"status": "cancelled", "cancel_reason": reg.cancel_reason},
-        ip_address=ip_address,
-    )
-    db.commit()
+    try:
+        log_audit_action(
+            db=db,
+            actor_id=getattr(current_user, "user_id"),
+            action="CANCEL_REGISTRATION",
+            target_entity="Registrations",
+            target_id=getattr(reg, "registration_id", None),
+            old_value={"status": old_status, "waitlist_position": old_pos},
+            new_value={"status": "cancelled", "cancel_reason": reg.cancel_reason},
+            ip_address=ip_address,
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
 
     # BR-03: Nếu vé bị hủy là confirmed -> Tự động đôn người đứng đầu trong Waitlist
     if old_status == "confirmed":
         promote_waitlist_entries(
             db=db,
-            workshop_id=workshop.workshop_id,
+            workshop_id=getattr(workshop, "workshop_id"),
             available_slots=1,
-            actor_id=current_user.user_id,
+            actor_id=getattr(current_user, "user_id"),
             ip_address=ip_address,
         )
     elif old_status == "waitlist":
@@ -270,12 +279,16 @@ def cancel_registration_by_user(
                 Registration.workshop_id == workshop.workshop_id,
                 Registration.status == "waitlist",
             )
+            .with_for_update()
             .order_by(Registration.waitlist_position.asc(), Registration.registered_at.asc())
             .all()
         )
         for idx, rem_reg in enumerate(remaining_waitlist, start=1):
-            rem_reg.waitlist_position = idx
-        db.commit()
+            setattr(rem_reg, "waitlist_position", idx)
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
 
     db.refresh(reg)
     return reg

@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.config import settings
-from app.core.database import Base, get_db
+from app.core.database import Base, SessionLocal, get_db
 from app.main import app
 from app.models import Attendance, AuditLog, Registration, Survey, User, Workshop
 
@@ -186,6 +186,11 @@ class TestRegistrationWaitlistAndCheckin:
         # Python workshop has quota=2.
         # User 1 & User 2 are confirmed. User 3 & User 4 are in waitlist (position 1, 2).
         # When User 1 cancels, User 3 should be promoted to confirmed, User 4 becomes waitlist position 1.
+        db = SessionLocal()
+        db.query(User).filter(User.email == "nam.nt@workshop.edu.vn").update({"status": "active"})
+        db.commit()
+        db.close()
+
         user1_token = get_auth_token("user@workshop.edu.vn", "User@123")
         my_regs = client.get("/api/v1/registrations/my", headers=auth_headers(user1_token)).json()
         py_reg = next((r for r in my_regs if "Python" in (r.get("workshop_title") or "") and r["status"] == "confirmed"), None)

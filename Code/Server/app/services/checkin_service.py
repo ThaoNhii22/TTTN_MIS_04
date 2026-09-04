@@ -18,7 +18,25 @@ def process_checkin(
     current_user: User,
     ip_address: Optional[str] = None,
 ) -> Attendance:
-    workshop = db.query(Workshop).filter(Workshop.workshop_id == checkin_in.workshop_id).first()
+    # Tìm Workshop tương ứng
+    workshop: Optional[Workshop] = None
+    if checkin_in.workshop_id:
+        workshop = db.query(Workshop).filter(Workshop.workshop_id == checkin_in.workshop_id).first()
+    elif checkin_in.qr_payload and checkin_in.qr_payload.strip().startswith("TTTN_MIS_04|"):
+        parts = checkin_in.qr_payload.strip().split("|")
+        if len(parts) >= 2:
+            try:
+                ws_id = int(parts[1])
+                workshop = db.query(Workshop).filter(Workshop.workshop_id == ws_id).first()
+            except ValueError:
+                pass
+    elif checkin_in.checkin_code:
+        workshop = db.query(Workshop).filter(Workshop.checkin_code == checkin_in.checkin_code.strip()).first()
+    elif checkin_in.registration_id:
+        reg_temp = db.query(Registration).filter(Registration.registration_id == checkin_in.registration_id).first()
+        if reg_temp:
+            workshop = reg_temp.workshop
+
     if not workshop:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -39,13 +57,14 @@ def process_checkin(
             detail=f"Đã hết thời gian điểm danh (Cổng check-in đóng lúc {workshop.checkin_end_at.strftime('%H:%M %d/%m/%Y')}) theo quy tắc BR-05.",
         )
 
-    # Xác định Registration cần điểm danh và Kiểm tra Quyền bảo mật (Bug 3 & 4)
+    # Xác định Registration cần điểm danh và Kiểm tra Quyền bảo mật
     target_registration: Optional[Registration] = None
 
     if checkin_in.registration_id:
         target_registration = (
             db.query(Registration)
             .filter(Registration.registration_id == checkin_in.registration_id)
+            .with_for_update()
             .first()
         )
         if not target_registration:
@@ -87,6 +106,7 @@ def process_checkin(
                     Registration.registration_id == reg_id,
                     Registration.workshop_id == workshop.workshop_id,
                 )
+                .with_for_update()
                 .first()
             )
             if not target_registration:
@@ -118,6 +138,7 @@ def process_checkin(
                     Registration.workshop_id == workshop.workshop_id,
                     Registration.user_id == current_user.user_id,
                 )
+                .with_for_update()
                 .first()
             )
 
@@ -135,6 +156,7 @@ def process_checkin(
                 Registration.workshop_id == workshop.workshop_id,
                 Registration.user_id == current_user.user_id,
             )
+            .with_for_update()
             .first()
         )
 
@@ -144,24 +166,7 @@ def process_checkin(
             detail="Không tìm thấy lượt đăng ký hợp lệ để điểm danh.",
         )
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # FIX RACE CONDITION (BR-14): Khóa dòng Registration trước khi kiểm tra và ghi
-    # điểm danh. Ngăn 2 request đồng thời quét cùng 1 mã QR:
-    #   - Cũ: SELECT EXISTS → False (cả 2 thread) → cả 2 INSERT → Duplicate Attendance
-    #   - Mới: with_for_update() giữ Row Lock → chỉ 1 request xử lý tại 1 thời điểm
-    #
-    # Kết hợp 2 lớp bảo vệ:
-    #   1. with_for_update() — ngăn race ở tầng app (chính)
-    #   2. IntegrityError catch — bắt UNIQUE(registration_id) ở tầng DB (defense in depth)
-    # ─────────────────────────────────────────────────────────────────────────
-    target_registration = (
-        db.query(Registration)
-        .filter(Registration.registration_id == target_registration.registration_id)
-        .with_for_update()  # InnoDB Row Lock
-        .first()
-    )
-
-    # Kiểm tra trạng thái vé: Phải là confirmed
+    # Kiểm tra trạng thái vé: Bắt buộc phải là confirmed (hoặc reject rõ lý do)
     if target_registration.status == "waitlist":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -173,7 +178,7 @@ def process_checkin(
             detail="Lượt đăng ký này đã bị hủy, không thể điểm danh.",
         )
 
-    # BR-14: Chống điểm danh trùng (Bug 5) — kiểm tra tầng app sau khi đã có Row Lock
+    # BR-14: Chống điểm danh trùng (được bảo vệ bởi Row Lock và DB Unique Constraint)
     existing_attendance = (
         db.query(Attendance)
         .filter(Attendance.registration_id == target_registration.registration_id)
@@ -186,6 +191,12 @@ def process_checkin(
             detail=f"Lượt đăng ký này đã được điểm danh lúc {checkin_time_str} (BR-14 chống điểm danh trùng).",
         )
 
+    if target_registration.status != "confirmed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Trạng thái đăng ký '{target_registration.status}' không hợp lệ để điểm danh.",
+        )
+
     # Ghi nhận điểm danh
     attendance = Attendance(
         registration_id=target_registration.registration_id,
@@ -193,36 +204,42 @@ def process_checkin(
         checkin_method=checkin_in.checkin_method,
         status="present",
     )
-    target_registration.status = "attended"
+    setattr(target_registration, "status", "attended")
 
     db.add(attendance)
     try:
         db.commit()
+        db.refresh(attendance)
     except IntegrityError:
-        # Lớp bảo vệ thứ 2: Bắt UNIQUE(registration_id) constraint từ tầng DB
-        # Trường hợp hiếm hơn nhưng vẫn có thể xảy ra ở tầng connection pool
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Lượt đăng ký này đã được điểm danh rồi (BR-14). Vui lòng kiểm tra lại.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Lượt đăng ký này đã được điểm danh trước đó (BR-14 chống điểm danh trùng).",
         )
-    db.refresh(attendance)
+    except Exception:
+        db.rollback()
+        raise
 
     # BR-10: Audit Log
-    log_audit_action(
-        db=db,
-        actor_id=current_user.user_id,
-        action="CHECKIN_PARTICIPANT",
-        target_entity="Attendance",
-        target_id=attendance.attendance_id,
-        new_value={
-            "workshop_id": workshop.workshop_id,
-            "registration_id": target_registration.registration_id,
-            "checkin_method": checkin_in.checkin_method,
-            "status": attendance.status,
-            "checkin_at": str(now),
-        },
-        ip_address=ip_address,
-    )
-    db.commit()
+    try:
+        log_audit_action(
+            db=db,
+            actor_id=getattr(current_user, "user_id"),
+            action="CHECKIN_PARTICIPANT",
+            target_entity="Attendance",
+            target_id=getattr(attendance, "attendance_id", None),
+            new_value={
+                "workshop_id": getattr(workshop, "workshop_id"),
+                "registration_id": getattr(target_registration, "registration_id"),
+                "checkin_method": checkin_in.checkin_method,
+                "status": attendance.status,
+                "checkin_at": str(now),
+            },
+            ip_address=ip_address,
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        # Audit log failure should not crash successful checkin
+
     return attendance
