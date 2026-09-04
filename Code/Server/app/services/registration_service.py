@@ -29,11 +29,10 @@ def register_for_workshop(
     accept_waitlist: bool = True,
     ip_address: Optional[str] = None,
 ) -> Registration:
-    # Row-lock Workshop để ngăn race condition khi nhiều người đăng ký đồng thời
     workshop = (
         db.query(Workshop)
         .filter(Workshop.workshop_id == workshop_id)
-        .with_for_update()
+        .with_for_update()  # Row-lock Workshop để ngăn race condition khi nhiều người đăng ký đồng thời
         .first()
     )
     if not workshop:

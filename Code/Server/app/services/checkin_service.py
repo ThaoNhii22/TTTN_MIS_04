@@ -178,7 +178,7 @@ def process_checkin(
             detail="Lượt đăng ký này đã bị hủy, không thể điểm danh.",
         )
 
-    # BR-14: Chống điểm danh trùng
+    # BR-14: Chống điểm danh trùng (được bảo vệ bởi Row Lock và DB Unique Constraint)
     existing_attendance = (
         db.query(Attendance)
         .filter(Attendance.registration_id == target_registration.registration_id)
