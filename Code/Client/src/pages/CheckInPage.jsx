@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +8,15 @@ import { getMyRegistrations } from '../services/registrationService';
 
 function CheckInPage() {
   const { role } = useAuth();
-  const [activeTab, setActiveTab] = useState(role === 'participant' ? 'ticket' : 'scanner');
+
+  if (role === 'organizer') {
+    return <Navigate to="/organizer/workshops" replace />;
+  }
+  if (role === 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const [activeTab, setActiveTab] = useState('ticket');
   const [myTickets, setMyTickets] = useState([]);
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -299,9 +307,9 @@ function CheckInPage() {
       {activeTab === 'scanner' && (
         <div className="checkin-scanner-tab">
           <div className="scanner-card" style={{ maxWidth: '540px', margin: '0 auto', background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #ebdcd5' }}>
-            <h2>Nhập mã hoặc Quét QR bằng Camera</h2>
+            <h2>Nhập mã hoặc Quét QR Sự kiện</h2>
             <p style={{ color: '#7a5b50', fontSize: '13px', marginBottom: '20px' }}>
-              Dùng camera để quét mã QR của người tham gia, hoặc nhập thủ công mã check-in.
+              Dùng camera để quét mã QR sự kiện hoặc nhập thủ công mã check-in của Workshop.
             </p>
 
             {/* Camera QR Scanner */}
@@ -368,11 +376,11 @@ function CheckInPage() {
               }}
             >
               <div className="form-group">
-                <label>Mã QR Payload hoặc Mã Check-in:</label>
+                <label>Mã Check-in hoặc QR của Workshop:</label>
                 <textarea
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
-                  placeholder="Nhập chuỗi mã QR hoặc mã check-in"
+                  placeholder="Nhập mã check-in sự kiện (ví dụ: WS-CHECKIN-...)"
                   rows="3"
                   required
                 />

@@ -36,7 +36,7 @@ def submit_workshop_survey(
     if reg.status != "attended":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Chỉ người tham gia đã được ghi nhận điểm danh (Đã tham dự) mới được thực hiện khảo sát đánh giá theo quy tắc BR-09.",
+            detail="Chỉ người tham gia đã được ghi nhận điểm danh mới được thực hiện khảo sát đánh giá.",
         )
 
     # Kiểm tra nếu đã làm khảo sát trước đó

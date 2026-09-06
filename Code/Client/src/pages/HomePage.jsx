@@ -178,13 +178,15 @@ function HomePage() {
         </div>
 
         <div className="shortcut-grid">
-          <Link to="/check-in" className="shortcut-card">
-            <div>
-              <h3>Mã QR Điểm danh</h3>
-              <p>Quét hoặc nhập mã điểm danh</p>
-            </div>
-            <span>→</span>
-          </Link>
+          {role === 'participant' && (
+            <Link to="/check-in" className="shortcut-card">
+              <div>
+                <h3>Mã QR Điểm danh</h3>
+                <p>Quét hoặc nhập mã điểm danh</p>
+              </div>
+              <span>→</span>
+            </Link>
+          )}
 
           <Link to="/workshops" className="shortcut-card">
             <div>
