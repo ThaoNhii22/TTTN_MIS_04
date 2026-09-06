@@ -113,7 +113,7 @@ def verify_workshop_organizer_or_admin(
         if workshop.organizer_id != current_user.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bạn không có quyền quản lý Workshop này (Chỉ chính chủ người tổ chức hoặc Admin mới có quyền).",
+                detail="Bạn không có quyền quản lý Workshop này, chỉ chính chủ người tổ chức hoặc Admin mới có quyền.",
             )
         return workshop
 

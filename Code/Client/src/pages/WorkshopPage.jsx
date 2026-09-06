@@ -25,7 +25,11 @@ function WorkshopPage() {
         }
         const data = await getWorkshops(params);
         if (!ignore) {
-          setWorkshops(data);
+          // Lọc bỏ các workshop test (tiêu đề bắt đầu bằng "TEST")
+          const filtered = data.filter(
+            (w) => !w.title?.trim().toUpperCase().match(/^(TEST|Exception Test|Functional Test|Workshop Test|CONCURRENCY)/i)
+          );
+          setWorkshops(filtered);
         }
       } catch (err) {
         console.error('Error fetching workshops:', err);

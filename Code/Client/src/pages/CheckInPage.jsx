@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
@@ -6,19 +7,17 @@ import { checkInParticipant, getMyAttendanceHistory, getWorkshopAttendanceList }
 import { getWorkshops } from '../services/workshopService';
 
 function CheckInPage() {
-  const { role, user } = useAuth();
-  const isOrganizerOrAdmin = role === 'organizer' || role === 'admin';
+  const { role } = useAuth();
 
-  // Organizer state
-  const [organizedWorkshops, setOrganizedWorkshops] = useState([]);
-  const [workshopQrCodes, setWorkshopQrCodes] = useState({});
-  const [selectedWorkshopForProjection, setSelectedWorkshopForProjection] = useState(null);
-  const [selectedWorkshopAttendance, setSelectedWorkshopAttendance] = useState(null);
-  const [attendanceList, setAttendanceList] = useState([]);
-  const [loadingAttendanceList, setLoadingAttendanceList] = useState(false);
-  const [organizerMode, setOrganizerMode] = useState('display'); // 'display' | 'scanner'
+  if (role === 'organizer') {
+    return <Navigate to="/organizer/workshops" replace />;
+  }
+  if (role === 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
 
-  // Participant & Scanner Form state
+  const [activeTab, setActiveTab] = useState('ticket');
+  const [myTickets, setMyTickets] = useState([]);
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [manualCode, setManualCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -419,9 +418,17 @@ function CheckInPage() {
             </div>
           )}
 
-          {/* Modal Phóng to Trình Chiếu Mã QR (Dành cho Máy chiếu / Màn hình sự kiện) */}
-          {selectedWorkshopForProjection && (
-            <div className="modal-backdrop" style={{ background: 'rgba(26, 17, 13, 0.85)', zIndex: 9999 }}>
+      {/* Tab 2: Scanner & Manual Code Input */}
+      {activeTab === 'scanner' && (
+        <div className="checkin-scanner-tab">
+          <div className="scanner-card" style={{ maxWidth: '540px', margin: '0 auto', background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #ebdcd5' }}>
+            <h2>Nhập mã hoặc Quét QR Sự kiện</h2>
+            <p style={{ color: '#7a5b50', fontSize: '13px', marginBottom: '20px' }}>
+              Dùng camera để quét mã QR sự kiện hoặc nhập thủ công mã check-in của Workshop.
+            </p>
+
+            {/* Camera QR Scanner */}
+            <div style={{ marginBottom: '20px' }}>
               <div
                 className="modal-content"
                 style={{
@@ -676,36 +683,21 @@ function CheckInPage() {
               </div>
             </div>
 
-            {attendanceLogs.length === 0 ? (
-              <p style={{ color: '#7a5b50', fontSize: '14px' }}>Chưa có bản ghi điểm danh nào.</p>
-            ) : (
-              <div className="table-responsive" style={{ background: '#fff', borderRadius: '8px', border: '1px solid #ebdcd5', overflow: 'hidden' }}>
-                <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: '#fbf4f0', textAlign: 'left', borderBottom: '1px solid #ebdcd5' }}>
-                      <th style={{ padding: '12px 16px' }}>Mã điểm danh</th>
-                      <th style={{ padding: '12px 16px' }}>Sự kiện</th>
-                      <th style={{ padding: '12px 16px' }}>Phương thức</th>
-                      <th style={{ padding: '12px 16px' }}>Thời gian</th>
-                      <th style={{ padding: '12px 16px' }}>Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendanceLogs.map((log) => (
-                      <tr key={log.attendance_id} style={{ borderBottom: '1px solid #f2e6e0' }}>
-                        <td style={{ padding: '12px 16px' }}><code>ATT-{log.attendance_id}</code></td>
-                        <td style={{ padding: '12px 16px' }}><strong>{log.workshop_title}</strong></td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <span className="status-tag status-tag--draft">{log.checkin_method}</span>
-                        </td>
-                        <td style={{ padding: '12px 16px' }}>{new Date(log.checkin_at).toLocaleString('vi-VN')}</td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <span className="status-tag status-tag--attended">Đã tham dự</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleExecuteCheckIn();
+              }}
+            >
+              <div className="form-group">
+                <label>Mã Check-in hoặc QR của Workshop:</label>
+                <textarea
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value)}
+                  placeholder="Nhập mã check-in sự kiện (ví dụ: WS-CHECKIN-...)"
+                  rows="3"
+                  required
+                />
               </div>
             )}
           </div>

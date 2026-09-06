@@ -76,7 +76,7 @@ def validate_workshop_time_constraints(
     if end_at <= start_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Thời gian kết thúc sự kiện (end_at) phải sau thời gian bắt đầu (start_at).",
+            detail="Thời gian kết thúc sự kiện phải sau thời gian bắt đầu.",
         )
     if checkin_end_at <= checkin_start_at:
         raise HTTPException(
@@ -200,16 +200,16 @@ def update_workshop(
         if update_in.quota < confirmed_count:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Không thể giảm Quota ({update_in.quota}) nhỏ hơn số lượng đã xác nhận ({confirmed_count}) theo quy tắc BR-12.",
+                detail=f"Không thể giảm Quota {update_in.quota} nhỏ hơn số lượng đã xác nhận {confirmed_count}.",
             )
 
         # Ghi Audit Log riêng cho hành động thay đổi Quota (Task 25)
         log_audit_action(
             db=db,
-            actor_id=actor.user_id,
+            actor_id=getattr(actor, "user_id"),
             action="UPDATE_QUOTA",
             target_entity="Workshops",
-            target_id=workshop.workshop_id,
+            target_id=getattr(workshop, "workshop_id", None),
             old_value={"quota": old_quota},
             new_value={"quota": update_in.quota},
             ip_address=ip_address,
@@ -262,7 +262,7 @@ def submit_workshop_for_approval(
     if workshop.status != "draft":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Chỉ có thể gửi duyệt Workshop đang ở trạng thái Nháp (draft).",
+            detail="Chỉ có thể gửi duyệt Workshop đang ở trạng thái Nháp.",
         )
 
     old_status = str(workshop.status)
@@ -295,7 +295,7 @@ def review_workshop(
     if workshop.status != "pending":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Chỉ có thể duyệt Workshop đang ở trạng thái Chờ duyệt (pending).",
+            detail="Chỉ có thể duyệt Workshop đang ở trạng thái Chờ duyệt.",
         )
 
     old_status = str(workshop.status)
