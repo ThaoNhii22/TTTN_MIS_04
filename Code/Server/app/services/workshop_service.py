@@ -410,8 +410,8 @@ def promote_waitlist_entries(
             Registration.workshop_id == workshop_id,
             Registration.status == "waitlist",
         )
-        .with_for_update()
         .order_by(Registration.waitlist_position.asc(), Registration.registered_at.asc())
+        .with_for_update()  # Row Lock — ngăn concurrent promote cùng waitlist
         .limit(available_slots)
         .all()
     )

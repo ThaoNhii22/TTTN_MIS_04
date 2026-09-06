@@ -16,6 +16,7 @@ class WorkshopBase(BaseModel):
     checkin_start_at: datetime = Field(..., description="Thời điểm bắt đầu cho phép check-in")
     checkin_end_at: datetime = Field(..., description="Thời điểm kết thúc check-in")
 
+class WorkshopCreate(WorkshopBase):
     @model_validator(mode="after")
     def validate_times(self):
         if self.end_at <= self.start_at:
@@ -30,10 +31,6 @@ class WorkshopBase(BaseModel):
         if self.registration_close_at and self.registration_close_at > self.start_at:
             raise ValueError("Thời điểm đóng đăng ký không được sau thời gian bắt đầu sự kiện.")
         return self
-
-
-class WorkshopCreate(WorkshopBase):
-    pass
 
 
 class WorkshopUpdate(BaseModel):

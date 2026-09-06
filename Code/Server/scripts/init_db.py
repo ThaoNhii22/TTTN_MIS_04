@@ -7,6 +7,7 @@ import pymysql
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.stdout.reconfigure(encoding='utf-8')
 
+from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import Base, engine
 import app.models  # Nạp toàn bộ metadata của 6 models
@@ -49,7 +50,17 @@ def init_database():
     try:
         print("🔨 Đang tạo 6 bảng CSDL (USERS, WORKSHOPS, REGISTRATIONS, ATTENDANCE, SURVEYS, AUDIT_LOGS)...")
         Base.metadata.create_all(bind=engine)
-        print("✅ Đã tạo thành công toàn bộ các bảng CSDL!")
+
+        # 3. Đảm bảo đồng bộ các cột mới nếu bảng đã tồn tại từ trước
+        with engine.connect() as conn:
+            try:
+                conn.execute(text("ALTER TABLE `ATTENDANCE` ADD COLUMN `status` ENUM('present', 'invalid') NOT NULL DEFAULT 'present' AFTER `checkin_method`;"))
+                conn.commit()
+                print("✅ Đã bổ sung cột `status` vào bảng `ATTENDANCE`.")
+            except Exception:
+                pass  # Cột đã tồn tại hoặc đang dùng SQLite
+
+        print("✅ Đã tạo/đồng bộ thành công toàn bộ các bảng CSDL!")
         return True
     except Exception as e:
         print(f"❌ Lỗi khi tạo bảng CSDL: {e}")

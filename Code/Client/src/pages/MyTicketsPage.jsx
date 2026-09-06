@@ -102,7 +102,7 @@ function MyTicketsPage() {
         <div>
           <h1>Vé và Lịch sử Đăng ký của bạn</h1>
           <p className="home-page__subtitle">
-            Xem danh sách vé tham gia, mã QR check-in và gửi khảo sát đánh giá sau khi tham dự.
+            Xem danh sách vé tham gia, trạng thái đăng ký và gửi khảo sát đánh giá sau khi tham dự.
           </p>
         </div>
         <Link to="/workshops" className="home-page__primary-button">
@@ -177,14 +177,7 @@ function MyTicketsPage() {
                   <p>Đăng ký lúc: {new Date(t.registered_at).toLocaleString('vi-VN')}</p>
                 </div>
 
-                {t.qr_payload && (
-                  <div className="ticket-qr-section">
-                    <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#4a3832', marginBottom: '4px' }}>MÃ QR ĐIỂM DANH:</p>
-                    <code style={{ fontSize: '11px', wordBreak: 'break-all', display: 'block', padding: '6px', background: '#fdf7f4', borderRadius: '6px', border: '1px solid #ebdcd5' }}>
-                      {t.qr_payload}
-                    </code>
-                  </div>
-                )}
+
 
                 <div className="ticket-actions" style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
                   {t.is_cancellable && (
