@@ -1,20 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ErrorState from '../components/ui/ErrorState';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/useToast';
 import { getWorkshops } from '../services/workshopService';
 
 function WorkshopPage() {
   const { role } = useAuth();
+  const toast = useToast();
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let ignore = false;
     async function loadWorkshops() {
       setLoading(true);
+      setHasError(false);
       try {
         const params = {};
         if (statusFilter !== 'all') {
@@ -29,6 +35,10 @@ function WorkshopPage() {
         }
       } catch (err) {
         console.error('Error fetching workshops:', err);
+        if (!ignore) {
+          setHasError(true);
+          toast.apiError(err, 'Không thể tải danh sách Workshop.');
+        }
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -39,7 +49,7 @@ function WorkshopPage() {
     return () => {
       ignore = true;
     };
-  }, [statusFilter, appliedSearch]);
+  }, [statusFilter, appliedSearch, reloadKey, toast]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -116,6 +126,12 @@ function WorkshopPage() {
           <div className="state-card__spinner" />
           <p style={{ marginTop: '12px' }}>Đang tải danh sách Workshop...</p>
         </div>
+      ) : hasError ? (
+        <ErrorState
+          title="Không thể tải danh sách Workshop"
+          message="Đã có lỗi xảy ra khi kết nối đến máy chủ. Vui lòng kiểm tra lại mạng hoặc thử lại."
+          onRetry={() => setReloadKey((k) => k + 1)}
+        />
       ) : workshops.length === 0 ? (
         <div className="workshop-empty">
           <div className="workshop-empty__icon">W</div>

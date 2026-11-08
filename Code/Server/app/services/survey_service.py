@@ -95,6 +95,7 @@ def get_workshop_survey_analytics(db: Session, workshop: Workshop) -> Dict[str, 
             "rating_distribution": {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
             "feedback_list": [],
             "surveys": [],
+            "feedbacks": [],
         }
 
     total_rating = sum(s.rating for s in surveys)
@@ -131,4 +132,5 @@ def get_workshop_survey_analytics(db: Session, workshop: Workshop) -> Dict[str, 
         "rating_distribution": dist,
         "feedback_list": feedbacks,
         "surveys": survey_list,
+        "feedbacks": survey_list,
     }

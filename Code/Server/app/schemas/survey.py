@@ -31,3 +31,4 @@ class SurveyStatsResponse(BaseModel):
     rating_distribution: Dict[int, int]
     feedback_list: List[Optional[str]]
     surveys: List[SurveyResponse]
+    feedbacks: List[SurveyResponse] = Field(default_factory=list, description="Danh sách chi tiết các phiếu khảo sát")

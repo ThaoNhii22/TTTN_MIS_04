@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import QRCode from 'qrcode';
+import Modal from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/useToast';
 import { checkInParticipant, getMyAttendanceHistory, getWorkshopAttendanceList } from '../services/attendanceService';
 import { getWorkshops } from '../services/workshopService';
 
 function CheckInPage() {
-  const { role, user } = useAuth();
+  const { role } = useAuth();
+  const toast = useToast();
   const isOrganizerOrAdmin = role === 'organizer' || role === 'admin';
 
   // Organizer state
@@ -30,7 +33,6 @@ function CheckInPage() {
 
   // Feedback state
   const [checkInResult, setCheckInResult] = useState(null);
-  const [checkInError, setCheckInError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -72,6 +74,7 @@ function CheckInPage() {
         }
       } catch (err) {
         console.error('Error loading check-in data:', err);
+        toast.apiError(err, 'Không thể tải dữ liệu điểm danh.');
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -83,7 +86,7 @@ function CheckInPage() {
     return () => {
       ignore = true;
     };
-  }, [role, isOrganizerOrAdmin, reloadKey]);
+  }, [role, isOrganizerOrAdmin, reloadKey, toast]);
 
   // Cleanup camera on unmount
   useEffect(() => {
@@ -97,13 +100,12 @@ function CheckInPage() {
   const handleExecuteCheckIn = async (codeToVerify) => {
     const code = (codeToVerify || manualCode).trim();
     if (!code) {
-      setCheckInError('Vui lòng nhập hoặc quét Mã điểm danh Sự kiện.');
+      toast.warning('Vui lòng nhập hoặc quét Mã điểm danh Sự kiện.');
       return;
     }
 
     setIsProcessing(true);
     setCheckInResult(null);
-    setCheckInError(null);
 
     try {
       const payload = {
@@ -115,10 +117,13 @@ function CheckInPage() {
       const result = await checkInParticipant(payload);
       setCheckInResult(result);
       setManualCode('');
+      toast.success(
+        `Điểm danh thành công cho "${result.user_name}" tại sự kiện "${result.workshop_title}".`,
+        'Xác nhận tham dự thành công'
+      );
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setCheckInError(typeof detail === 'string' ? detail : 'Điểm danh không thành công.');
+      toast.apiError(err, 'Điểm danh không thành công.');
     } finally {
       setIsProcessing(false);
     }
@@ -146,11 +151,11 @@ function CheckInPage() {
       );
     } catch (err) {
       setIsScannerActive(false);
-      setScannerError(
-        err?.message?.includes('Permission')
-          ? 'Không có quyền truy cập camera. Vui lòng cấp quyền trong trình duyệt.'
-          : `Không thể khởi động camera: ${err?.message || 'Lỗi không xác định'}`
-      );
+      const errMsg = err?.message?.includes('Permission')
+        ? 'Không có quyền truy cập camera. Vui lòng cấp quyền máy ảnh trong trình duyệt.'
+        : `Không thể khởi động camera: ${err?.message || 'Lỗi không xác định'}`;
+      setScannerError(errMsg);
+      toast.error(errMsg, 'Lỗi Camera');
     }
   };
 
@@ -158,7 +163,9 @@ function CheckInPage() {
     if (html5QrCodeRef.current) {
       try {
         await html5QrCodeRef.current.stop();
-      } catch (_) {}
+      } catch {
+        // Ignore camera shutdown errors
+      }
       html5QrCodeRef.current = null;
     }
     setIsScannerActive(false);
@@ -172,6 +179,7 @@ function CheckInPage() {
       setAttendanceList(list);
     } catch (err) {
       console.error('Error fetching workshop attendance list:', err);
+      toast.apiError(err, 'Không thể tải danh sách điểm danh của workshop.');
     } finally {
       setLoadingAttendanceList(false);
     }
@@ -179,20 +187,17 @@ function CheckInPage() {
 
   return (
     <div className="checkin-page">
-      {/* ========================================================================= */}
-      {/* 1. GIAO DIỆN DÀNH CHO BAN TỔ CHỨC / ADMIN                                */}
-      {/* ========================================================================= */}
       {isOrganizerOrAdmin ? (
         <>
-          <div className="checkin-page__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div className="checkin-page__header">
             <div>
-              <h1>Mã QR Điểm danh Sự kiện (Ban Tổ Chức)</h1>
+              <h1>Cổng Quản lý Điểm danh Sự kiện</h1>
               <p className="checkin-page__subtitle">
-                Trình chiếu mã QR hoặc cung cấp Mã check-in cho Người tham gia quét mã tại sự kiện (BR-04, BR-05).
+                Trình chiếu Mã QR điểm danh sự kiện lên máy chiếu, hoặc sử dụng máy quét hỗ trợ người tham gia (BR-04, BR-05).
               </p>
             </div>
 
-            <div className="checkin-tabs-toggle">
+            <div className="checkin-toggle-group">
               <button
                 type="button"
                 className={`checkin-toggle-btn ${organizerMode === 'display' ? 'active' : ''}`}
@@ -222,12 +227,6 @@ function CheckInPage() {
                 </p>
                 <small>Thời gian ghi nhận: {new Date(checkInResult.checkin_at).toLocaleString('vi-VN')}</small>
               </div>
-            </div>
-          )}
-
-          {checkInError && (
-            <div className="alert-banner alert-banner--error" style={{ marginBottom: '20px' }}>
-              <div>{checkInError}</div>
             </div>
           )}
 
@@ -420,28 +419,16 @@ function CheckInPage() {
           )}
 
           {/* Modal Phóng to Trình Chiếu Mã QR (Dành cho Máy chiếu / Màn hình sự kiện) */}
-          {selectedWorkshopForProjection && (
-            <div className="modal-backdrop" style={{ background: 'rgba(26, 17, 13, 0.85)', zIndex: 9999 }}>
-              <div
-                className="modal-content"
-                style={{
-                  maxWidth: '560px',
-                  textAlign: 'center',
-                  padding: '32px 24px',
-                  borderRadius: '16px',
-                  background: '#fff',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-                }}
-              >
-                <span className="status-tag status-tag--confirmed" style={{ fontSize: '13px', padding: '4px 12px' }}>
-                  CỔNG ĐIỂM DANH SỰ KIỆN
-                </span>
-
-                <h2 style={{ fontSize: '22px', color: '#3d2b24', marginTop: '12px', marginBottom: '6px', lineHeight: '1.4' }}>
-                  {selectedWorkshopForProjection.title}
-                </h2>
-
-                <p style={{ fontSize: '13px', color: '#7a5b50', marginBottom: '20px' }}>
+          <Modal
+            isOpen={!!selectedWorkshopForProjection}
+            onClose={() => setSelectedWorkshopForProjection(null)}
+            title="Cổng Điểm danh Trực tiếp"
+            subtitle={`Sự kiện: ${selectedWorkshopForProjection?.title}`}
+            size="md"
+          >
+            {selectedWorkshopForProjection && (
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '13px', color: '#7a5b50', marginBottom: '16px' }}>
                   📍 {selectedWorkshopForProjection.location} | 🕒 {new Date(selectedWorkshopForProjection.start_at).toLocaleString('vi-VN')}
                 </p>
 
@@ -474,7 +461,7 @@ function CheckInPage() {
                   </div>
                 </div>
 
-                <div style={{ marginTop: '28px' }}>
+                <div style={{ marginTop: '24px' }}>
                   <button
                     type="button"
                     className="home-page__primary-button"
@@ -485,66 +472,61 @@ function CheckInPage() {
                   </button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </Modal>
 
           {/* Modal Danh sách đã điểm danh của Workshop */}
-          {selectedWorkshopAttendance && (
-            <div className="modal-backdrop">
-              <div className="modal-content" style={{ maxWidth: '680px' }}>
-                <h2>Danh sách điểm danh: {selectedWorkshopAttendance.title}</h2>
-                <p style={{ color: '#7a5b50', fontSize: '13px', marginBottom: '16px' }}>
-                  Khung giờ check-in: {new Date(selectedWorkshopAttendance.checkin_start_at).toLocaleTimeString('vi-VN')} - {new Date(selectedWorkshopAttendance.checkin_end_at).toLocaleTimeString('vi-VN')}
-                </p>
-
-                {loadingAttendanceList ? (
-                  <div style={{ padding: '30px', textAlign: 'center' }}>Đang tải danh sách...</div>
-                ) : attendanceList.length === 0 ? (
-                  <p style={{ padding: '20px', textAlign: 'center', color: '#886255' }}>Chưa có ai điểm danh cho sự kiện này.</p>
-                ) : (
-                  <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #ebdcd5', borderRadius: '8px' }}>
-                    <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ background: '#fbf4f0', textAlign: 'left', borderBottom: '1px solid #ebdcd5' }}>
-                          <th style={{ padding: '10px 12px' }}>Họ tên</th>
-                          <th style={{ padding: '10px 12px' }}>Email</th>
-                          <th style={{ padding: '10px 12px' }}>Thời điểm quét</th>
-                          <th style={{ padding: '10px 12px' }}>Phương thức</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {attendanceList.map((item) => (
-                          <tr key={item.attendance_id} style={{ borderBottom: '1px solid #f2e6e0' }}>
-                            <td style={{ padding: '10px 12px' }}><strong>{item.user_name}</strong></td>
-                            <td style={{ padding: '10px 12px', fontSize: '13px' }}>{item.user_email}</td>
-                            <td style={{ padding: '10px 12px', fontSize: '13px' }}>{new Date(item.checkin_at).toLocaleString('vi-VN')}</td>
-                            <td style={{ padding: '10px 12px' }}>
-                              <span className="status-tag status-tag--draft">{item.checkin_method}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                <div className="modal-actions" style={{ marginTop: '20px', justifyContent: 'flex-end' }}>
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => setSelectedWorkshopAttendance(null)}
-                  >
-                    Đóng
-                  </button>
-                </div>
+          <Modal
+            isOpen={!!selectedWorkshopAttendance}
+            onClose={() => setSelectedWorkshopAttendance(null)}
+            title={`Lượt Điểm danh: ${selectedWorkshopAttendance?.title}`}
+            subtitle={`Khung giờ check-in: ${selectedWorkshopAttendance ? new Date(selectedWorkshopAttendance.checkin_start_at).toLocaleTimeString('vi-VN') + ' - ' + new Date(selectedWorkshopAttendance.checkin_end_at).toLocaleTimeString('vi-VN') : ''}`}
+            size="lg"
+          >
+            {loadingAttendanceList ? (
+              <div style={{ padding: '30px', textAlign: 'center' }}>Đang tải danh sách...</div>
+            ) : attendanceList.length === 0 ? (
+              <p style={{ padding: '20px', textAlign: 'center', color: '#886255' }}>Chưa có ai điểm danh cho sự kiện này.</p>
+            ) : (
+              <div style={{ maxHeight: '380px', overflowY: 'auto', border: '1px solid #ebdcd5', borderRadius: '8px' }}>
+                <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#fbf4f0', textAlign: 'left', borderBottom: '1px solid #ebdcd5' }}>
+                      <th style={{ padding: '10px 12px' }}>Họ tên</th>
+                      <th style={{ padding: '10px 12px' }}>Email</th>
+                      <th style={{ padding: '10px 12px' }}>Thời điểm quét</th>
+                      <th style={{ padding: '10px 12px' }}>Phương thức</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendanceList.map((item) => (
+                      <tr key={item.attendance_id} style={{ borderBottom: '1px solid #f2e6e0' }}>
+                        <td style={{ padding: '10px 12px' }}><strong>{item.user_name}</strong></td>
+                        <td style={{ padding: '10px 12px', fontSize: '13px' }}>{item.user_email}</td>
+                        <td style={{ padding: '10px 12px', fontSize: '13px' }}>{new Date(item.checkin_at).toLocaleString('vi-VN')}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span className="status-tag status-tag--draft">{item.checkin_method}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+            )}
+
+            <div className="modal-actions" style={{ marginTop: '20px' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setSelectedWorkshopAttendance(null)}
+              >
+                Đóng
+              </button>
             </div>
-          )}
+          </Modal>
         </>
       ) : (
-        /* ========================================================================= */
-        /* 2. GIAO DIỆN DÀNH CHO NGƯỜI THAM GIA (PARTICIPANT)                        */
-        /* ========================================================================= */
+        /* Giao diện dành cho Participant */
         <>
           <div className="checkin-page__header">
             <div>
@@ -564,12 +546,6 @@ function CheckInPage() {
                 </p>
                 <small>Thời gian ghi nhận: {new Date(checkInResult.checkin_at).toLocaleString('vi-VN')}</small>
               </div>
-            </div>
-          )}
-
-          {checkInError && (
-            <div className="alert-banner alert-banner--error" style={{ marginBottom: '20px' }}>
-              <div>{checkInError}</div>
             </div>
           )}
 

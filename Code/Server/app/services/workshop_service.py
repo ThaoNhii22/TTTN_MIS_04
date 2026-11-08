@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.audit import log_audit_action
+from app.core.datetime_utils import get_now, is_within_window
 from app.models.registration import Registration
 from app.models.user import User
 from app.models.workshop import Workshop
@@ -42,19 +43,12 @@ def get_workshop_stats(db: Session, workshop: Workshop) -> Dict[str, Any]:
     )
     is_full = confirmed_count >= workshop.quota
 
-    # BR-15 Check if registration is currently open
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    # BR-15 Check if registration is currently open (hỗ trợ cả Local Time và UTC)
     is_open = False
     if workshop.status == "published":
-        open_ok = True
-        close_ok = True
-        if workshop.registration_open_at:
-            open_ok = now >= workshop.registration_open_at
-        if workshop.registration_close_at:
-            close_ok = now <= workshop.registration_close_at
-        else:
-            close_ok = now < workshop.start_at
-        is_open = open_ok and close_ok
+        reg_end = workshop.registration_close_at or workshop.start_at
+        within_reg, _, _ = is_within_window(workshop.registration_open_at, reg_end)
+        is_open = within_reg
 
     return {
         "confirmed_count": confirmed_count,

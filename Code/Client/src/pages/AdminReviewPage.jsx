@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import Modal from '../components/ui/Modal';
+import { useToast } from '../context/useToast';
 import { cancelWorkshop, getWorkshops, reviewWorkshop } from '../services/workshopService';
 
 function AdminReviewPage() {
+  const toast = useToast();
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('pending');
+
+  // Approve Confirmation
+  const [workshopToApprove, setWorkshopToApprove] = useState(null);
+  const [showApproveModal, setShowApproveModal] = useState(false);
 
   // Reject Modal
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
@@ -17,8 +25,6 @@ function AdminReviewPage() {
   const [cancelReason, setCancelReason] = useState('Quản trị viên hủy bỏ sự kiện theo yêu cầu quản lý');
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [alertMessage, setAlertMessage] = useState(null);
-
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -36,6 +42,7 @@ function AdminReviewPage() {
         }
       } catch (err) {
         console.error('Error fetching workshops for review:', err);
+        toast.apiError(err, 'Không thể tải danh sách sự kiện xét duyệt.');
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -46,18 +53,24 @@ function AdminReviewPage() {
     return () => {
       ignore = true;
     };
-  }, [statusFilter, reloadKey]);
+  }, [statusFilter, reloadKey, toast]);
 
-  const handleApprove = async (workshopId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn PHÊ DUYỆT Workshop này và công bố mở đăng ký?')) return;
+  const openApproveModal = (workshop) => {
+    setWorkshopToApprove(workshop);
+    setShowApproveModal(true);
+  };
+
+  const handleConfirmApprove = async () => {
+    if (!workshopToApprove) return;
     setIsProcessing(true);
     try {
-      await reviewWorkshop(workshopId, { action: 'approve' });
-      setAlertMessage({ type: 'success', text: 'Đã phê duyệt Workshop thành công. Sự kiện đã chuyển sang Đã công bố.' });
+      await reviewWorkshop(workshopToApprove.workshop_id, { action: 'approve' });
+      toast.success(`Đã phê duyệt sự kiện "${workshopToApprove.title}". Workshop hiện đã được công bố mở đăng ký.`);
+      setShowApproveModal(false);
+      setWorkshopToApprove(null);
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Phê duyệt thất bại.' });
+      toast.apiError(err, 'Phê duyệt Workshop thất bại.');
     } finally {
       setIsProcessing(false);
     }
@@ -73,12 +86,11 @@ function AdminReviewPage() {
         rejection_reason: rejectionReason,
       });
       setShowRejectModal(false);
+      toast.success(`Đã từ chối Workshop "${selectedWorkshop.title}" và trả lại trạng thái Bản nháp cho Ban tổ chức.`);
       setSelectedWorkshop(null);
-      setAlertMessage({ type: 'success', text: 'Đã từ chối Workshop và chuyển về trạng thái Bản nháp kèm lý do.' });
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Từ chối thất bại.' });
+      toast.apiError(err, 'Từ chối Workshop thất bại.');
     } finally {
       setIsProcessing(false);
     }
@@ -91,12 +103,11 @@ function AdminReviewPage() {
     try {
       await cancelWorkshop(selectedWorkshop.workshop_id, cancelReason);
       setShowForceCancelModal(false);
+      toast.success(`Quản trị viên đã hủy Workshop "${selectedWorkshop.title}". Toàn bộ vé đăng ký liên quan đã được hủy.`);
       setSelectedWorkshop(null);
-      setAlertMessage({ type: 'success', text: 'Quản trị viên đã cưỡng chế hủy Workshop.' });
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Cưỡng chế hủy thất bại.' });
+      toast.apiError(err, 'Cưỡng chế hủy Workshop thất bại.');
     } finally {
       setIsProcessing(false);
     }
@@ -112,12 +123,6 @@ function AdminReviewPage() {
           </p>
         </div>
       </div>
-
-      {alertMessage && (
-        <div className={`alert-banner alert-banner--${alertMessage.type}`} style={{ marginBottom: '20px' }}>
-          <div>{alertMessage.text}</div>
-        </div>
-      )}
 
       {/* Filter Tabs */}
       <div className="filter-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
@@ -199,10 +204,10 @@ function AdminReviewPage() {
                             type="button"
                             className="home-page__primary-button"
                             style={{ fontSize: '12px', padding: '6px 12px' }}
-                            onClick={() => handleApprove(w.workshop_id)}
+                            onClick={() => openApproveModal(w)}
                             disabled={isProcessing}
                           >
-                            Duyệt
+                            Phê duyệt
                           </button>
                           <button
                             type="button"
@@ -250,90 +255,129 @@ function AdminReviewPage() {
         </div>
       )}
 
+      {/* Confirmation Dialog Phê duyệt Workshop */}
+      <ConfirmDialog
+        isOpen={showApproveModal}
+        onClose={() => setShowApproveModal(false)}
+        onConfirm={handleConfirmApprove}
+        title="Phê duyệt Workshop"
+        message={`Bạn có chắc chắn muốn PHÊ DUYỆT Workshop "${workshopToApprove?.title}"? Sự kiện sẽ được chuyển sang trạng thái "Đã công bố" và cho phép người tham gia đăng ký.`}
+        confirmText="Xác nhận Phê duyệt"
+        variant="primary"
+        isLoading={isProcessing}
+      />
+
       {/* Modal Từ chối Workshop */}
-      {showRejectModal && selectedWorkshop && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Từ chối Workshop</h2>
-            <p>Workshop: <strong>{selectedWorkshop.title}</strong></p>
-
-            <form onSubmit={handleReject}>
-              <div className="form-group" style={{ marginTop: '14px' }}>
-                <label>Lý do từ chối gửi lại Ban tổ chức *</label>
-                <textarea
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Nhập lý do từ chối để ban tổ chức chỉnh sửa..."
-                  rows="3"
-                  required
-                />
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowRejectModal(false)}
-                  disabled={isProcessing}
-                >
-                  Đóng
-                </button>
-                <button
-                  type="submit"
-                  className="btn-danger"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Đang xử lý...' : 'Xác nhận Từ chối'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showRejectModal}
+        onClose={() => !isProcessing && setShowRejectModal(false)}
+        title="Từ chối Phê duyệt Workshop"
+        subtitle={`Sự kiện: ${selectedWorkshop?.title}`}
+        size="md"
+      >
+        <form onSubmit={handleReject}>
+          <div className="form-group">
+            <label>Lý do từ chối gửi lại Ban tổ chức *</label>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Nhập lý do cụ thể để Ban tổ chức biết và chỉnh sửa bổ sung..."
+              rows="4"
+              required
+            />
           </div>
-        </div>
-      )}
+
+          <div className="modal-actions" style={{ marginTop: '20px' }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowRejectModal(false)}
+              disabled={isProcessing}
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="btn-danger"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <span className="btn-loading-wrapper">
+                  <span className="mini-spinner" /> Đang xử lý...
+                </span>
+              ) : (
+                'Xác nhận Từ chối'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Modal Cưỡng chế Hủy Workshop */}
-      {showForceCancelModal && selectedWorkshop && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Quản trị viên Cưỡng chế Hủy Workshop</h2>
-            <p>Sự kiện: <strong>{selectedWorkshop.title}</strong></p>
-
-            <form onSubmit={handleForceCancel}>
-              <div className="form-group" style={{ marginTop: '14px' }}>
-                <label>Lý do cưỡng chế hủy *</label>
-                <textarea
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  rows="3"
-                  required
-                />
-              </div>
-
-              <small style={{ color: '#c53030', display: 'block', margin: '8px 0' }}>
-                Hành động này sẽ được ghi vết vào Nhật ký hoạt động hệ thống.
-              </small>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowForceCancelModal(false)}
-                  disabled={isProcessing}
-                >
-                  Đóng
-                </button>
-                <button
-                  type="submit"
-                  className="btn-danger"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Đang hủy...' : 'Cưỡng chế Hủy'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showForceCancelModal}
+        onClose={() => !isProcessing && setShowForceCancelModal(false)}
+        title="Quản trị viên Cưỡng chế Hủy Workshop"
+        subtitle={`Sự kiện: ${selectedWorkshop?.title}`}
+        size="md"
+      >
+        <form onSubmit={handleForceCancel}>
+          <div className="form-group">
+            <label>Lý do cưỡng chế hủy sự kiện *</label>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy bỏ sự kiện..."
+              rows="4"
+              required
+            />
           </div>
-        </div>
-      )}
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              background: '#fef2f2',
+              color: '#991b1b',
+              fontSize: '13px',
+              margin: '14px 0',
+            }}
+          >
+            <svg style={{ width: '18px', height: '18px', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>Hành động này sẽ hủy toàn bộ vé của người đăng ký và được ghi vết kiểm toán vĩnh viễn vào hệ thống.</span>
+          </div>
+
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowForceCancelModal(false)}
+              disabled={isProcessing}
+            >
+              Đóng
+            </button>
+            <button
+              type="submit"
+              className="btn-danger"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <span className="btn-loading-wrapper">
+                  <span className="mini-spinner" /> Đang hủy...
+                </span>
+              ) : (
+                'Cưỡng chế Hủy Workshop'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </section>
   );
 }

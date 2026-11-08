@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Modal from '../components/ui/Modal';
+import { useToast } from '../context/useToast';
 import { cancelRegistration, getMyRegistrations } from '../services/registrationService';
 
 function WaitlistPage() {
+  const toast = useToast();
   const [waitlistEntries, setWaitlistEntries] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Leave Waitlist Modal
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('Không thể tham gia nữa');
+  const [cancelReason, setCancelReason] = useState('Không thể sắp xếp thời gian tham gia');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [actionAlert, setActionAlert] = useState(null);
-
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -27,12 +28,7 @@ function WaitlistPage() {
         }
       } catch (err) {
         console.error('Error fetching waitlists:', err);
-        if (!ignore) {
-          setActionAlert({
-            type: 'error',
-            message: 'Không thể tải danh sách chờ. Vui lòng thử lại.',
-          });
-        }
+        toast.apiError(err, 'Không thể tải danh sách chờ của bạn.');
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -43,27 +39,21 @@ function WaitlistPage() {
     return () => {
       ignore = true;
     };
-  }, [reloadKey]);
+  }, [reloadKey, toast]);
 
-  const handleLeaveWaitlist = async () => {
+  const handleLeaveWaitlist = async (e) => {
+    if (e) e.preventDefault();
     if (!selectedEntry) return;
     setIsProcessing(true);
 
     try {
       await cancelRegistration(selectedEntry.registration_id, cancelReason);
       setShowCancelModal(false);
+      toast.success(`Đã rút khỏi Danh sách chờ cho Workshop "${selectedEntry.workshop_title}".`);
       setSelectedEntry(null);
-      setActionAlert({
-        type: 'success',
-        message: `Đã rút khỏi Danh sách chờ cho Workshop "${selectedEntry.workshop_title}".`,
-      });
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setActionAlert({
-        type: 'error',
-        message: typeof detail === 'string' ? detail : 'Không thể rút khỏi danh sách chờ.',
-      });
+      toast.apiError(err, 'Không thể rút khỏi danh sách chờ.');
     } finally {
       setIsProcessing(false);
     }
@@ -84,12 +74,6 @@ function WaitlistPage() {
         </Link>
       </div>
 
-      {actionAlert && (
-        <div className={`alert-banner alert-banner--${actionAlert.type}`} style={{ marginBottom: '20px' }}>
-          <div>{actionAlert.message}</div>
-        </div>
-      )}
-
       {loading ? (
         <div className="state-card state-card--loading" style={{ margin: '60px auto', textAlign: 'center' }}>
           <div className="state-card__spinner" />
@@ -99,7 +83,7 @@ function WaitlistPage() {
         <div className="workshop-empty">
           <div className="workshop-empty__icon">W</div>
           <h2>Bạn hiện không ở trong danh sách chờ nào</h2>
-          <p>Khi đăng ký một workshop đã kín chỗ, bạn có thể chọn vào danh sách chờ.</p>
+          <p>Khi đăng ký một workshop đã kín chỗ, bạn có thể chọn vào danh sách chờ để tự động nhận vé khi có người hủy.</p>
           <Link to="/workshops" className="home-page__primary-button" style={{ marginTop: '16px' }}>
             Khám phá Workshop
           </Link>
@@ -119,10 +103,10 @@ function WaitlistPage() {
                     {item.workshop_title}
                   </Link>
                 </h3>
-                <p>Địa điểm: {item.workshop_location}</p>
-                <p>Thời gian sự kiện: {new Date(item.workshop_start_at).toLocaleString('vi-VN')}</p>
+                <p>📍 <strong>Địa điểm:</strong> {item.workshop_location}</p>
+                <p>🕒 <strong>Thời gian sự kiện:</strong> {new Date(item.workshop_start_at).toLocaleString('vi-VN')}</p>
                 <p style={{ fontSize: '12px', color: '#886255' }}>
-                  Ghi danh lúc: {new Date(item.registered_at).toLocaleString('vi-VN')}
+                  📅 Ghi danh hàng đợi lúc: {new Date(item.registered_at).toLocaleString('vi-VN')}
                 </p>
               </div>
 
@@ -132,6 +116,7 @@ function WaitlistPage() {
                   className="btn-danger-outline"
                   onClick={() => {
                     setSelectedEntry(item);
+                    setCancelReason('Không thể sắp xếp thời gian tham gia');
                     setShowCancelModal(true);
                   }}
                 >
@@ -144,43 +129,69 @@ function WaitlistPage() {
       )}
 
       {/* Modal Leave Waitlist */}
-      {showCancelModal && selectedEntry && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Rút khỏi Danh sách chờ</h2>
-            <p>Bạn có chắc chắn muốn hủy vị trí hàng đợi cho <strong>{selectedEntry.workshop_title}</strong>?</p>
-
-            <div className="form-group" style={{ marginTop: '14px' }}>
-              <label>Lý do rút lui:</label>
-              <textarea
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Nhập lý do..."
-                rows="3"
-              />
-            </div>
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setShowCancelModal(false)}
-                disabled={isProcessing}
-              >
-                Đóng
-              </button>
-              <button
-                type="button"
-                className="btn-danger"
-                onClick={handleLeaveWaitlist}
-                disabled={isProcessing}
-              >
-                {isProcessing ? 'Đang xử lý...' : 'Xác nhận Rút lui'}
-              </button>
-            </div>
+      <Modal
+        isOpen={showCancelModal && !!selectedEntry}
+        onClose={() => !isProcessing && setShowCancelModal(false)}
+        title="Rút khỏi Danh sách chờ"
+        subtitle={`Workshop: ${selectedEntry?.workshop_title}`}
+        size="md"
+      >
+        <form onSubmit={handleLeaveWaitlist}>
+          <div className="form-group">
+            <label>Lý do rút khỏi hàng đợi:</label>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do rút lui..."
+              rows="3"
+            />
           </div>
-        </div>
-      )}
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              background: '#fef2f2',
+              color: '#991b1b',
+              fontSize: '13px',
+              margin: '14px 0',
+            }}
+          >
+            <svg style={{ width: '18px', height: '18px', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>Khi rút khỏi hàng đợi, vị trí #{selectedEntry?.waitlist_position} của bạn sẽ bị hủy bỏ và không thể khôi phục.</span>
+          </div>
+
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowCancelModal(false)}
+              disabled={isProcessing}
+            >
+              Giữ lại vị trí
+            </button>
+            <button
+              type="submit"
+              className="btn-danger"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <span className="btn-loading-wrapper">
+                  <span className="mini-spinner" /> Đang xử lý...
+                </span>
+              ) : (
+                'Xác nhận Rút lui'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

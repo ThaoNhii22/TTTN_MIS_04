@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
+import Modal from '../components/ui/Modal';
+import { useToast } from '../context/useToast';
 import { getAuditLogs } from '../services/auditLogService';
 import { formatDateTime } from '../utils/dateUtils';
 
 function AuditLogsPage() {
+  const toast = useToast();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionFilter, setActionFilter] = useState('');
@@ -27,6 +30,7 @@ function AuditLogsPage() {
         }
       } catch (err) {
         console.error('Error fetching audit logs:', err);
+        toast.apiError(err, 'Không thể tải nhật ký hoạt động hệ thống.');
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -37,7 +41,7 @@ function AuditLogsPage() {
     return () => {
       ignore = true;
     };
-  }, [actionFilter, entityFilter, reloadKey]);
+  }, [actionFilter, entityFilter, reloadKey, toast]);
 
   const getActionBadgeClass = (action) => {
     if (action.includes('CREATE') || action.includes('APPROVE') || action.includes('REGISTER')) return 'status-tag--published';
@@ -56,7 +60,14 @@ function AuditLogsPage() {
           </p>
         </div>
 
-        <button type="button" className="btn-secondary" onClick={() => setReloadKey((k) => k + 1)}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => {
+            setReloadKey((k) => k + 1);
+            toast.info('Đang làm mới dữ liệu nhật ký...');
+          }}
+        >
           Làm mới Nhật ký
         </button>
       </div>
@@ -107,56 +118,57 @@ function AuditLogsPage() {
       ) : logs.length === 0 ? (
         <div className="workshop-empty">
           <div className="workshop-empty__icon">W</div>
-          <h2>Không có bản ghi nhật ký nào</h2>
-          <p>Không tìm thấy bản ghi theo bộ lọc đã chọn.</p>
+          <h2>Không có bản ghi nhật ký phù hợp</h2>
+          <p>Hãy thử thay đổi bộ lọc thao tác hoặc thực thể.</p>
         </div>
       ) : (
-        <div className="audit-table-wrapper" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #ebdcd5', overflow: 'hidden' }}>
+        <div className="admin-table-wrapper" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #ebdcd5', overflow: 'hidden' }}>
           <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#fbf4f0', textAlign: 'left', borderBottom: '1px solid #ebdcd5' }}>
-                <th style={{ padding: '12px 14px' }}>Thời gian</th>
-                <th style={{ padding: '12px 14px' }}>Người thực hiện</th>
-                <th style={{ padding: '12px 14px' }}>Hành động</th>
-                <th style={{ padding: '12px 14px' }}>Thực thể</th>
-                <th style={{ padding: '12px 14px' }}>Địa chỉ IP</th>
-                <th style={{ padding: '12px 14px' }}>Chi tiết thay đổi</th>
+                <th style={{ padding: '14px 16px' }}>Mã log</th>
+                <th style={{ padding: '14px 16px' }}>Hành động</th>
+                <th style={{ padding: '14px 16px' }}>Thực thể</th>
+                <th style={{ padding: '14px 16px' }}>Người thực hiện</th>
+                <th style={{ padding: '14px 16px' }}>Thời gian</th>
+                <th style={{ padding: '14px 16px' }}>Chi tiết</th>
               </tr>
             </thead>
             <tbody>
               {logs.map((log) => (
                 <tr key={log.audit_log_id} style={{ borderBottom: '1px solid #f2e6e0' }}>
-                  <td style={{ padding: '12px 14px', fontSize: '12px' }}>
-                    {new Date(log.timestamp).toLocaleString('vi-VN')}
+                  <td style={{ padding: '14px 16px' }}>
+                    <code>LOG-{log.audit_log_id}</code>
                   </td>
 
-                  <td style={{ padding: '12px 14px' }}>
-                    <strong>{log.actor_name || `User #${log.actor_id}`}</strong>
-                    <div style={{ fontSize: '11px', color: '#886255' }}>{log.actor_email}</div>
-                  </td>
-
-                  <td style={{ padding: '12px 14px' }}>
+                  <td style={{ padding: '14px 16px' }}>
                     <span className={`status-tag ${getActionBadgeClass(log.action)}`}>
                       {log.action}
                     </span>
                   </td>
 
-                  <td style={{ padding: '12px 14px', fontSize: '13px' }}>
-                    <strong>{log.target_entity}</strong> #{log.target_id}
+                  <td style={{ padding: '14px 16px' }}>
+                    <strong>{log.target_entity}</strong>
+                    <div style={{ fontSize: '11px', color: '#886255' }}>ID: #{log.target_id}</div>
                   </td>
 
-                  <td style={{ padding: '12px 14px', fontSize: '12px' }}>
-                    <code>{log.ip_address || '127.0.0.1'}</code>
+                  <td style={{ padding: '14px 16px' }}>
+                    <div><strong>{log.actor_name || 'Hệ thống'}</strong></div>
+                    <div style={{ fontSize: '11px', color: '#886255' }}>{log.actor_email}</div>
                   </td>
 
-                  <td style={{ padding: '12px 14px' }}>
+                  <td style={{ padding: '14px 16px', fontSize: '12px' }}>
+                    {formatDateTime(log.timestamp)}
+                  </td>
+
+                  <td style={{ padding: '14px 16px' }}>
                     <button
                       type="button"
                       className="btn-secondary"
-                      style={{ fontSize: '11px', padding: '4px 8px' }}
+                      style={{ fontSize: '12px', padding: '5px 10px' }}
                       onClick={() => setSelectedLog(log)}
                     >
-                      Xem chi tiết JSON
+                      Xem Diff
                     </button>
                   </td>
                 </tr>
@@ -167,33 +179,41 @@ function AuditLogsPage() {
       )}
 
       {/* Modal Chi tiết Audit Log */}
-      {selectedLog && (
-        <div className="modal-backdrop">
-          <div className="modal-content modal-content--large">
-            <h2>Chi tiết Nhật ký Audit Log #{selectedLog.audit_log_id}</h2>
-            <div style={{ margin: '14px 0', fontSize: '13px', lineHeight: '1.6' }}>
-              <p>Người thực hiện: <strong>{selectedLog.actor_name}</strong> - {selectedLog.actor_email}</p>
-              <p>Hành động: <code>{selectedLog.action}</code> trên <strong>{selectedLog.target_entity}</strong> #{selectedLog.target_id}</p>
-              <p>Thời gian: {new Date(selectedLog.timestamp).toLocaleString('vi-VN')} - IP: {selectedLog.ip_address}</p>
+      <Modal
+        isOpen={!!selectedLog}
+        onClose={() => setSelectedLog(null)}
+        title={`Chi tiết Nhật ký Audit Log #${selectedLog?.audit_log_id}`}
+        subtitle={`Thời gian: ${selectedLog ? new Date(selectedLog.timestamp).toLocaleString('vi-VN') : ''} | IP: ${selectedLog?.ip_address || '127.0.0.1'}`}
+        size="lg"
+      >
+        {selectedLog && (
+          <div>
+            <div className="modal-info-box" style={{ margin: '0 0 16px' }}>
+              <p>👤 <strong>Người thực hiện:</strong> {selectedLog.actor_name} ({selectedLog.actor_email})</p>
+              <p>⚡ <strong>Hành động:</strong> <code>{selectedLog.action}</code> trên thực thể <strong>{selectedLog.target_entity}</strong> #{selectedLog.target_id}</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', margin: '16px 0' }}>
               <div>
-                <h4 style={{ fontSize: '13px', marginBottom: '6px', color: '#c53030' }}>Giá trị cũ:</h4>
-                <pre style={{ padding: '12px', background: '#fdf7f4', borderRadius: '6px', fontSize: '11px', overflowX: 'auto', border: '1px solid #ebdcd5' }}>
+                <h4 style={{ fontSize: '13px', marginBottom: '6px', color: '#c53030', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>●</span> Dữ liệu trước khi sửa đổi (Old Value):
+                </h4>
+                <pre style={{ padding: '12px', background: '#fdf7f4', borderRadius: '8px', fontSize: '12px', overflowX: 'auto', border: '1px solid #ebdcd5', maxHeight: '240px' }}>
                   {JSON.stringify(selectedLog.old_value, null, 2) || 'null'}
                 </pre>
               </div>
 
               <div>
-                <h4 style={{ fontSize: '13px', marginBottom: '6px', color: '#2f855a' }}>Giá trị mới:</h4>
-                <pre style={{ padding: '12px', background: '#f6ffed', borderRadius: '6px', fontSize: '11px', overflowX: 'auto', border: '1px solid #b7eb8f' }}>
+                <h4 style={{ fontSize: '13px', marginBottom: '6px', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>●</span> Dữ liệu sau khi sửa đổi (New Value):
+                </h4>
+                <pre style={{ padding: '12px', background: '#f0fdf4', borderRadius: '8px', fontSize: '12px', overflowX: 'auto', border: '1px solid #bbf7d0', maxHeight: '240px' }}>
                   {JSON.stringify(selectedLog.new_value, null, 2) || 'null'}
                 </pre>
               </div>
             </div>
 
-            <div className="modal-actions">
+            <div className="modal-actions" style={{ marginTop: '20px' }}>
               <button
                 type="button"
                 className="btn-secondary"
@@ -203,8 +223,8 @@ function AuditLogsPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </section>
   );
 }

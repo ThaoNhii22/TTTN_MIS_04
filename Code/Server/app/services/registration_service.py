@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.audit import log_audit_action
+from app.core.datetime_utils import get_now, is_within_window
 from app.models.registration import Registration
 from app.models.user import User
 from app.models.workshop import Workshop
@@ -48,23 +49,28 @@ def register_for_workshop(
             detail=f"Sự kiện hiện đang ở trạng thái '{workshop.status}', chưa mở đăng ký (BR-08).",
         )
 
-    # BR-15: Kiểm tra khung thời gian mở/đóng đăng ký
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    if workshop.registration_open_at and now < workshop.registration_open_at:
+    # BR-15: Kiểm tra khung thời gian mở/đóng đăng ký (hỗ trợ cả Local Time và UTC)
+    reg_end = workshop.registration_close_at or workshop.start_at
+    is_valid_reg_time, is_early, is_late = is_within_window(
+        workshop.registration_open_at,
+        reg_end,
+    )
+    if is_early and workshop.registration_open_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cổng đăng ký chưa mở (mở lúc {workshop.registration_open_at.strftime('%H:%M %d/%m/%Y')}) theo quy tắc BR-15.",
         )
-    if workshop.registration_close_at and now > workshop.registration_close_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Sự kiện đã đóng cổng đăng ký lúc {workshop.registration_close_at.strftime('%H:%M %d/%m/%Y')} (BR-15).",
-        )
-    if not workshop.registration_close_at and now >= workshop.start_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sự kiện đã bắt đầu, không thể đăng ký thêm (BR-08).",
-        )
+    if is_late:
+        if workshop.registration_close_at:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Sự kiện đã đóng cổng đăng ký lúc {workshop.registration_close_at.strftime('%H:%M %d/%m/%Y')} (BR-15).",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sự kiện đã bắt đầu, không thể đăng ký thêm (BR-08).",
+            )
 
     # BR-01: Chống đăng ký trùng (1 email/user = 1 vé)
     existing_reg = (

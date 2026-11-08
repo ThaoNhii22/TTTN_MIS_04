@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ErrorState from '../components/ui/ErrorState';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardStats } from '../services/dashboardService';
 
@@ -44,9 +45,11 @@ function DashboardPage() {
 
   if (!stats) {
     return (
-      <div className="workshop-empty">
-        <h2>Không thể tải dữ liệu thống kê</h2>
-      </div>
+      <ErrorState
+        title="Không thể tải dữ liệu thống kê"
+        message="Không thể kết nối hoặc tải chỉ số thống kê từ máy chủ. Vui lòng thử lại."
+        onRetry={() => setReloadKey((k) => k + 1)}
+      />
     );
   }
 
