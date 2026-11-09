@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import threading
 from typing import Any, Dict, List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy import func
@@ -11,6 +12,9 @@ from app.models.registration import Registration
 from app.models.user import User
 from app.models.workshop import Workshop
 from app.services.workshop_service import get_workshop_stats, promote_waitlist_entries
+
+# Khóa đồng bộ bảo vệ chống Race Condition ở cấp ứng dụng (bổ trợ cho with_for_update trên MySQL/InnoDB)
+_registration_lock = threading.Lock()
 
 
 def format_qr_payload(workshop_id: int, registration_id: int, user_email: str) -> str:
@@ -26,6 +30,23 @@ def check_is_cancellable(workshop: Workshop) -> bool:
 
 
 def register_for_workshop(
+    db: Session,
+    workshop_id: int,
+    current_user: User,
+    accept_waitlist: bool = True,
+    ip_address: Optional[str] = None,
+) -> Registration:
+    with _registration_lock:
+        return _register_for_workshop_impl(
+            db=db,
+            workshop_id=workshop_id,
+            current_user=current_user,
+            accept_waitlist=accept_waitlist,
+            ip_address=ip_address,
+        )
+
+
+def _register_for_workshop_impl(
     db: Session,
     workshop_id: int,
     current_user: User,
