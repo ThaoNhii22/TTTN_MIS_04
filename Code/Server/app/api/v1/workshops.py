@@ -83,13 +83,33 @@ def list_workshops(
 
     if my_organized and current_user:
         query = query.filter(Workshop.organizer_id == current_user.user_id)
-    elif not current_user or current_user.role == "participant":
-        # Khách hoặc Participant chỉ xem được published hoặc đã kết thúc
         if status_filter:
             query = query.filter(Workshop.status == status_filter)
+    elif not current_user or current_user.role == "participant":
+        # Khách và Participant CHỈ ĐƯỢC XEM các Workshop đã công bố (published) hoặc đã kết thúc (completed)
+        public_statuses = ["published", "completed"]
+        if status_filter:
+            if status_filter not in public_statuses:
+                # Cố tình lọc draft hoặc pending -> Chặn, trả về danh sách rỗng
+                query = query.filter(False)
+            else:
+                query = query.filter(Workshop.status == status_filter)
         else:
-            query = query.filter(Workshop.status.in_(["published", "completed"]))
+            query = query.filter(Workshop.status.in_(public_statuses))
+    elif current_user.role == "organizer":
+        # Organizer: xem sự kiện của mình (mọi trạng thái) hoặc sự kiện công khai của người khác
+        if status_filter:
+            query = query.filter(
+                ((Workshop.organizer_id == current_user.user_id) & (Workshop.status == status_filter))
+                | ((Workshop.organizer_id != current_user.user_id) & (Workshop.status.in_(["published", "completed"])) & (Workshop.status == status_filter))
+            )
+        else:
+            query = query.filter(
+                (Workshop.organizer_id == current_user.user_id)
+                | (Workshop.status.in_(["published", "completed"]))
+            )
     else:
+        # Admin: Xem toàn bộ các Workshop trên hệ thống
         if status_filter:
             query = query.filter(Workshop.status == status_filter)
 
@@ -106,10 +126,24 @@ def list_workshops(
     response_model=WorkshopDetailResponse,
     summary="Xem chi tiết Workshop",
 )
-def get_workshop_detail(workshop_id: int, db: Session = Depends(get_db)):
+def get_workshop_detail(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
+):
     workshop = db.query(Workshop).filter(Workshop.workshop_id == workshop_id).first()
     if not workshop:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workshop không tồn tại.")
+
+    # BR-07, BR-08, UC-08: Khách và Participant không được xem Workshop nháp hoặc đang chờ duyệt
+    if workshop.status in ["draft", "pending"]:
+        is_admin = current_user and current_user.role == "admin"
+        is_owner = current_user and current_user.role == "organizer" and workshop.organizer_id == current_user.user_id
+        if not (is_admin or is_owner):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bạn không có quyền xem thông tin Workshop đang ở trạng thái Nháp hoặc Chờ duyệt.",
+            )
 
     data = format_workshop_response(db, workshop)
     data["organizer"] = workshop.organizer
