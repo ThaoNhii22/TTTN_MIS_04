@@ -18,9 +18,11 @@ def format_qr_payload(workshop_id: int, registration_id: int, user_email: str) -
 
 
 def check_is_cancellable(workshop: Workshop) -> bool:
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
     cutoff_time = workshop.start_at - timedelta(hours=24)  # BR-11 Mặc định trước 24h
-    return bool(now < cutoff_time)
+    now_local = datetime.now()
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    # Hợp lệ nếu theo giờ Local hoặc UTC đều chưa quá cutoff
+    return bool(now_local < cutoff_time or now_utc < cutoff_time)
 
 
 def register_for_workshop(
@@ -71,6 +73,8 @@ def register_for_workshop(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Sự kiện đã bắt đầu, không thể đăng ký thêm (BR-08).",
             )
+
+    now = get_now()
 
     # BR-01: Chống đăng ký trùng (1 email/user = 1 vé)
     existing_reg = (
@@ -229,7 +233,7 @@ def cancel_registration_by_user(
         )
 
     workshop = reg.workshop
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = get_now()
 
     # BR-11: Kiểm soát hạn chót hủy vé (Cutoff time)
     if not check_is_cancellable(workshop) and current_user.role != "admin":
