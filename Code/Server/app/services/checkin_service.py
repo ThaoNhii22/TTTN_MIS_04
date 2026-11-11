@@ -52,12 +52,12 @@ def process_checkin(
     if is_early:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Chưa đến giờ điểm danh (Cổng check-in mở lúc {workshop.checkin_start_at.strftime('%H:%M %d/%m/%Y')}) theo quy tắc BR-05.",
+            detail=f"Chưa đến giờ điểm danh, cổng check-in mở lúc {workshop.checkin_start_at.strftime('%H:%M %d/%m/%Y')}.",
         )
     if is_late:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Đã hết thời gian điểm danh (Cổng check-in đóng lúc {workshop.checkin_end_at.strftime('%H:%M %d/%m/%Y')}) theo quy tắc BR-05.",
+            detail=f"Đã hết thời gian điểm danh, cổng check-in đóng lúc {workshop.checkin_end_at.strftime('%H:%M %d/%m/%Y')}.",
         )
 
     now = get_now()
@@ -86,7 +86,7 @@ def process_checkin(
         if current_user.role == "participant" and target_registration.user_id != current_user.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bạn không có quyền điểm danh cho người khác (Participant chỉ được check-in cho chính mình).",
+                detail="Bạn không có quyền điểm danh cho người khác, người tham gia chỉ được điểm danh cho chính mình.",
             )
         if current_user.role == "organizer" and workshop.organizer_id != current_user.user_id:
             raise HTTPException(
@@ -123,7 +123,7 @@ def process_checkin(
             if current_user.role == "participant" and target_registration.user_id != current_user.user_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Bạn không có quyền điểm danh cho người khác (Participant chỉ được check-in cho chính mình).",
+                    detail="Bạn không có quyền điểm danh cho người khác, người tham gia chỉ được điểm danh cho chính mình.",
                 )
             if current_user.role == "organizer" and workshop.organizer_id != current_user.user_id:
                 raise HTTPException(
@@ -135,7 +135,7 @@ def process_checkin(
             if checkin_in.qr_payload.strip() != workshop.checkin_code:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Mã QR điểm danh không chính xác (BR-04).",
+                    detail="Mã QR điểm danh không chính xác.",
                 )
             target_registration = (
                 db.query(Registration)
@@ -152,7 +152,7 @@ def process_checkin(
         if checkin_in.checkin_code.strip() != workshop.checkin_code:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Mã điểm danh không chính xác (BR-04).",
+                detail="Mã điểm danh không chính xác.",
             )
         # Người tham gia tự check-in bằng mã của Workshop
         target_registration = (
@@ -175,7 +175,7 @@ def process_checkin(
     if target_registration.status == "waitlist":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Lượt đăng ký đang ở Danh sách chờ (chưa được xác nhận vé chính thức), không thể điểm danh.",
+            detail="Lượt đăng ký đang ở Danh sách chờ, chưa được xác nhận vé chính thức, không thể điểm danh.",
         )
     if target_registration.status == "cancelled":
         raise HTTPException(
@@ -193,7 +193,7 @@ def process_checkin(
         checkin_time_str = existing_attendance.checkin_at.strftime("%H:%M:%S ngày %d/%m/%Y") if existing_attendance else "trước đó"
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Lượt đăng ký này đã được điểm danh lúc {checkin_time_str} (BR-14 chống điểm danh trùng).",
+            detail=f"Lượt đăng ký này đã được điểm danh lúc {checkin_time_str}.",
         )
 
     if target_registration.status != "confirmed":
@@ -219,7 +219,7 @@ def process_checkin(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Lượt đăng ký này đã được điểm danh trước đó (BR-14 chống điểm danh trùng).",
+            detail="Lượt đăng ký này đã được điểm danh trước đó.",
         )
     except Exception:
         db.rollback()

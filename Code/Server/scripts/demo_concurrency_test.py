@@ -48,7 +48,7 @@ def run_test():
     # 1. Lấy danh sách 10 Participant độc lập từ Database để tham gia đua đăng ký
     print(f"\n[Bước 1] Chuẩn bị {NUM_USERS} người dùng độc lập để tham gia đua tranh...")
     participants = db.query(User).filter(User.role == "participant").all()
-    
+
     # Nếu thiếu user thì tạo nhanh với password_hash có sẵn
     dummy_hash = get_password_hash("User@123")
     while len(participants) < NUM_USERS:

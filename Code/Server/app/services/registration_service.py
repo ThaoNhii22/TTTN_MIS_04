@@ -36,6 +36,13 @@ def register_for_workshop(
     accept_waitlist: bool = True,
     ip_address: Optional[str] = None,
 ) -> Registration:
+    # Bảng RBAC (Mục 3.1.7, UC-09): Chỉ tài khoản Người tham gia (Participant) mới có quyền đăng ký workshop
+    if getattr(current_user, "role", None) != "participant":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ tài khoản Người tham gia (Participant) mới có quyền đăng ký workshop.",
+        )
+
     with _registration_lock:
         return _register_for_workshop_impl(
             db=db,
@@ -66,10 +73,18 @@ def _register_for_workshop_impl(
         )
 
     # BR-08: Chỉ cho phép đăng ký Workshop đã được công bố chính thức
-    if workshop.status != "published":
+    if workshop.status not in ("published",):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Sự kiện hiện đang ở trạng thái '{workshop.status}', chưa mở đăng ký (BR-08).",
+            detail=f"Sự kiện hiện đang ở trạng thái '{workshop.status}', chưa mở đăng ký.",
+        )
+
+    # Kiểm tra workshop đã kết thúc (end_at đã qua) — áp dụng kể cả khi status vẫn là published
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if now >= workshop.end_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Sự kiện đã kết thúc, không thể đăng ký hay vào hàng đợi.",
         )
 
     # BR-15: Kiểm tra khung thời gian mở/đóng đăng ký (hỗ trợ cả Local Time và UTC)
@@ -108,10 +123,9 @@ def _register_for_workshop_impl(
         .first()
     )
     if existing_reg and existing_reg.status in ["confirmed", "waitlist", "attended"]:
-        status_text = "Đã xác nhận" if existing_reg.status in ["confirmed", "attended"] else "Danh sách chờ"
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Bạn đã có lượt đăng ký ({status_text}) cho Workshop này rồi (BR-01 chống đăng ký trùng).",
+            detail="Bạn đã có lượt đăng ký cho Workshop này rồi.",
         )
 
     # BR-02: Kiểm soát số lượng vé và Danh sách chờ (Khóa dòng và đọc dữ liệu mới nhất - Current Read)
@@ -130,7 +144,7 @@ def _register_for_workshop_impl(
     if is_full and not accept_waitlist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Workshop đã hết chỗ. Vui lòng xác nhận tham gia Danh sách chờ (BR-02).",
+            detail="Workshop đã hết chỗ. Vui lòng xác nhận tham gia Danh sách chờ.",
         )
 
     if is_full:
@@ -193,7 +207,7 @@ def _register_for_workshop_impl(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Bạn đã có lượt đăng ký cho Workshop này rồi (BR-01 chống đăng ký trùng).",
+            detail="Bạn đã có lượt đăng ký cho Workshop này rồi.",
         )
     except Exception:
         db.rollback()
@@ -260,7 +274,7 @@ def cancel_registration_by_user(
     if not check_is_cancellable(workshop) and current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Đã quá hạn chót hủy vé (trước 24 giờ khi sự kiện diễn ra) theo quy tắc BR-11.",
+            detail="Đã quá hạn chót hủy vé trước 24 giờ khi sự kiện diễn ra.",
         )
 
     old_status = str(reg.status)

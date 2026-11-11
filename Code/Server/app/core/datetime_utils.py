@@ -41,4 +41,3 @@ def is_within_window(
 
     # Trường hợp còn lại: đã quá hạn
     return False, False, True
-

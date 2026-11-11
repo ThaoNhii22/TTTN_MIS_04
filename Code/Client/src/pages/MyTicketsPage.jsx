@@ -75,11 +75,19 @@ function MyTicketsPage() {
       await submitSurvey({
         registration_id: selectedReg.registration_id,
         rating: Number(surveyRating),
+        answers: {},
         feedback: surveyFeedback.trim(),
       });
       setShowSurveyModal(false);
       toast.success('Đã gửi đánh giá khảo sát thành công. Cảm ơn ý kiến quý báu của bạn!');
       setSelectedReg(null);
+      setRegistrations((prev) =>
+        prev.map((r) =>
+          r.registration_id === selectedReg.registration_id
+            ? { ...r, is_survey_available: false }
+            : r
+        )
+      );
       setReloadKey((k) => k + 1);
     } catch (err) {
       toast.apiError(err, 'Gửi khảo sát đánh giá thất bại.');
@@ -187,7 +195,7 @@ function MyTicketsPage() {
                     </button>
                   )}
 
-                  {t.status === 'attended' && (
+                  {t.is_survey_available && (
                     <button
                       type="button"
                       className="home-page__primary-button"

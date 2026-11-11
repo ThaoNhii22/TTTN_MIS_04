@@ -31,6 +31,10 @@ function AppRouter() {
             <Route path="/" element={<HomePage />} />
             <Route path="/workshops" element={<WorkshopPage />} />
             <Route path="/workshops/:id" element={<WorkshopDetailPage />} />
+          </Route>
+
+          {/* Participant Only Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['participant']} />}>
             <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/waitlist" element={<WaitlistPage />} />
             <Route path="/check-in" element={<CheckInPage />} />

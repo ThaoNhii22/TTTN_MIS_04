@@ -1,6 +1,6 @@
 # Hệ thống Quản lý Workshop Nội Bộ (TTTN_MIS_04)
 
-> Đề tài thực tập tốt nghiệp ngành Hệ thống thông tin quản lý (MIS).  
+> Đề tài thực tập tốt nghiệp ngành Hệ thống thông tin quản lý (MIS).<br />
 > Xây dựng hệ thống số hóa quy trình tổ chức, đăng ký, điểm danh QR và khảo sát đánh giá Workshop nội bộ cho tổ chức/doanh nghiệp.
 
 ---

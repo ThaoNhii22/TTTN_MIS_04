@@ -134,4 +134,3 @@ export function formatErrorMessage(err, fallbackMessage = 'Đã có lỗi xảy 
 
   return fallbackMessage;
 }
-

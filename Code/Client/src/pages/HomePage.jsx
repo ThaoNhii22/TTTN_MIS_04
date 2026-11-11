@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getDashboardStats } from '../services/dashboardService';
 import { getMyRegistrations } from '../services/registrationService';
 import { getWorkshops } from '../services/workshopService';
+import { formatDateTime, getWorkshopLifecycle, parseUtcDate } from '../utils/workshopStatus';
 
 function HomePage() {
   const { user, role } = useAuth();
@@ -13,8 +14,17 @@ function HomePage() {
   const [myRegistrationsCount, setMyRegistrationsCount] = useState(0);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [hasError, setHasError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Cập nhật mốc thời gian tự động (15s/lần), dọn timer khi unmount
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -56,7 +66,20 @@ function HomePage() {
     };
   }, [role, reloadKey]);
 
-  const nextWorkshop = upcomingWorkshops.length > 0 ? upcomingWorkshops[0] : null;
+  // Chỉ hiển thị workshop SẮP TỚI hoặc ĐANG DIỄN RA: loại trừ sự kiện đã kết thúc
+  const futureWorkshops = upcomingWorkshops
+    .filter((w) => {
+      const lc = getWorkshopLifecycle(w, currentTime);
+      return lc.phase === 'upcoming' || lc.phase === 'ongoing';
+    })
+    .sort((a, b) => {
+      const timeA = parseUtcDate(a.start_at)?.getTime() || 0;
+      const timeB = parseUtcDate(b.start_at)?.getTime() || 0;
+      return timeA - timeB;
+    });
+
+  const nextWorkshop = futureWorkshops.length > 0 ? futureWorkshops[0] : null;
+  const nextLifecycle = nextWorkshop ? getWorkshopLifecycle(nextWorkshop, currentTime) : null;
 
   if (loading) {
     return (
@@ -115,14 +138,18 @@ function HomePage() {
         {nextWorkshop ? (
           <div className="dashboard-card dashboard-card--featured">
             <div className="dashboard-card__top">
-              <span className="dashboard-card__label">Workshop sắp diễn ra</span>
-              <span className="dashboard-card__badge">Sắp tới</span>
+              <span className="dashboard-card__label">
+                {nextLifecycle?.isOngoing ? 'Workshop đang diễn ra' : 'Workshop sắp diễn ra'}
+              </span>
+              <span className={`dashboard-card__badge ${nextLifecycle?.badgeClass || ''}`}>
+                {nextLifecycle?.label || 'Sắp tới'}
+              </span>
             </div>
 
             <h2>{nextWorkshop.title}</h2>
 
             <div className="dashboard-card__info">
-              <span>Thời gian: {new Date(nextWorkshop.start_at).toLocaleString('vi-VN')}</span>
+              <span>Thời gian: {formatDateTime(nextWorkshop.start_at)}</span>
               <span>Địa điểm: {nextWorkshop.location}</span>
             </div>
 
@@ -140,9 +167,9 @@ function HomePage() {
             <div className="dashboard-card__top">
               <span className="dashboard-card__label">Trạng thái Workshop</span>
             </div>
-            <h2>Chưa có workshop công bố</h2>
+            <h2>Chưa có workshop sắp tới</h2>
             <p style={{ color: '#7a5b50', fontSize: '13px', margin: '12px 0' }}>
-              Hãy theo dõi danh sách để cập nhật các workshop mới nhất từ ban tổ chức.
+              Hiện chưa có workshop nào sắp diễn ra. Hãy theo dõi danh sách để cập nhật sự kiện mới nhất.
             </p>
             <Link to="/workshops" className="dashboard-card__link">
               Xem tất cả <span>→</span>
@@ -187,7 +214,7 @@ function HomePage() {
                   <span className="waitlist-card__dot" />
                   <div>
                     <h3>{item.workshop_title}</h3>
-                    <p>Đăng ký lúc: {new Date(item.registered_at).toLocaleString('vi-VN')}</p>
+                    <p>Đăng ký lúc: {formatDateTime(item.registered_at)}</p>
                   </div>
                 </div>
                 <span className="waitlist-card__position">
@@ -208,13 +235,15 @@ function HomePage() {
         </div>
 
         <div className="shortcut-grid">
-          <Link to="/check-in" className="shortcut-card">
-            <div>
-              <h3>Mã QR Điểm danh</h3>
-              <p>Quét hoặc nhập mã điểm danh</p>
-            </div>
-            <span>→</span>
-          </Link>
+          {role === 'participant' && (
+            <Link to="/check-in" className="shortcut-card">
+              <div>
+                <h3>Mã QR Điểm danh</h3>
+                <p>Quét hoặc nhập mã điểm danh</p>
+              </div>
+              <span>→</span>
+            </Link>
+          )}
 
           <Link to="/workshops" className="shortcut-card">
             <div>

@@ -7,3 +7,11 @@ search-path = [
 site-package-path = [
     "C:/Users/Admin/.pyenv/pyenv-win/versions/3.12.6/Lib/site-packages"
 ]
+include = [
+    "Code/Server"
+]
+exclude = [
+    "**/__pyrefly_virtual__/**",
+    "**/node_modules/**",
+    "**/__pycache__/**"
+]

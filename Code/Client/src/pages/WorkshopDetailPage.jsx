@@ -6,16 +6,27 @@ import { useToast } from '../context/useToast';
 import { cancelRegistration, getMyRegistrations, registerWorkshop } from '../services/registrationService';
 import { submitSurvey } from '../services/surveyService';
 import { getWorkshopById } from '../services/workshopService';
+import { formatDateTime, getWorkshopLifecycle } from '../utils/workshopStatus';
 
 function WorkshopDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { user, isAuthenticated, role } = useAuth();
   const toast = useToast();
 
   const [workshop, setWorkshop] = useState(null);
   const [loading, setLoading] = useState(true);
   const [myRegistration, setMyRegistration] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  // Cập nhật trạng thái tự động theo thời gian thực (15s/lần), dọn timer khi unmount
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Registration Modal State
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -31,8 +42,6 @@ function WorkshopDetailPage() {
   const [surveyRating, setSurveyRating] = useState(5);
   const [surveyFeedback, setSurveyFeedback] = useState('');
   const [surveySubmitted, setSurveySubmitted] = useState(false);
-
-  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -125,11 +134,14 @@ function WorkshopDetailPage() {
       await submitSurvey({
         registration_id: myRegistration.registration_id,
         rating: Number(surveyRating),
+        answers: {},
         feedback: surveyFeedback.trim(),
       });
       setShowSurveyModal(false);
       setSurveySubmitted(true);
+      setMyRegistration((prev) => (prev ? { ...prev, is_survey_available: false } : null));
       toast.success('Cảm ơn bạn đã gửi ý kiến đánh giá khảo sát thành công!');
+      setReloadKey((k) => k + 1);
     } catch (err) {
       toast.apiError(err, 'Gửi khảo sát đánh giá thất bại.');
     } finally {
@@ -159,6 +171,11 @@ function WorkshopDetailPage() {
   const fillPercent = Math.min(100, Math.round((workshop.confirmed_count / workshop.quota) * 100));
   const remaining = Math.max(0, workshop.quota - workshop.confirmed_count);
 
+  // Vòng đời Workshop thống nhất theo chuẩn UTC
+  const lifecycle = getWorkshopLifecycle(workshop, currentTime);
+  const isEnded = lifecycle.isEnded;
+  const isOngoing = lifecycle.isOngoing;
+
   return (
     <div className="workshop-detail-page">
       <div className="breadcrumb" style={{ marginBottom: '16px', fontSize: '13px', color: '#886255' }}>
@@ -170,10 +187,10 @@ function WorkshopDetailPage() {
         <div className="detail-main">
           <div className="detail-header">
             <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-              <span className={`status-tag status-tag--${workshop.status}`}>
-                {workshop.status.toUpperCase()}
+              <span className={`status-tag ${lifecycle.badgeClass}`}>
+                {lifecycle.label.toUpperCase()}
               </span>
-              {workshop.is_full && (
+              {!isEnded && workshop.is_full && (
                 <span className="status-tag status-tag--full">ĐÃ HẾT CHỖ</span>
               )}
             </div>
@@ -197,11 +214,11 @@ function WorkshopDetailPage() {
             <div className="info-grid">
               <div className="info-item">
                 <span className="info-label">Thời gian bắt đầu:</span>
-                <strong>{new Date(workshop.start_at).toLocaleString('vi-VN')}</strong>
+                <strong>{formatDateTime(workshop.start_at)}</strong>
               </div>
               <div className="info-item">
                 <span className="info-label">Thời gian kết thúc:</span>
-                <strong>{new Date(workshop.end_at).toLocaleString('vi-VN')}</strong>
+                <strong>{formatDateTime(workshop.end_at)}</strong>
               </div>
               <div className="info-item">
                 <span className="info-label">Địa điểm tổ chức:</span>
@@ -210,7 +227,7 @@ function WorkshopDetailPage() {
               <div className="info-item">
                 <span className="info-label">Khung giờ điểm danh:</span>
                 <strong>
-                  {workshop.checkin_start_at ? new Date(workshop.checkin_start_at).toLocaleTimeString('vi-VN') : '--'} - {workshop.checkin_end_at ? new Date(workshop.checkin_end_at).toLocaleTimeString('vi-VN') : '--'}
+                  {workshop.checkin_start_at ? formatDateTime(workshop.checkin_start_at) : '--'} - {workshop.checkin_end_at ? formatDateTime(workshop.checkin_end_at) : '--'}
                 </strong>
               </div>
             </div>
@@ -223,14 +240,25 @@ function WorkshopDetailPage() {
                 <h3>Vé tham gia của bạn</h3>
                 <span className={`status-tag status-tag--${myRegistration.status}`}>
                   {myRegistration.status === 'confirmed' && 'Xác nhận tham gia'}
-                  {myRegistration.status === 'waitlist' && `Hàng đợi #${myRegistration.waitlist_position}`}
+                  {myRegistration.status === 'waitlist' && (
+                    isEnded
+                      ? 'Hàng đợi (Đã kết thúc)'
+                      : `Hàng đợi #${myRegistration.waitlist_position}`
+                  )}
                   {myRegistration.status === 'attended' && 'Đã tham dự'}
                 </span>
               </div>
 
               <div className="user-ticket-card__body">
                 <p>Mã đăng ký: <code>REG-{myRegistration.registration_id}</code></p>
-                <p>Đăng ký lúc: {new Date(myRegistration.registered_at).toLocaleString('vi-VN')}</p>
+                <p>Đăng ký lúc: {formatDateTime(myRegistration.registered_at)}</p>
+
+                {/* Thông báo rõ khi waitlist đã hết hạn */}
+                {myRegistration.status === 'waitlist' && isEnded && (
+                  <div className="alert-banner alert-banner--warning" style={{ marginTop: '12px' }}>
+                    Sự kiện đã kết thúc. Vị trí hàng đợi này không còn hiệu lực — không có vé nào được đôn thêm.
+                  </div>
+                )}
 
                 {myRegistration.qr_payload && (
                   <div className="qr-code-box">
@@ -255,11 +283,12 @@ function WorkshopDetailPage() {
                     </button>
                   )}
 
-                  {myRegistration.status === 'attended' && (
+                  {myRegistration.status === 'attended' && (myRegistration.is_survey_available || surveySubmitted) && (
                     <button
                       type="button"
                       className="home-page__primary-button"
-                      onClick={() => setShowSurveyModal(true)}
+                      onClick={() => !surveySubmitted && setShowSurveyModal(true)}
+                      disabled={surveySubmitted}
                     >
                       {surveySubmitted ? 'Đã gửi khảo sát' : 'Làm khảo sát đánh giá'}
                     </button>
@@ -282,37 +311,55 @@ function WorkshopDetailPage() {
               <span style={{ width: `${fillPercent}%` }} />
             </div>
 
-            <p style={{ fontSize: '13px', color: '#7a5b50', margin: '8px 0' }}>
-              {workshop.is_full
-                ? 'Workshop đã hết chỗ chính thức. Bạn có thể đăng ký vào Hàng đợi.'
-                : `Còn lại ${remaining} chỗ trống.`}
-            </p>
-
-            {workshop.waitlist_count > 0 && (
-              <div className="waitlist-indicator">
-                Hiện có <strong>{workshop.waitlist_count}</strong> người trong danh sách chờ.
+            {/* Nếu workshop đã kết thúc: hiện banner kết thúc, ẩn hành động đăng ký */}
+            {isEnded ? (
+              <div className="alert-banner alert-banner--warning" style={{ marginTop: '8px' }}>
+                <div>
+                  <strong>Sự kiện đã kết thúc</strong>
+                  <div style={{ fontSize: '12px', marginTop: '4px' }}>
+                    Kết thúc lúc {formatDateTime(workshop.end_at)}
+                  </div>
+                </div>
               </div>
-            )}
+            ) : (
+              <>
+                <p style={{ fontSize: '13px', color: '#7a5b50', margin: '8px 0' }}>
+                  {workshop.is_full
+                    ? 'Workshop đã hết chỗ chính thức. Bạn có thể đăng ký vào Hàng đợi.'
+                    : `Còn lại ${remaining} chỗ trống.`}
+                </p>
 
-            {/* Action Buttons */}
-            {workshop.status === 'published' && (!myRegistration || myRegistration.status === 'cancelled') && (
-              <button
-                type="button"
-                className="home-page__primary-button"
-                style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }}
-                onClick={() => {
-                  setAcceptWaitlist(workshop.is_full);
-                  setShowRegisterModal(true);
-                }}
-              >
-                {workshop.is_full ? 'Đăng ký vào Danh sách chờ' : 'Đăng ký tham gia ngay'}
-              </button>
-            )}
+                {workshop.waitlist_count > 0 && (
+                  <div className="waitlist-indicator">
+                    Hiện có <strong>{workshop.waitlist_count}</strong> người trong danh sách chờ.
+                  </div>
+                )}
 
-            {workshop.status !== 'published' && (
-              <div className="alert-banner alert-banner--warning" style={{ marginTop: '16px' }}>
-                Workshop hiện không mở đăng ký.
-              </div>
+                {/* Hành động Đăng ký và Thông báo chỉ dành cho Người tham gia */}
+                {(!role || role === 'participant') && (
+                  <>
+                    {workshop.status === 'published' && (!myRegistration || myRegistration.status === 'cancelled') && (
+                      <button
+                        type="button"
+                        className="home-page__primary-button"
+                        style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }}
+                        onClick={() => {
+                          setAcceptWaitlist(workshop.is_full);
+                          setShowRegisterModal(true);
+                        }}
+                      >
+                        {workshop.is_full ? 'Đăng ký vào Danh sách chờ' : 'Đăng ký tham gia ngay'}
+                      </button>
+                    )}
+
+                    {workshop.status !== 'published' && (
+                      <div className="alert-banner alert-banner--warning" style={{ marginTop: '16px' }}>
+                        Workshop hiện không mở đăng ký.
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -328,7 +375,7 @@ function WorkshopDetailPage() {
       >
         <div className="modal-info-box">
           <p>📍 <strong>Địa điểm:</strong> {workshop.location}</p>
-          <p>🕒 <strong>Thời gian:</strong> {new Date(workshop.start_at).toLocaleString('vi-VN')}</p>
+          <p>🕒 <strong>Thời gian:</strong> {formatDateTime(workshop.start_at)}</p>
           <p>👤 <strong>Người đăng ký:</strong> {user?.full_name} ({user?.email})</p>
         </div>
 

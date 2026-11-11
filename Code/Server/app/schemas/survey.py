@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class SurveySubmit(BaseModel):
@@ -8,6 +8,14 @@ class SurveySubmit(BaseModel):
     rating: int = Field(..., ge=1, le=5, description="Đánh giá từ 1 đến 5 sao")
     answers: Dict[str, Any] = Field(default_factory=dict, description="Các câu trả lời chi tiết")
     feedback: Optional[str] = Field(None, description="Ý kiến đóng góp phản hồi")
+
+    @model_validator(mode="before")
+    @classmethod
+    def ensure_answers_dict(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if data.get("answers") is None:
+                data["answers"] = {}
+        return data
 
 
 class SurveyResponse(BaseModel):

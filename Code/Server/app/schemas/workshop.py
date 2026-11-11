@@ -72,6 +72,10 @@ class WorkshopResponse(WorkshopBase):
     attended_count: int = 0
     is_full: bool = False
     is_registration_open: bool = False
+    # Trạng thái hiệu lực tính theo thời gian thực tế (không đổi DB status)
+    is_ended: bool = False
+    is_started: bool = False  # True khi now >= start_at (đang diễn ra hoặc đã kết thúc)
+    effective_status: str = "published"  # published | completed | cancelled | draft | pending
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -73,6 +73,14 @@ function Navbar() {
             >
               Waitlist
             </NavLink>
+            <NavLink
+              to="/check-in"
+              className={({ isActive }) =>
+                isActive ? 'navbar__link active' : 'navbar__link'
+              }
+            >
+              Check-in QR
+            </NavLink>
           </>
         )}
 
@@ -135,15 +143,6 @@ function Navbar() {
             </NavLink>
           </>
         )}
-
-        <NavLink
-          to="/check-in"
-          className={({ isActive }) =>
-            isActive ? 'navbar__link active' : 'navbar__link'
-          }
-        >
-          Check-in QR
-        </NavLink>
 
         {/* User Info & Actions */}
         {isAuthenticated && user && (
