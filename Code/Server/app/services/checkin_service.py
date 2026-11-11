@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.audit import log_audit_action
+from app.core.datetime_utils import get_now, is_within_window
 from app.models.attendance import Attendance
 from app.models.registration import Registration
 from app.models.user import User
@@ -43,19 +44,23 @@ def process_checkin(
             detail="Workshop không tồn tại trên hệ thống.",
         )
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-
-    # BR-05: Kiểm soát thời gian điểm danh
-    if now < workshop.checkin_start_at:
+    # BR-05: Kiểm soát thời gian điểm danh (hỗ trợ cả Local Time và UTC)
+    is_valid_time, is_early, is_late = is_within_window(
+        workshop.checkin_start_at,
+        workshop.checkin_end_at,
+    )
+    if is_early:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Chưa đến giờ điểm danh, cổng check-in mở lúc {workshop.checkin_start_at.strftime('%H:%M %d/%m/%Y')}.",
         )
-    if now > workshop.checkin_end_at:
+    if is_late:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Đã hết thời gian điểm danh, cổng check-in đóng lúc {workshop.checkin_end_at.strftime('%H:%M %d/%m/%Y')}.",
         )
+
+    now = get_now()
 
     # Xác định Registration cần điểm danh và Kiểm tra Quyền bảo mật
     target_registration: Optional[Registration] = None

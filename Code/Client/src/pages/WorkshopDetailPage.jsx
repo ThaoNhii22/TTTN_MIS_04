@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import Modal from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
-import { getWorkshopById } from '../services/workshopService';
+import { useToast } from '../context/useToast';
 import { cancelRegistration, getMyRegistrations, registerWorkshop } from '../services/registrationService';
 import { submitSurvey } from '../services/surveyService';
+import { getWorkshopById } from '../services/workshopService';
 import { formatDateTime, getWorkshopLifecycle } from '../utils/workshopStatus';
 
 function WorkshopDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated, role } = useAuth();
+  const toast = useToast();
 
   const [workshop, setWorkshop] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,12 +32,10 @@ function WorkshopDetailPage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [acceptWaitlist, setAcceptWaitlist] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
 
-  // Cancel Registration State
+  // Cancel Modal State
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('Bận lịch đột xuất');
+  const [cancelReason, setCancelReason] = useState('Bận lịch cá nhân đột xuất');
 
   // Survey Modal State
   const [showSurveyModal, setShowSurveyModal] = useState(false);
@@ -54,15 +55,15 @@ function WorkshopDetailPage() {
 
         if (isAuthenticated) {
           const myRegs = await getMyRegistrations();
-          const found = myRegs.find((r) => r.workshop_id === Number(id));
           if (!ignore) {
+            const found = myRegs.find((r) => r.workshop_id === Number(id));
             setMyRegistration(found || null);
           }
         }
       } catch (err) {
         console.error('Error fetching workshop detail:', err);
         if (!ignore) {
-          setErrorMessage('Không tìm thấy thông tin Workshop.');
+          toast.apiError(err, 'Không tìm thấy thông tin Workshop.');
         }
       } finally {
         if (!ignore) {
@@ -74,7 +75,7 @@ function WorkshopDetailPage() {
     return () => {
       ignore = true;
     };
-  }, [id, isAuthenticated, reloadKey]);
+  }, [id, isAuthenticated, reloadKey, toast]);
 
   const handleRegister = async (e) => {
     if (e) e.preventDefault();
@@ -84,8 +85,6 @@ function WorkshopDetailPage() {
     }
 
     setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
 
     try {
       const result = await registerWorkshop({
@@ -95,14 +94,13 @@ function WorkshopDetailPage() {
 
       setShowRegisterModal(false);
       if (result.status === 'confirmed') {
-        setSuccessMessage('Đăng ký thành công. Bạn đã được cấp vé tham dự chính thức.');
+        toast.success('Đăng ký thành công! Bạn đã được cấp vé tham dự chính thức.');
       } else if (result.status === 'waitlist') {
-        setSuccessMessage(`Bạn đã được thêm vào Danh sách chờ ở vị trí #${result.waitlist_position}.`);
+        toast.info(`Bạn đã được ghi danh vào Danh sách chờ ở vị trí #${result.waitlist_position}.`);
       }
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setErrorMessage(typeof detail === 'string' ? detail : 'Đăng ký không thành công.');
+      toast.apiError(err, 'Đăng ký Workshop không thành công.');
     } finally {
       setIsSubmitting(false);
     }
@@ -113,16 +111,14 @@ function WorkshopDetailPage() {
     if (!myRegistration) return;
 
     setIsSubmitting(true);
-    setErrorMessage(null);
 
     try {
       await cancelRegistration(myRegistration.registration_id, cancelReason);
       setShowCancelModal(false);
-      setSuccessMessage('Đã hủy đăng ký vé thành công.');
+      toast.success('Đã hủy đăng ký vé thành công.');
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setErrorMessage(typeof detail === 'string' ? detail : 'Hủy đăng ký thất bại.');
+      toast.apiError(err, 'Hủy đăng ký vé thất bại.');
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +129,6 @@ function WorkshopDetailPage() {
     if (!myRegistration) return;
 
     setIsSubmitting(true);
-    setErrorMessage(null);
 
     try {
       await submitSurvey({
@@ -145,11 +140,10 @@ function WorkshopDetailPage() {
       setShowSurveyModal(false);
       setSurveySubmitted(true);
       setMyRegistration((prev) => (prev ? { ...prev, is_survey_available: false } : null));
-      setSuccessMessage('Cảm ơn bạn đã gửi đánh giá khảo sát thành công.');
+      toast.success('Cảm ơn bạn đã gửi ý kiến đánh giá khảo sát thành công!');
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setErrorMessage(typeof detail === 'string' ? detail : 'Gửi khảo sát thất bại.');
+      toast.apiError(err, 'Gửi khảo sát đánh giá thất bại.');
     } finally {
       setIsSubmitting(false);
     }
@@ -159,7 +153,7 @@ function WorkshopDetailPage() {
     return (
       <div className="state-card state-card--loading" style={{ margin: '80px auto', textAlign: 'center' }}>
         <div className="state-card__spinner" />
-        <p style={{ marginTop: '16px' }}>Đang tải chi tiết Workshop...</p>
+        <p style={{ marginTop: '14px' }}>Đang tải chi tiết Workshop...</p>
       </div>
     );
   }
@@ -187,18 +181,6 @@ function WorkshopDetailPage() {
       <div className="breadcrumb" style={{ marginBottom: '16px', fontSize: '13px', color: '#886255' }}>
         <Link to="/workshops" style={{ color: '#886255', textDecoration: 'none' }}>← Quay lại danh sách</Link>
       </div>
-
-      {successMessage && (
-        <div className="alert-banner alert-banner--success" style={{ marginBottom: '20px' }}>
-          <div>{successMessage}</div>
-        </div>
-      )}
-
-      {errorMessage && (
-        <div className="alert-banner alert-banner--error" style={{ marginBottom: '20px' }}>
-          <div>{errorMessage}</div>
-        </div>
-      )}
 
       <div className="detail-layout">
         {/* Main Content */}
@@ -384,149 +366,199 @@ function WorkshopDetailPage() {
       </div>
 
       {/* Modal Đăng ký Workshop */}
-      {showRegisterModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Xác nhận Đăng ký Workshop</h2>
-            <p><strong>{workshop.title}</strong></p>
-
-            <div className="modal-info-box">
-              <p>Địa điểm: {workshop.location}</p>
-              <p>Thời gian: {formatDateTime(workshop.start_at)}</p>
-              <p>Người đăng ký: {user?.full_name} - {user?.email}</p>
-            </div>
-
-            {workshop.is_full && (
-              <div className="alert-banner alert-banner--warning" style={{ margin: '12px 0' }}>
-                <label style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={acceptWaitlist}
-                    onChange={(e) => setAcceptWaitlist(e.target.checked)}
-                  />
-                  <span>Tôi đồng ý ghi danh vào <strong>Danh sách chờ</strong> khi có người hủy vé.</span>
-                </label>
-              </div>
-            )}
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setShowRegisterModal(false)}
-                disabled={isSubmitting}
-              >
-                Hủy bỏ
-              </button>
-              <button
-                type="button"
-                className="home-page__primary-button"
-                onClick={handleRegister}
-                disabled={isSubmitting || (workshop.is_full && !acceptWaitlist)}
-              >
-                {isSubmitting ? 'Đang xử lý...' : 'Xác nhận Đăng ký'}
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={showRegisterModal}
+        onClose={() => !isSubmitting && setShowRegisterModal(false)}
+        title="Xác nhận Đăng ký Workshop"
+        subtitle={`Sự kiện: ${workshop.title}`}
+        size="md"
+      >
+        <div className="modal-info-box">
+          <p>📍 <strong>Địa điểm:</strong> {workshop.location}</p>
+          <p>🕒 <strong>Thời gian:</strong> {formatDateTime(workshop.start_at)}</p>
+          <p>👤 <strong>Người đăng ký:</strong> {user?.full_name} ({user?.email})</p>
         </div>
-      )}
+
+        {workshop.is_full && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '10px',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              background: '#fffbeb',
+              border: '1px solid #fde68a',
+              color: '#92400e',
+              fontSize: '13px',
+              margin: '14px 0',
+            }}
+          >
+            <input
+              type="checkbox"
+              id="waitlist-check"
+              checked={acceptWaitlist}
+              onChange={(e) => setAcceptWaitlist(e.target.checked)}
+              style={{ marginTop: '2px' }}
+            />
+            <label htmlFor="waitlist-check" style={{ cursor: 'pointer', lineHeight: '1.4' }}>
+              Workshop đã hết chỗ chính thức. Tôi đồng ý ghi danh vào <strong>Danh sách chờ (Waitlist)</strong> để tự động nhận vé khi có người hủy.
+            </label>
+          </div>
+        )}
+
+        <div className="modal-actions" style={{ marginTop: '20px' }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setShowRegisterModal(false)}
+            disabled={isSubmitting}
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="button"
+            className="home-page__primary-button"
+            onClick={handleRegister}
+            disabled={isSubmitting || (workshop.is_full && !acceptWaitlist)}
+          >
+            {isSubmitting ? (
+              <span className="btn-loading-wrapper">
+                <span className="mini-spinner" /> Đang xử lý...
+              </span>
+            ) : (
+              'Xác nhận Đăng ký'
+            )}
+          </button>
+        </div>
+      </Modal>
 
       {/* Modal Hủy Đăng ký Vé */}
-      {showCancelModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Hủy đăng ký Workshop</h2>
-            <p>Bạn có chắc chắn muốn hủy vé tham gia workshop này?</p>
-
-            <div className="form-group" style={{ marginTop: '14px' }}>
-              <label>Lý do hủy:</label>
-              <textarea
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Nhập lý do hủy vé..."
-                rows="3"
-                required
-              />
-            </div>
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setShowCancelModal(false)}
-                disabled={isSubmitting}
-              >
-                Đóng
-              </button>
-              <button
-                type="button"
-                className="btn-danger"
-                onClick={handleCancelRegistration}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Đang hủy...' : 'Xác nhận Hủy'}
-              </button>
-            </div>
+      <Modal
+        isOpen={showCancelModal}
+        onClose={() => !isSubmitting && setShowCancelModal(false)}
+        title="Hủy Vé Tham gia Workshop"
+        subtitle={`Sự kiện: ${workshop.title}`}
+        size="md"
+      >
+        <form onSubmit={handleCancelRegistration}>
+          <div className="form-group">
+            <label>Lý do hủy vé *</label>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy vé tham dự..."
+              rows="3"
+              required
+            />
           </div>
-        </div>
-      )}
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              background: '#fef2f2',
+              color: '#991b1b',
+              fontSize: '13px',
+              margin: '14px 0',
+            }}
+          >
+            <svg style={{ width: '18px', height: '18px', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>Sau khi hủy, chỗ của bạn sẽ được chuyển nhượng ngay cho người đầu tiên trong Hàng đợi (nếu có).</span>
+          </div>
+
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowCancelModal(false)}
+              disabled={isSubmitting}
+            >
+              Đóng
+            </button>
+            <button
+              type="submit"
+              className="btn-danger"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span className="btn-loading-wrapper">
+                  <span className="mini-spinner" /> Đang hủy...
+                </span>
+              ) : (
+                'Xác nhận Hủy'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Modal Khảo sát Đánh giá */}
-      {showSurveyModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Đánh giá và Khảo sát Workshop</h2>
-            <p><strong>{workshop.title}</strong></p>
-
-            <form onSubmit={handleSubmitSurvey}>
-              <div className="form-group" style={{ margin: '16px 0' }}>
-                <label>Mức độ hài lòng chung từ 1 đến 5 sao:</label>
-                <div className="star-rating-selector">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      type="button"
-                      key={star}
-                      className={`star-btn ${surveyRating >= star ? 'active' : ''}`}
-                      onClick={() => setSurveyRating(star)}
-                    >
-                      ★
-                    </button>
-                  ))}
-                  <span style={{ marginLeft: '10px', fontWeight: 'bold' }}>{surveyRating}/5 sao</span>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Ý kiến đóng góp và Phản hồi:</label>
-                <textarea
-                  value={surveyFeedback}
-                  onChange={(e) => setSurveyFeedback(e.target.value)}
-                  placeholder="Nội dung workshop, giảng viên, tổ chức..."
-                  rows="4"
-                />
-              </div>
-
-              <div className="modal-actions">
+      <Modal
+        isOpen={showSurveyModal}
+        onClose={() => !isSubmitting && setShowSurveyModal(false)}
+        title="Đánh giá và Khảo sát Workshop"
+        subtitle={`Sự kiện: ${workshop.title}`}
+        size="md"
+      >
+        <form onSubmit={handleSubmitSurvey}>
+          <div className="form-group" style={{ margin: '8px 0 16px' }}>
+            <label>Mức độ hài lòng chung từ 1 đến 5 sao:</label>
+            <div className="star-rating-selector" style={{ marginTop: '8px' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowSurveyModal(false)}
-                  disabled={isSubmitting}
+                  key={star}
+                  className={`star-btn ${surveyRating >= star ? 'active' : ''}`}
+                  onClick={() => setSurveyRating(star)}
                 >
-                  Đóng
+                  ★
                 </button>
-                <button
-                  type="submit"
-                  className="home-page__primary-button"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá'}
-                </button>
-              </div>
-            </form>
+              ))}
+              <span style={{ marginLeft: '10px', fontWeight: 'bold', color: '#c2410c' }}>{surveyRating}/5 sao</span>
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="form-group">
+            <label>Ý kiến đóng góp và Phản hồi:</label>
+            <textarea
+              value={surveyFeedback}
+              onChange={(e) => setSurveyFeedback(e.target.value)}
+              placeholder="Nội dung workshop, giảng viên, tổ chức..."
+              rows="4"
+            />
+          </div>
+
+          <div className="modal-actions" style={{ marginTop: '20px' }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowSurveyModal(false)}
+              disabled={isSubmitting}
+            >
+              Đóng
+            </button>
+            <button
+              type="submit"
+              className="home-page__primary-button"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span className="btn-loading-wrapper">
+                  <span className="mini-spinner" /> Đang gửi...
+                </span>
+              ) : (
+                'Gửi đánh giá'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

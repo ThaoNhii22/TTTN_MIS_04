@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ErrorState from '../components/ui/ErrorState';
 import { useAuth } from '../context/AuthContext';
-import { getWorkshops } from '../services/workshopService';
-import { getMyRegistrations } from '../services/registrationService';
 import { getDashboardStats } from '../services/dashboardService';
+import { getMyRegistrations } from '../services/registrationService';
+import { getWorkshops } from '../services/workshopService';
 import { formatDateTime, getWorkshopLifecycle, parseUtcDate } from '../utils/workshopStatus';
 
 function HomePage() {
@@ -14,6 +15,8 @@ function HomePage() {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [hasError, setHasError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Cập nhật mốc thời gian tự động (15s/lần), dọn timer khi unmount
   useEffect(() => {
@@ -24,27 +27,44 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     async function loadHomeData() {
+      setLoading(true);
+      setHasError(false);
       try {
         const workshopsData = await getWorkshops({ status: 'published' });
-        setUpcomingWorkshops(workshopsData);
+        if (!ignore) {
+          setUpcomingWorkshops(workshopsData);
+        }
 
         if (role === 'participant') {
           const myRegs = await getMyRegistrations();
-          setMyRegistrationsCount(myRegs.filter((r) => r.status === 'confirmed' || r.status === 'attended').length);
-          setMyWaitlists(myRegs.filter((r) => r.status === 'waitlist'));
+          if (!ignore) {
+            setMyRegistrationsCount(myRegs.filter((r) => r.status === 'confirmed' || r.status === 'attended').length);
+            setMyWaitlists(myRegs.filter((r) => r.status === 'waitlist'));
+          }
         } else if (role === 'admin' || role === 'organizer') {
           const stats = await getDashboardStats();
-          setDashboardStats(stats);
+          if (!ignore) {
+            setDashboardStats(stats);
+          }
         }
       } catch (err) {
         console.error('Error loading home data:', err);
+        if (!ignore) {
+          setHasError(true);
+        }
       } finally {
-        setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     }
     loadHomeData();
-  }, [role]);
+    return () => {
+      ignore = true;
+    };
+  }, [role, reloadKey]);
 
   // Chỉ hiển thị workshop SẮP TỚI hoặc ĐANG DIỄN RA: loại trừ sự kiện đã kết thúc
   const futureWorkshops = upcomingWorkshops
@@ -67,6 +87,16 @@ function HomePage() {
         <div className="state-card__spinner" />
         <p style={{ marginTop: '16px' }}>Đang tải thông tin trang chủ...</p>
       </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <ErrorState
+        title="Không thể tải dữ liệu trang chủ"
+        message="Không thể kết nối đến máy chủ hoặc dữ liệu bị gián đoạn. Vui lòng thử lại."
+        onRetry={() => setReloadKey((k) => k + 1)}
+      />
     );
   }
 

@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import Modal from '../components/ui/Modal';
+import { useToast } from '../context/useToast';
 import { createInternalUser, getUsers, updateUserRole, updateUserStatus } from '../services/userService';
 
 function AdminUsersPage() {
+  const toast = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,9 +21,11 @@ function AdminUsersPage() {
     role: 'participant',
   });
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [alertMessage, setAlertMessage] = useState(null);
+  // Status Toggle Confirmation
+  const [userToToggle, setUserToToggle] = useState(null);
+  const [showStatusConfirmModal, setShowStatusConfirmModal] = useState(false);
 
+  const [isProcessing, setIsProcessing] = useState(false);
   const [appliedSearch, setAppliedSearch] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -39,6 +45,7 @@ function AdminUsersPage() {
         }
       } catch (err) {
         console.error('Error fetching users:', err);
+        toast.apiError(err, 'Không thể tải danh sách tài khoản.');
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -49,7 +56,7 @@ function AdminUsersPage() {
     return () => {
       ignore = true;
     };
-  }, [roleFilter, statusFilter, appliedSearch, reloadKey]);
+  }, [roleFilter, statusFilter, appliedSearch, reloadKey, toast]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -63,11 +70,10 @@ function AdminUsersPage() {
       await createInternalUser(formData);
       setShowCreateModal(false);
       setFormData({ full_name: '', email: '', password: '', role: 'participant' });
-      setAlertMessage({ type: 'success', text: 'Cấp tài khoản nội bộ mới thành công.' });
+      toast.success('Cấp tài khoản nội bộ mới thành công.');
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Cấp tài khoản thất bại.' });
+      toast.apiError(err, 'Cấp tài khoản mới thất bại.');
     } finally {
       setIsProcessing(false);
     }
@@ -76,26 +82,35 @@ function AdminUsersPage() {
   const handleRoleChange = async (userId, newRole) => {
     try {
       await updateUserRole(userId, newRole);
-      setAlertMessage({ type: 'success', text: 'Cập nhật phân quyền vai trò thành công.' });
+      toast.success('Cập nhật phân quyền vai trò người dùng thành công.');
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Đổi vai trò thất bại.' });
+      toast.apiError(err, 'Đổi vai trò người dùng thất bại.');
     }
   };
 
-  const handleStatusToggle = async (user) => {
-    const newStatus = user.status === 'active' ? 'locked' : 'active';
-    const actionText = newStatus === 'locked' ? 'khóa' : 'mở khóa';
-    if (!window.confirm(`Bạn có chắc chắn muốn ${actionText} tài khoản của ${user.full_name}?`)) return;
+  const openStatusConfirm = (user) => {
+    setUserToToggle(user);
+    setShowStatusConfirmModal(true);
+  };
 
+  const handleConfirmStatusToggle = async () => {
+    if (!userToToggle) return;
+    const isLocking = userToToggle.status === 'active';
+    const newStatus = isLocking ? 'locked' : 'active';
+    const actionText = isLocking ? 'khóa' : 'mở khóa';
+
+    setIsProcessing(true);
     try {
-      await updateUserStatus(user.user_id, newStatus);
-      setAlertMessage({ type: 'success', text: `Đã ${actionText} tài khoản thành công.` });
+      await updateUserStatus(userToToggle.user_id, newStatus);
+      toast.success(`Đã ${actionText} tài khoản của "${userToToggle.full_name}" thành công.`);
+      setShowStatusConfirmModal(false);
+      setUserToToggle(null);
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setAlertMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Thao tác thất bại.' });
+      toast.apiError(err, `Không thể ${actionText} tài khoản.`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -113,12 +128,6 @@ function AdminUsersPage() {
           + Cấp Tài khoản Mới
         </button>
       </div>
-
-      {alertMessage && (
-        <div className={`alert-banner alert-banner--${alertMessage.type}`} style={{ marginBottom: '20px' }}>
-          <div>{alertMessage.text}</div>
-        </div>
-      )}
 
       {/* Filter Toolbar */}
       <div className="workshop-toolbar" style={{ marginBottom: '20px' }}>
@@ -159,7 +168,7 @@ function AdminUsersPage() {
         <div className="workshop-empty">
           <div className="workshop-empty__icon">W</div>
           <h2>Không tìm thấy người dùng phù hợp</h2>
-          <p>Hãy thử thay đổi tiêu chí tìm kiếm.</p>
+          <p>Hãy thử thay đổi tiêu chí tìm kiếm hoặc xóa bộ lọc.</p>
         </div>
       ) : (
         <div className="admin-table-wrapper" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #ebdcd5', overflow: 'hidden' }}>
@@ -212,7 +221,7 @@ function AdminUsersPage() {
                       type="button"
                       className={u.status === 'active' ? 'btn-danger-outline' : 'btn-secondary'}
                       style={{ fontSize: '12px', padding: '6px 12px' }}
-                      onClick={() => handleStatusToggle(u)}
+                      onClick={() => openStatusConfirm(u)}
                     >
                       {u.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa'}
                     </button>
@@ -225,79 +234,102 @@ function AdminUsersPage() {
       )}
 
       {/* Modal Cấp Tài khoản Mới */}
-      {showCreateModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Cấp Tài khoản Nội bộ Mới</h2>
-            <form onSubmit={handleCreateUser}>
-              <div className="form-group">
-                <label>Họ và tên *</label>
-                <input
-                  type="text"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  placeholder="Ví dụ: Nguyễn Văn A"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Email đăng nhập *</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="user@workshop.edu.vn"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Mật khẩu khởi tạo *</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Nhập mật khẩu..."
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Phân quyền Vai trò</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="filter-select"
-                  style={{ width: '100%' }}
-                >
-                  <option value="participant">Người tham gia</option>
-                  <option value="organizer">Ban tổ chức</option>
-                  <option value="admin">Quản trị viên</option>
-                </select>
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowCreateModal(false)}
-                  disabled={isProcessing}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="home-page__primary-button"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Đang tạo...' : 'Tạo tài khoản'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => !isProcessing && setShowCreateModal(false)}
+        title="Cấp Tài khoản Nội bộ Mới"
+        subtitle="Thông tin tài khoản để nhân viên hoặc người học đăng nhập vào hệ thống"
+        size="md"
+      >
+        <form onSubmit={handleCreateUser}>
+          <div className="form-group">
+            <label>Họ và tên *</label>
+            <input
+              type="text"
+              value={formData.full_name}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              placeholder="Ví dụ: Nguyễn Văn An"
+              required
+            />
           </div>
-        </div>
-      )}
+
+          <div className="form-group">
+            <label>Email đăng nhập *</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="user@workshop.edu.vn"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Mật khẩu khởi tạo *</label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="Nhập mật khẩu an toàn..."
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Phân quyền Vai trò</label>
+            <select
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              className="filter-select"
+              style={{ width: '100%' }}
+            >
+              <option value="participant">Người tham gia (Participant)</option>
+              <option value="organizer">Ban tổ chức (Organizer)</option>
+              <option value="admin">Quản trị viên (Admin)</option>
+            </select>
+          </div>
+
+          <div className="modal-actions" style={{ marginTop: '24px' }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowCreateModal(false)}
+              disabled={isProcessing}
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="home-page__primary-button"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <span className="btn-loading-wrapper">
+                  <span className="mini-spinner" /> Đang tạo...
+                </span>
+              ) : (
+                'Tạo tài khoản'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Confirmation Dialog for Status Lock/Unlock */}
+      <ConfirmDialog
+        isOpen={showStatusConfirmModal}
+        onClose={() => setShowStatusConfirmModal(false)}
+        onConfirm={handleConfirmStatusToggle}
+        title={userToToggle?.status === 'active' ? 'Khóa tài khoản người dùng' : 'Mở khóa tài khoản'}
+        message={
+          userToToggle?.status === 'active'
+            ? `Bạn có chắc chắn muốn KHÓA tài khoản của "${userToToggle?.full_name}"? Người dùng này sẽ không thể đăng nhập hoặc thao tác trên hệ thống.`
+            : `Bạn có chắc chắn muốn MỞ KHÓA tài khoản của "${userToToggle?.full_name}" để người dùng có thể tiếp tục sử dụng hệ thống?`
+        }
+        confirmText={userToToggle?.status === 'active' ? 'Xác nhận Khóa' : 'Xác nhận Mở khóa'}
+        variant={userToToggle?.status === 'active' ? 'danger' : 'primary'}
+        isLoading={isProcessing}
+      />
     </section>
   );
 }

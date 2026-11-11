@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import threading
 from typing import Any, Dict, List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy import func
@@ -6,10 +7,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.audit import log_audit_action
+from app.core.datetime_utils import get_now, is_within_window
 from app.models.registration import Registration
 from app.models.user import User
 from app.models.workshop import Workshop
 from app.services.workshop_service import get_workshop_stats, promote_waitlist_entries
+
+# Khóa đồng bộ bảo vệ chống Race Condition ở cấp ứng dụng (bổ trợ cho with_for_update trên MySQL/InnoDB)
+_registration_lock = threading.Lock()
 
 
 def format_qr_payload(workshop_id: int, registration_id: int, user_email: str) -> str:
@@ -17,9 +22,11 @@ def format_qr_payload(workshop_id: int, registration_id: int, user_email: str) -
 
 
 def check_is_cancellable(workshop: Workshop) -> bool:
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
     cutoff_time = workshop.start_at - timedelta(hours=24)  # BR-11 Mặc định trước 24h
-    return bool(now < cutoff_time)
+    now_local = datetime.now()
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    # Hợp lệ nếu theo giờ Local hoặc UTC đều chưa quá cutoff
+    return bool(now_local < cutoff_time or now_utc < cutoff_time)
 
 
 def register_for_workshop(
@@ -36,6 +43,23 @@ def register_for_workshop(
             detail="Chỉ tài khoản Người tham gia (Participant) mới có quyền đăng ký workshop.",
         )
 
+    with _registration_lock:
+        return _register_for_workshop_impl(
+            db=db,
+            workshop_id=workshop_id,
+            current_user=current_user,
+            accept_waitlist=accept_waitlist,
+            ip_address=ip_address,
+        )
+
+
+def _register_for_workshop_impl(
+    db: Session,
+    workshop_id: int,
+    current_user: User,
+    accept_waitlist: bool = True,
+    ip_address: Optional[str] = None,
+) -> Registration:
     workshop = (
         db.query(Workshop)
         .filter(Workshop.workshop_id == workshop_id)
@@ -63,26 +87,30 @@ def register_for_workshop(
             detail="Sự kiện đã kết thúc, không thể đăng ký hay vào hàng đợi.",
         )
 
-    # BR-15: Kiểm tra khung thời gian mở/đóng đăng ký
-    if workshop.registration_open_at and now < workshop.registration_open_at:
+    # BR-15: Kiểm tra khung thời gian mở/đóng đăng ký (hỗ trợ cả Local Time và UTC)
+    reg_end = workshop.registration_close_at or workshop.start_at
+    is_valid_reg_time, is_early, is_late = is_within_window(
+        workshop.registration_open_at,
+        reg_end,
+    )
+    if is_early and workshop.registration_open_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cổng đăng ký chưa mở, thời gian mở lúc {workshop.registration_open_at.strftime('%H:%M %d/%m/%Y')}.",
+            detail=f"Cổng đăng ký chưa mở (mở lúc {workshop.registration_open_at.strftime('%H:%M %d/%m/%Y')}) theo quy tắc BR-15.",
         )
-    # Hạn đăng ký: dùng registration_close_at nếu có, ngược lại fallback về start_at (BR-15)
-    reg_deadline = workshop.registration_close_at if workshop.registration_close_at else workshop.start_at
-    if now >= reg_deadline:
-        deadline_str = reg_deadline.strftime('%H:%M %d/%m/%Y')
+    if is_late:
         if workshop.registration_close_at:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Sự kiện đã đóng cổng đăng ký lúc {deadline_str}.",
+                detail=f"Sự kiện đã đóng cổng đăng ký lúc {workshop.registration_close_at.strftime('%H:%M %d/%m/%Y')} (BR-15).",
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Sự kiện đã bắt đầu, không thể đăng ký thêm.",
+                detail="Sự kiện đã bắt đầu, không thể đăng ký thêm (BR-08).",
             )
+
+    now = get_now()
 
     # BR-01: Chống đăng ký trùng (1 email/user = 1 vé)
     existing_reg = (
@@ -240,7 +268,7 @@ def cancel_registration_by_user(
         )
 
     workshop = reg.workshop
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = get_now()
 
     # BR-11: Kiểm soát hạn chót hủy vé (Cutoff time)
     if not check_is_cancellable(workshop) and current_user.role != "admin":

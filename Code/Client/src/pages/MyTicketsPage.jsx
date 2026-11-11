@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Modal from '../components/ui/Modal';
+import { useToast } from '../context/useToast';
 import { cancelRegistration, getMyRegistrations } from '../services/registrationService';
 import { submitSurvey } from '../services/surveyService';
 
 function MyTicketsPage() {
+  const toast = useToast();
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -11,7 +14,7 @@ function MyTicketsPage() {
   // Cancel Modal State
   const [selectedReg, setSelectedReg] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('Bận lịch cá nhân');
+  const [cancelReason, setCancelReason] = useState('Bận lịch cá nhân đột xuất');
 
   // Survey Modal State
   const [showSurveyModal, setShowSurveyModal] = useState(false);
@@ -19,8 +22,6 @@ function MyTicketsPage() {
   const [surveyFeedback, setSurveyFeedback] = useState('');
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [actionMessage, setActionMessage] = useState(null);
-
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ function MyTicketsPage() {
         }
       } catch (err) {
         console.error('Error fetching my tickets:', err);
+        toast.apiError(err, 'Không thể tải danh sách vé của bạn.');
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -44,7 +46,7 @@ function MyTicketsPage() {
     return () => {
       ignore = true;
     };
-  }, [reloadKey]);
+  }, [reloadKey, toast]);
 
   const handleCancel = async (e) => {
     if (e) e.preventDefault();
@@ -54,12 +56,11 @@ function MyTicketsPage() {
     try {
       await cancelRegistration(selectedReg.registration_id, cancelReason);
       setShowCancelModal(false);
+      toast.success(`Đã hủy vé tham gia Workshop "${selectedReg.workshop_title}" thành công.`);
       setSelectedReg(null);
-      setActionMessage({ type: 'success', text: 'Đã hủy vé tham gia thành công.' });
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setActionMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Không thể hủy vé.' });
+      toast.apiError(err, 'Không thể hủy vé đăng ký.');
     } finally {
       setIsProcessing(false);
     }
@@ -78,8 +79,8 @@ function MyTicketsPage() {
         feedback: surveyFeedback.trim(),
       });
       setShowSurveyModal(false);
+      toast.success('Đã gửi đánh giá khảo sát thành công. Cảm ơn ý kiến quý báu của bạn!');
       setSelectedReg(null);
-      setActionMessage({ type: 'success', text: 'Đã gửi khảo sát thành công. Cảm ơn bạn đã đóng góp ý kiến.' });
       setRegistrations((prev) =>
         prev.map((r) =>
           r.registration_id === selectedReg.registration_id
@@ -89,8 +90,7 @@ function MyTicketsPage() {
       );
       setReloadKey((k) => k + 1);
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setActionMessage({ type: 'error', text: typeof detail === 'string' ? detail : 'Gửi khảo sát thất bại.' });
+      toast.apiError(err, 'Gửi khảo sát đánh giá thất bại.');
     } finally {
       setIsProcessing(false);
     }
@@ -110,19 +110,13 @@ function MyTicketsPage() {
         <div>
           <h1>Vé và Lịch sử Đăng ký của bạn</h1>
           <p className="home-page__subtitle">
-            Xem danh sách vé tham gia, trạng thái đăng ký và gửi khảo sát đánh giá sau khi tham dự.
+            Xem danh sách vé tham gia, vị trí hàng đợi và gửi khảo sát đánh giá sau khi hoàn thành.
           </p>
         </div>
         <Link to="/workshops" className="home-page__primary-button">
           + Khám phá thêm Workshop
         </Link>
       </div>
-
-      {actionMessage && (
-        <div className={`alert-banner alert-banner--${actionMessage.type}`} style={{ marginBottom: '20px' }}>
-          <div>{actionMessage.text}</div>
-        </div>
-      )}
 
       {/* Filter Tabs */}
       <div className="filter-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
@@ -180,14 +174,12 @@ function MyTicketsPage() {
                 </h3>
 
                 <div className="ticket-meta" style={{ margin: '12px 0', fontSize: '13px', color: '#6d4336' }}>
-                  <p>Thời gian: {new Date(t.workshop_start_at).toLocaleString('vi-VN')}</p>
-                  <p>Địa điểm: {t.workshop_location}</p>
-                  <p>Đăng ký lúc: {new Date(t.registered_at).toLocaleString('vi-VN')}</p>
+                  <p>🕒 <strong>Thời gian:</strong> {new Date(t.workshop_start_at).toLocaleString('vi-VN')}</p>
+                  <p>📍 <strong>Địa điểm:</strong> {t.workshop_location}</p>
+                  <p>📅 <strong>Đăng ký lúc:</strong> {new Date(t.registered_at).toLocaleString('vi-VN')}</p>
                 </div>
 
-
-
-                <div className="ticket-actions" style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                <div className="ticket-actions" style={{ marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {t.is_cancellable && (
                     <button
                       type="button"
@@ -195,6 +187,7 @@ function MyTicketsPage() {
                       style={{ fontSize: '12px', padding: '6px 12px' }}
                       onClick={() => {
                         setSelectedReg(t);
+                        setCancelReason('Bận việc cá nhân đột xuất');
                         setShowCancelModal(true);
                       }}
                     >
@@ -231,101 +224,132 @@ function MyTicketsPage() {
       )}
 
       {/* Modal Hủy Vé */}
-      {showCancelModal && selectedReg && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Xác nhận Hủy Vé</h2>
-            <p>Hủy đăng ký cho: <strong>{selectedReg.workshop_title}</strong></p>
-
-            <div className="form-group" style={{ marginTop: '14px' }}>
-              <label>Lý do hủy:</label>
-              <textarea
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Nhập lý do..."
-                rows="3"
-                required
-              />
-            </div>
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setShowCancelModal(false)}
-                disabled={isProcessing}
-              >
-                Đóng
-              </button>
-              <button
-                type="button"
-                className="btn-danger"
-                onClick={handleCancel}
-                disabled={isProcessing}
-              >
-                {isProcessing ? 'Đang xử lý...' : 'Xác nhận Hủy vé'}
-              </button>
-            </div>
+      <Modal
+        isOpen={showCancelModal && !!selectedReg}
+        onClose={() => !isProcessing && setShowCancelModal(false)}
+        title="Xác nhận Hủy Vé Tham gia"
+        subtitle={`Workshop: ${selectedReg?.workshop_title}`}
+        size="md"
+      >
+        <form onSubmit={handleCancel}>
+          <div className="form-group">
+            <label>Lý do hủy vé *</label>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy vé..."
+              rows="3"
+              required
+            />
           </div>
-        </div>
-      )}
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              background: '#fffbeb',
+              color: '#92400e',
+              fontSize: '13px',
+              margin: '14px 0',
+            }}
+          >
+            <svg style={{ width: '18px', height: '18px', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span>Khi bạn hủy vé chính thức, hệ thống sẽ tự động chuyển nhượng vị trí trống cho người đầu tiên trong Danh sách chờ.</span>
+          </div>
+
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowCancelModal(false)}
+              disabled={isProcessing}
+            >
+              Giữ lại vé
+            </button>
+            <button
+              type="submit"
+              className="btn-danger"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <span className="btn-loading-wrapper">
+                  <span className="mini-spinner" /> Đang hủy...
+                </span>
+              ) : (
+                'Xác nhận Hủy vé'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Modal Khảo sát */}
-      {showSurveyModal && selectedReg && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Khảo sát và Đánh giá Workshop</h2>
-            <p><strong>{selectedReg.workshop_title}</strong></p>
-
-            <form onSubmit={handleSurveySubmit}>
-              <div className="form-group" style={{ margin: '16px 0' }}>
-                <label>Đánh giá chất lượng:</label>
-                <div className="star-rating-selector">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      type="button"
-                      key={star}
-                      className={`star-btn ${surveyRating >= star ? 'active' : ''}`}
-                      onClick={() => setSurveyRating(star)}
-                    >
-                      ★
-                    </button>
-                  ))}
-                  <span style={{ marginLeft: '10px', fontWeight: 'bold' }}>{surveyRating}/5 sao</span>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Ý kiến nhận xét và Đóng góp:</label>
-                <textarea
-                  value={surveyFeedback}
-                  onChange={(e) => setSurveyFeedback(e.target.value)}
-                  placeholder="Chia sẻ trải nghiệm học tập của bạn..."
-                  rows="4"
-                />
-              </div>
-
-              <div className="modal-actions">
+      <Modal
+        isOpen={showSurveyModal && !!selectedReg}
+        onClose={() => !isProcessing && setShowSurveyModal(false)}
+        title="Khảo sát và Đánh giá Workshop"
+        subtitle={`Workshop: ${selectedReg?.workshop_title}`}
+        size="md"
+      >
+        <form onSubmit={handleSurveySubmit}>
+          <div className="form-group" style={{ margin: '8px 0 16px' }}>
+            <label>Đánh giá mức độ hài lòng:</label>
+            <div className="star-rating-selector" style={{ marginTop: '8px' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowSurveyModal(false)}
-                  disabled={isProcessing}
+                  key={star}
+                  className={`star-btn ${surveyRating >= star ? 'active' : ''}`}
+                  onClick={() => setSurveyRating(star)}
                 >
-                  Đóng
+                  ★
                 </button>
-                <button
-                  type="submit"
-                  className="home-page__primary-button"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Đang gửi...' : 'Gửi khảo sát'}
-                </button>
-              </div>
-            </form>
+              ))}
+              <span style={{ marginLeft: '10px', fontWeight: 'bold', color: '#c2410c' }}>{surveyRating}/5 sao</span>
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="form-group">
+            <label>Ý kiến nhận xét và Đóng góp:</label>
+            <textarea
+              value={surveyFeedback}
+              onChange={(e) => setSurveyFeedback(e.target.value)}
+              placeholder="Chia sẻ trải nghiệm học tập, sự tổ chức, diễn giả..."
+              rows="4"
+            />
+          </div>
+
+          <div className="modal-actions" style={{ marginTop: '20px' }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowSurveyModal(false)}
+              disabled={isProcessing}
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="home-page__primary-button"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <span className="btn-loading-wrapper">
+                  <span className="mini-spinner" /> Đang gửi...
+                </span>
+              ) : (
+                'Gửi đánh giá'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </section>
   );
 }

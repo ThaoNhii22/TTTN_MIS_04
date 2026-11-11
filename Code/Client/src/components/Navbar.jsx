@@ -1,12 +1,15 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/useToast';
 
 function Navbar() {
   const navigate = useNavigate();
   const { user, role, logout, isAuthenticated } = useAuth();
+  const toast = useToast();
 
   const handleLogout = async () => {
     await logout();
+    toast.info('Bạn đã đăng xuất khỏi hệ thống thành công.');
     navigate('/login');
   };
 

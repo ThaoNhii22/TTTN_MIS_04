@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.audit import log_audit_action
+from app.core.datetime_utils import get_now, is_within_window
 from app.models.registration import Registration
 from app.models.user import User
 from app.models.workshop import Workshop
@@ -42,7 +43,7 @@ def get_workshop_stats(db: Session, workshop: Workshop) -> Dict[str, Any]:
     )
     is_full = confirmed_count >= workshop.quota
 
-    # BR-15 Check if registration is currently open
+    # BR-15 Check if registration is currently open (hỗ trợ cả Local Time và UTC)
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     # Xác định workshop có thực sự đã kết thúc (end_at đã qua, bất kể status DB)
@@ -51,7 +52,6 @@ def get_workshop_stats(db: Session, workshop: Workshop) -> Dict[str, Any]:
     is_started = now >= workshop.start_at
 
     # effective_status: trạng thái hiệu lực thực tế tính theo thời gian
-    # Dùng để frontend phân biệt rõ hơn mà không cần đổi schema DB
     if workshop.status in ("cancelled", "completed"):
         effective_status = workshop.status
     elif is_ended:
@@ -61,16 +61,9 @@ def get_workshop_stats(db: Session, workshop: Workshop) -> Dict[str, Any]:
 
     is_open = False
     if workshop.status == "published" and not is_ended:
-        open_ok = True
-        close_ok = True
-        if workshop.registration_open_at:
-            open_ok = now >= workshop.registration_open_at
-        # Hạn đăng ký: registration_close_at nếu có, ngược lại fallback về start_at
-        if workshop.registration_close_at:
-            close_ok = now <= workshop.registration_close_at
-        else:
-            close_ok = now < workshop.start_at
-        is_open = open_ok and close_ok
+        reg_end = workshop.registration_close_at or workshop.start_at
+        within_reg, _, _ = is_within_window(workshop.registration_open_at, reg_end)
+        is_open = within_reg
 
     return {
         "confirmed_count": confirmed_count,

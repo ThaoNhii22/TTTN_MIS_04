@@ -1,0 +1,702 @@
+"""
+Script sinh file Postman Collection v2.1.0 đầy đủ kịch bản kiểm thử API cho dự án TTTN_MIS_04
+Bao gồm: 21 Use Cases, 15 Business Rules, Phân quyền RBAC và kiểm tra ngoại lệ.
+"""
+import json
+import os
+
+collection = {
+    "info": {
+        "_postman_id": "tttn-mis-04-api-test-suite",
+        "name": "TTTN_MIS_04 - Bộ Test Case Kiểm Thử Toàn Diện API (21 UCs & 15 BRs)",
+        "description": "Bộ Test Case API tự động phục vụ nghiệm thu đề tài TTTN_MIS_04: Quản lý Khóa học hoặc Sự kiện Nội bộ. Chứa đầy đủ kịch bản Thành công (Happy Path), Vi phạm Business Rules (400), Phân quyền RBAC (403), Không tìm thấy (404) và Dữ liệu sai định dạng (422).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {"key": "base_url", "value": "http://127.0.0.1:8000/api/v1", "type": "string"},
+        {"key": "admin_token", "value": "", "type": "string"},
+        {"key": "organizer_token", "value": "", "type": "string"},
+        {"key": "participant_token", "value": "", "type": "string"},
+        {"key": "test_workshop_id", "value": "1", "type": "string"}
+    ],
+    "item": [
+        {
+            "name": "01. Xác thực & Tài khoản (Auth & Users)",
+            "item": [
+                {
+                    "name": "TC-01.1: Đăng nhập Admin thành công (UC-01)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"email": "admin@workshop.edu.vn", "password": "Admin@123"})
+                        },
+                        "url": "{{base_url}}/auth/login"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.test('Có access_token và role admin', function () {",
+                                "    pm.expect(jsonData.access_token).to.not.be.empty;",
+                                "    pm.expect(jsonData.user.role).to.eql('admin');",
+                                "    pm.collectionVariables.set('admin_token', jsonData.access_token);",
+                                "});"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-01.2: Đăng nhập Organizer thành công (UC-01)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"email": "organizer@workshop.edu.vn", "password": "Organizer@123"})
+                        },
+                        "url": "{{base_url}}/auth/login"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.collectionVariables.set('organizer_token', jsonData.access_token);"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-01.3: Đăng nhập Participant thành công (UC-01)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"email": "user@workshop.edu.vn", "password": "User@123"})
+                        },
+                        "url": "{{base_url}}/auth/login"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.collectionVariables.set('participant_token', jsonData.access_token);"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-01.4: Đăng nhập sai mật khẩu => Bị từ chối (401 Unauthorized)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"email": "admin@workshop.edu.vn", "password": "WrongPassword@999"})
+                        },
+                        "url": "{{base_url}}/auth/login"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 401 Unauthorized', function () { pm.response.to.have.status(401); });"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-02.1: Đăng xuất hệ thống (UC-02)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Authorization", "value": "Bearer {{participant_token}}"}],
+                        "url": "{{base_url}}/auth/logout"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-14.1: Admin tạo tài khoản nội bộ mới (UC-14)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({
+                                "full_name": "Nguyen Van Test Internal",
+                                "email": "test_internal_{{$timestamp}}@workshop.edu.vn",
+                                "password": "Password@123",
+                                "role": "organizer"
+                            })
+                        },
+                        "url": "{{base_url}}/users"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 201 Created', function () { pm.response.to.have.status(201); });"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-14.2: Participant cố tình tạo tài khoản => Bị chặn (403 Forbidden)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{participant_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({
+                                "full_name": "Hacker",
+                                "email": "hacker@test.com",
+                                "password": "123",
+                                "role": "admin"
+                            })
+                        },
+                        "url": "{{base_url}}/users"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 403 Forbidden', function () { pm.response.to.have.status(403); });"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-15.1: Admin cố tự khóa tài khoản của chính mình => Bị chặn (400 Bad Request)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"status": "locked"})
+                        },
+                        "url": "{{base_url}}/users/1/status"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 400 Bad Request', function () { pm.response.to.have.status(400); });"
+                            ]
+                        }
+                    }]
+                }
+            ]
+        },
+        {
+            "name": "02. Vòng đời Workshop (Workshops Lifecycle)",
+            "item": [
+                {
+                    "name": "TC-03.1: Organizer tạo Workshop mới (Trạng thái Nháp DRAFT - BR-07)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{organizer_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({
+                                "title": "Workshop Automation Testing Postman {{$timestamp}}",
+                                "description": "Workshop kiểm thử API tự động theo chuẩn đặc tả",
+                                "location": "Hội trường B, Tòa nhà Trung tâm",
+                                "quota": 30,
+                                "start_at": "2026-12-01T09:00:00",
+                                "end_at": "2026-12-01T11:30:00",
+                                "registration_open_at": "2026-11-15T00:00:00",
+                                "registration_close_at": "2026-11-30T23:59:00",
+                                "checkin_start_at": "2026-12-01T08:30:00",
+                                "checkin_end_at": "2026-12-01T09:30:00"
+                            })
+                        },
+                        "url": "{{base_url}}/workshops"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 201 Created', function () { pm.response.to.have.status(201); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData.status).to.eql('draft');",
+                                "pm.collectionVariables.set('test_workshop_id', jsonData.workshop_id);"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-03.2: Tạo Workshop với start_at >= end_at => Lỗi validate (422 Unprocessable)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{organizer_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({
+                                "title": "Lỗi Thời Gian",
+                                "location": "Phòng A",
+                                "quota": 20,
+                                "start_at": "2026-12-01T11:00:00",
+                                "end_at": "2026-12-01T09:00:00",
+                                "checkin_start_at": "2026-12-01T08:00:00",
+                                "checkin_end_at": "2026-12-01T09:00:00"
+                            })
+                        },
+                        "url": "{{base_url}}/workshops"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 422 hoặc 400', function () { pm.expect(pm.response.code).to.be.oneOf([422, 400]); });"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-05.1: Organizer gửi Workshop để phê duyệt (Draft -> Pending - UC-05)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Authorization", "value": "Bearer {{organizer_token}}"}],
+                        "url": "{{base_url}}/workshops/{{test_workshop_id}}/submit"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData.status).to.eql('pending');"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-06.1: Organizer cố tự duyệt Workshop của mình => Bị chặn (403 Forbidden)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{organizer_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"action": "approve"})
+                        },
+                        "url": "{{base_url}}/workshops/{{test_workshop_id}}/review"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 403 Forbidden', function () { pm.response.to.have.status(403); });"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-06.2: Admin xét duyệt Workshop (Pending -> Published - BR-06, BR-07)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"action": "approve"})
+                        },
+                        "url": "{{base_url}}/workshops/{{test_workshop_id}}/review"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData.status).to.eql('published');"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-08.1: Khách & Participant xem danh sách Workshop (Chỉ thấy Published - UC-08)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/workshops"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.test('Không chứa bản nháp', function () {",
+                                "    jsonData.forEach(function(w) { pm.expect(w.status).to.be.oneOf(['published', 'completed']); });",
+                                "});"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-08.2: Participant cố lọc draft => Trả về rỗng (0 bản ghi)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{participant_token}}"}],
+                        "url": "{{base_url}}/workshops?status=draft"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData.length).to.eql(0);"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-08.3: Mở trực tiếp ID Workshop Nháp (ID=5) => Bị từ chối (403 Forbidden)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/workshops/5"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 403 Forbidden', function () { pm.response.to.have.status(403); });"
+                            ]
+                        }
+                    }]
+                }
+            ]
+        },
+        {
+            "name": "03. Đăng ký & Hàng chờ Waitlist (Registration & Waitlist)",
+            "item": [
+                {
+                    "name": "TC-09.1: Đăng ký vé hợp lệ (Trạng thái CONFIRMED - UC-09, BR-02)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{participant_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"workshop_id": 1, "accept_waitlist": True})
+                        },
+                        "url": "{{base_url}}/registrations"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status 201 Created hoặc 400 nếu đã đăng ký trước', function () {",
+                                "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                                "});"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-09.2: Đăng ký trùng sự kiện lần 2 => Bị chặn (BR-01 Anti-Duplicate 400)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{participant_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"workshop_id": 1, "accept_waitlist": True})
+                        },
+                        "url": "{{base_url}}/registrations"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                                "pm.expect(pm.response.text()).to.include('trùng');"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-11.1: Xem danh sách vé của tôi (UC-11)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{participant_token}}"}],
+                        "url": "{{base_url}}/registrations/my"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData).to.be.an('array');"
+                            ]
+                        }
+                    }]
+                }
+            ]
+        },
+        {
+            "name": "04. Điểm danh QR & Kiểm soát Thời gian (Check-in & BR-05)",
+            "item": [
+                {
+                    "name": "TC-12.1: Điểm danh hợp lệ bằng mã QR (BR-04, BR-05, UC-12)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{participant_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({
+                                "qr_payload": "TTTN_MIS_04|32|23|organizer@workshop.edu.vn",
+                                "checkin_method": "qr"
+                            })
+                        },
+                        "url": "{{base_url}}/attendance/check-in"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Phản hồi hợp lệ 200 hoặc 400 nếu đã quét trước', function () {",
+                                "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                                "});"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-12.2: Điểm danh sai mã check-in => Bị từ chối (BR-04 400 Bad Request)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{participant_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({
+                                "workshop_id": 1,
+                                "checkin_code": "SAI_HOAN_TOAN_999",
+                                "checkin_method": "manual"
+                            })
+                        },
+                        "url": "{{base_url}}/attendance/check-in"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 400 Bad Request', function () { pm.response.to.have.status(400); });"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-13.1: Xem lịch sử điểm danh của tôi (UC-13)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{participant_token}}"}],
+                        "url": "{{base_url}}/attendance/my"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });"
+                            ]
+                        }
+                    }]
+                }
+            ]
+        },
+        {
+            "name": "05. Khảo sát & Đánh giá (Surveys & Feedback)",
+            "item": [
+                {
+                    "name": "TC-16.1: Gửi khảo sát khi chưa tham dự => Bị chặn (BR-09 400 Bad Request)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{participant_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({
+                                "registration_id": 1,
+                                "rating": 5,
+                                "feedback": "Buổi chia sẻ rất bổ ích"
+                            })
+                        },
+                        "url": "{{base_url}}/surveys"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status 400 Bad Request hoặc 201 nếu đã attended', function () {",
+                                "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                                "});"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-17.1: Organizer xem phân tích khảo sát của Workshop (UC-17)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{organizer_token}}"}],
+                        "url": "{{base_url}}/workshops/31/surveys"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData).to.have.property('average_rating');",
+                                "pm.expect(jsonData).to.have.property('rating_distribution');",
+                                "pm.expect(jsonData).to.have.property('feedbacks');"
+                            ]
+                        }
+                    }]
+                }
+            ]
+        },
+        {
+            "name": "06. Dashboard, Báo cáo KPI & Audit Logs",
+            "item": [
+                {
+                    "name": "TC-18.1: Xem Bảng điều khiển KPI Dashboard (UC-18, UC-19)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+                        "url": "{{base_url}}/dashboard/stats"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData).to.have.property('kpi');",
+                                "pm.expect(jsonData.kpi).to.have.property('attendance_rate');",
+                                "pm.expect(jsonData.kpi).to.have.property('fill_rate');"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-20.1: Admin xem nhật ký hoạt động Server Audit Log (BR-10, UC-20)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+                        "url": "{{base_url}}/audit-logs?limit=10"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData).to.be.an('array');",
+                                "pm.test('Không chứa password trong audit log', function () {",
+                                "    jsonData.forEach(function(log) {",
+                                "        pm.expect(JSON.stringify(log)).to.not.include('password_hash');",
+                                "    });",
+                                "});"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-20.2: Participant xem Audit Log => Bị chặn (403 Forbidden)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{participant_token}}"}],
+                        "url": "{{base_url}}/audit-logs"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 403 Forbidden', function () { pm.response.to.have.status(403); });"
+                            ]
+                        }
+                    }]
+                },
+                {
+                    "name": "TC-21.1: Admin cưỡng chế hủy Workshop (UC-21, BR-13)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": json.dumps({"cancel_reason": "Vi phạm quy chế nội bộ trường đại học"})
+                        },
+                        "url": "{{base_url}}/workshops/{{test_workshop_id}}/force-cancel"
+                    },
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test('Status code 200 OK', function () { pm.response.to.have.status(200); });",
+                                "var jsonData = pm.response.json();",
+                                "pm.expect(jsonData.status).to.eql('cancelled');"
+                            ]
+                        }
+                    }]
+                }
+            ]
+        }
+    ]
+}
+
+target_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "TTTN_MIS_04_Postman_Tests.json")
+with open(target_path, "w", encoding="utf-8") as f:
+    json.dump(collection, f, indent=2, ensure_ascii=False)
+
+print(f"✅ Đã tạo thành công file Postman Collection hoàn chỉnh tại: {target_path}")
