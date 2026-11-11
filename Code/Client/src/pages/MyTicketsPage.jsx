@@ -74,11 +74,19 @@ function MyTicketsPage() {
       await submitSurvey({
         registration_id: selectedReg.registration_id,
         rating: Number(surveyRating),
+        answers: {},
         feedback: surveyFeedback.trim(),
       });
       setShowSurveyModal(false);
       setSelectedReg(null);
       setActionMessage({ type: 'success', text: 'Đã gửi khảo sát thành công. Cảm ơn bạn đã đóng góp ý kiến.' });
+      setRegistrations((prev) =>
+        prev.map((r) =>
+          r.registration_id === selectedReg.registration_id
+            ? { ...r, is_survey_available: false }
+            : r
+        )
+      );
       setReloadKey((k) => k + 1);
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -194,7 +202,7 @@ function MyTicketsPage() {
                     </button>
                   )}
 
-                  {t.status === 'attended' && (
+                  {t.is_survey_available && (
                     <button
                       type="button"
                       className="home-page__primary-button"

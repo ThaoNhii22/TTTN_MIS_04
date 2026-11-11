@@ -14,15 +14,17 @@ from app.services.registration_service import (
     format_qr_payload,
     register_for_workshop,
 )
+from app.services.survey_service import is_survey_available
 
 router = APIRouter(tags=["Quản lý Đăng ký & Waitlist (Registrations)"])
 
 
-def format_registration_response(reg: Registration) -> Dict[str, Any]:
+def format_registration_response(reg: Registration, db: Optional[Session] = None) -> Dict[str, Any]:
     workshop = reg.workshop
     user = reg.user
     qr_payload = format_qr_payload(reg.workshop_id, reg.registration_id, user.email) if reg.status in ["confirmed", "attended"] else None
     is_cancellable = check_is_cancellable(workshop) if workshop and reg.status in ["confirmed", "waitlist"] else False
+    survey_available = is_survey_available(reg, db=db)
 
     return {
         "registration_id": reg.registration_id,
@@ -41,6 +43,7 @@ def format_registration_response(reg: Registration) -> Dict[str, Any]:
         "user_email": user.email if user else None,
         "qr_payload": qr_payload,
         "is_cancellable": is_cancellable,
+        "is_survey_available": survey_available,
     }
 
 
@@ -58,12 +61,19 @@ def create_registration(
 ):
     """
     Use Case 09: Đăng ký tham gia Workshop.
+    - Bảng RBAC (Mục 3.1.7): Chỉ Participant được đăng ký.
     - Hệ thống tự động lấy thông tin của người dùng đăng nhập (current_user).
     - BR-01: Chống đăng ký trùng (1 email/user = 1 vé).
     - BR-02: Kiểm soát số lượng vé và Danh sách chờ (Waitlist).
     - BR-08: Chỉ cho phép đăng ký Workshop đã công bố (published).
     - BR-15: Kiểm soát khung giờ mở/đóng đăng ký.
     """
+    if current_user.role != "participant":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ tài khoản Người tham gia (Participant) mới có quyền đăng ký workshop.",
+        )
+
     reg = register_for_workshop(
         db=db,
         workshop_id=reg_in.workshop_id,
@@ -71,7 +81,7 @@ def create_registration(
         accept_waitlist=reg_in.accept_waitlist,
         ip_address=get_client_ip(request),
     )
-    return format_registration_response(reg)
+    return format_registration_response(reg, db=db)
 
 
 @router.post(
@@ -98,7 +108,7 @@ def cancel_registration(
         current_user=current_user,
         ip_address=get_client_ip(request),
     )
-    return format_registration_response(cancelled_reg)
+    return format_registration_response(cancelled_reg, db=db)
 
 
 @router.get(
@@ -119,7 +129,7 @@ def get_my_registrations(
         query = query.filter(Registration.status == status_filter)
 
     registrations = query.order_by(Registration.registered_at.desc()).all()
-    return [format_registration_response(r) for r in registrations]
+    return [format_registration_response(r, db=db) for r in registrations]
 
 
 @router.get(
@@ -143,4 +153,4 @@ def get_workshop_registrations(
         query = query.filter(Registration.status == status_filter)
 
     registrations = query.order_by(Registration.waitlist_position.asc(), Registration.registered_at.asc()).all()
-    return [format_registration_response(r) for r in registrations]
+    return [format_registration_response(r, db=db) for r in registrations]

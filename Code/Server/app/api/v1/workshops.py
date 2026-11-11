@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
@@ -32,6 +33,14 @@ from app.services.workshop_service import (
 router = APIRouter(prefix="/workshops", tags=["Quản lý Workshop (Workshops)"])
 
 
+def _to_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
 def format_workshop_response(db: Session, workshop: Workshop) -> Dict[str, Any]:
     stats = get_workshop_stats(db, workshop)
     return {
@@ -40,24 +49,27 @@ def format_workshop_response(db: Session, workshop: Workshop) -> Dict[str, Any]:
         "title": workshop.title,
         "description": workshop.description,
         "location": workshop.location,
-        "start_at": workshop.start_at,
-        "end_at": workshop.end_at,
-        "registration_open_at": workshop.registration_open_at,
-        "registration_close_at": workshop.registration_close_at,
+        "start_at": _to_utc(workshop.start_at),
+        "end_at": _to_utc(workshop.end_at),
+        "registration_open_at": _to_utc(workshop.registration_open_at),
+        "registration_close_at": _to_utc(workshop.registration_close_at),
         "quota": workshop.quota,
         "checkin_code": workshop.checkin_code,
-        "checkin_start_at": workshop.checkin_start_at,
-        "checkin_end_at": workshop.checkin_end_at,
+        "checkin_start_at": _to_utc(workshop.checkin_start_at),
+        "checkin_end_at": _to_utc(workshop.checkin_end_at),
         "status": workshop.status,
         "cancel_reason": workshop.cancel_reason,
         "rejection_reason": workshop.rejection_reason,
-        "created_at": workshop.created_at,
-        "updated_at": workshop.updated_at,
+        "created_at": _to_utc(workshop.created_at),
+        "updated_at": _to_utc(workshop.updated_at),
         "confirmed_count": stats["confirmed_count"],
         "waitlist_count": stats["waitlist_count"],
         "attended_count": stats["attended_count"],
         "is_full": stats["is_full"],
         "is_registration_open": stats["is_registration_open"],
+        "is_ended": stats["is_ended"],
+        "is_started": stats["is_started"],
+        "effective_status": stats["effective_status"],
     }
 
 

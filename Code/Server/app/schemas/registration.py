@@ -32,5 +32,6 @@ class RegistrationResponse(BaseModel):
     user_email: Optional[str] = None
     qr_payload: Optional[str] = None
     is_cancellable: bool = True
+    is_survey_available: bool = False
 
     model_config = ConfigDict(from_attributes=True)

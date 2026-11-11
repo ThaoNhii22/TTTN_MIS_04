@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getWorkshops } from '../services/workshopService';
+import { formatDateTime, getWorkshopLifecycle } from '../utils/workshopStatus';
 
 function WorkshopPage() {
   const { role } = useAuth();
@@ -10,6 +11,15 @@ function WorkshopPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  // Tự động cập nhật mốc thời gian (15s/lần), dọn timer khi unmount
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -48,23 +58,6 @@ function WorkshopPage() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setAppliedSearch(searchTerm);
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'published':
-        return { label: 'Đã công bố', class: 'status-tag--published' };
-      case 'completed':
-        return { label: 'Đã kết thúc', class: 'status-tag--completed' };
-      case 'pending':
-        return { label: 'Chờ duyệt', class: 'status-tag--pending' };
-      case 'draft':
-        return { label: 'Bản nháp', class: 'status-tag--draft' };
-      case 'cancelled':
-        return { label: 'Đã hủy', class: 'status-tag--cancelled' };
-      default:
-        return { label: status, class: '' };
-    }
   };
 
   return (
@@ -129,15 +122,15 @@ function WorkshopPage() {
       ) : (
         <div className="workshop-grid">
           {workshops.map((w) => {
-            const statusInfo = getStatusBadge(w.status);
+            const lifecycle = getWorkshopLifecycle(w, currentTime);
             const fillPercent = Math.min(100, Math.round((w.confirmed_count / w.quota) * 100));
             const remaining = Math.max(0, w.quota - w.confirmed_count);
 
             return (
               <article className="workshop-card" key={w.workshop_id}>
                 <div className="workshop-card__cover">
-                  <span className={`status-tag ${statusInfo.class}`}>{statusInfo.label}</span>
-                  {w.is_full && (
+                  <span className={`status-tag ${lifecycle.badgeClass}`}>{lifecycle.label}</span>
+                  {!lifecycle.isEnded && w.is_full && (
                     <span className="status-tag status-tag--full">Đã hết chỗ</span>
                   )}
                 </div>
@@ -149,7 +142,7 @@ function WorkshopPage() {
                   <div className="workshop-card__meta">
                     <div>
                       <span>Thời gian:</span>
-                      <span>{new Date(w.start_at).toLocaleString('vi-VN')}</span>
+                      <span>{formatDateTime(w.start_at)}</span>
                     </div>
                     <div>
                       <span>Địa điểm:</span>

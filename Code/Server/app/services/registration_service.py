@@ -29,6 +29,13 @@ def register_for_workshop(
     accept_waitlist: bool = True,
     ip_address: Optional[str] = None,
 ) -> Registration:
+    # Bảng RBAC (Mục 3.1.7, UC-09): Chỉ tài khoản Người tham gia (Participant) mới có quyền đăng ký workshop
+    if getattr(current_user, "role", None) != "participant":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ tài khoản Người tham gia (Participant) mới có quyền đăng ký workshop.",
+        )
+
     workshop = (
         db.query(Workshop)
         .filter(Workshop.workshop_id == workshop_id)
@@ -42,29 +49,40 @@ def register_for_workshop(
         )
 
     # BR-08: Chỉ cho phép đăng ký Workshop đã được công bố chính thức
-    if workshop.status != "published":
+    if workshop.status not in ("published",):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Sự kiện hiện đang ở trạng thái '{workshop.status}', chưa mở đăng ký.",
         )
 
-    # BR-15: Kiểm tra khung thời gian mở/đóng đăng ký
+    # Kiểm tra workshop đã kết thúc (end_at đã qua) — áp dụng kể cả khi status vẫn là published
     now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if now >= workshop.end_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Sự kiện đã kết thúc, không thể đăng ký hay vào hàng đợi.",
+        )
+
+    # BR-15: Kiểm tra khung thời gian mở/đóng đăng ký
     if workshop.registration_open_at and now < workshop.registration_open_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cổng đăng ký chưa mở, thời gian mở lúc {workshop.registration_open_at.strftime('%H:%M %d/%m/%Y')}.",
         )
-    if workshop.registration_close_at and now > workshop.registration_close_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Sự kiện đã đóng cổng đăng ký lúc {workshop.registration_close_at.strftime('%H:%M %d/%m/%Y')}.",
-        )
-    if not workshop.registration_close_at and now >= workshop.start_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sự kiện đã bắt đầu, không thể đăng ký thêm.",
-        )
+    # Hạn đăng ký: dùng registration_close_at nếu có, ngược lại fallback về start_at (BR-15)
+    reg_deadline = workshop.registration_close_at if workshop.registration_close_at else workshop.start_at
+    if now >= reg_deadline:
+        deadline_str = reg_deadline.strftime('%H:%M %d/%m/%Y')
+        if workshop.registration_close_at:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Sự kiện đã đóng cổng đăng ký lúc {deadline_str}.",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sự kiện đã bắt đầu, không thể đăng ký thêm.",
+            )
 
     # BR-01: Chống đăng ký trùng (1 email/user = 1 vé)
     existing_reg = (

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cancelRegistration, getMyRegistrations } from '../services/registrationService';
+import { getWorkshopById } from '../services/workshopService';
 
 function WaitlistPage() {
-  const [waitlistEntries, setWaitlistEntries] = useState([]);
+  const [activeEntries, setActiveEntries] = useState([]);
+  const [expiredEntries, setExpiredEntries] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Leave Waitlist Modal
@@ -21,10 +23,43 @@ function WaitlistPage() {
       setLoading(true);
       try {
         const data = await getMyRegistrations();
-        if (!ignore) {
-          const waitlists = data.filter((r) => r.status === 'waitlist');
-          setWaitlistEntries(waitlists);
+        if (ignore) return;
+
+        const waitlists = data.filter((r) => r.status === 'waitlist');
+
+        // Lấy thông tin workshop để phân loại active/expired
+        const workshopIds = [...new Set(waitlists.map((r) => r.workshop_id))];
+        const workshopMap = {};
+        await Promise.all(
+          workshopIds.map(async (wid) => {
+            try {
+              const ws = await getWorkshopById(wid);
+              workshopMap[wid] = ws;
+            } catch {
+              workshopMap[wid] = null;
+            }
+          })
+        );
+
+        const active = [];
+        const expired = [];
+        for (const reg of waitlists) {
+          const ws = workshopMap[reg.workshop_id];
+          // is_ended từ API; nếu không có, fallback theo effective_status hoặc end_at
+          const isEnded =
+            ws?.is_ended === true ||
+            ws?.effective_status === 'completed' ||
+            ws?.status === 'completed' ||
+            ws?.status === 'cancelled' ||
+            (ws?.end_at && new Date(ws.end_at) < new Date());
+          if (isEnded) {
+            expired.push({ ...reg, _workshop: ws });
+          } else {
+            active.push({ ...reg, _workshop: ws });
+          }
         }
+        setActiveEntries(active);
+        setExpiredEntries(expired);
       } catch (err) {
         console.error('Error fetching waitlists:', err);
         if (!ignore) {
@@ -69,6 +104,8 @@ function WaitlistPage() {
     }
   };
 
+  const totalEntries = activeEntries.length + expiredEntries.length;
+
   return (
     <div className="waitlist-page">
       <div className="waitlist-page__header">
@@ -95,7 +132,7 @@ function WaitlistPage() {
           <div className="state-card__spinner" />
           <p style={{ marginTop: '12px' }}>Đang tải hàng đợi của bạn...</p>
         </div>
-      ) : waitlistEntries.length === 0 ? (
+      ) : totalEntries === 0 ? (
         <div className="workshop-empty">
           <div className="workshop-empty__icon">W</div>
           <h2>Bạn hiện không ở trong danh sách chờ nào</h2>
@@ -105,41 +142,94 @@ function WaitlistPage() {
           </Link>
         </div>
       ) : (
-        <div className="waitlist-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {waitlistEntries.map((item) => (
-            <div className="waitlist-entry-card" key={item.registration_id}>
-              <div className="waitlist-entry-position">
-                <span className="queue-number">#{item.waitlist_position}</span>
-                <small>Vị trí hàng đợi</small>
-              </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
-              <div className="waitlist-entry-details">
-                <h3>
-                  <Link to={`/workshops/${item.workshop_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                    {item.workshop_title}
-                  </Link>
-                </h3>
-                <p>Địa điểm: {item.workshop_location}</p>
-                <p>Thời gian sự kiện: {new Date(item.workshop_start_at).toLocaleString('vi-VN')}</p>
-                <p style={{ fontSize: '12px', color: '#886255' }}>
-                  Ghi danh lúc: {new Date(item.registered_at).toLocaleString('vi-VN')}
-                </p>
-              </div>
+          {/* ── Hàng đợi còn hoạt động ── */}
+          {activeEntries.length > 0 && (
+            <section>
+              <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#4a3832', marginBottom: '12px' }}>
+                Đang chờ ({activeEntries.length})
+              </h2>
+              <div className="waitlist-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {activeEntries.map((item) => (
+                  <div className="waitlist-entry-card" key={item.registration_id}>
+                    <div className="waitlist-entry-position">
+                      <span className="queue-number">#{item.waitlist_position}</span>
+                      <small>Vị trí hàng đợi</small>
+                    </div>
 
-              <div className="waitlist-entry-actions">
-                <button
-                  type="button"
-                  className="btn-danger-outline"
-                  onClick={() => {
-                    setSelectedEntry(item);
-                    setShowCancelModal(true);
-                  }}
-                >
-                  Rút khỏi hàng đợi
-                </button>
+                    <div className="waitlist-entry-details">
+                      <h3>
+                        <Link to={`/workshops/${item.workshop_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                          {item.workshop_title}
+                        </Link>
+                      </h3>
+                      <p>Địa điểm: {item.workshop_location}</p>
+                      <p>Thời gian sự kiện: {new Date(item.workshop_start_at).toLocaleString('vi-VN')}</p>
+                      <p style={{ fontSize: '12px', color: '#886255' }}>
+                        Ghi danh lúc: {new Date(item.registered_at).toLocaleString('vi-VN')}
+                      </p>
+                    </div>
+
+                    <div className="waitlist-entry-actions">
+                      <button
+                        type="button"
+                        className="btn-danger-outline"
+                        onClick={() => {
+                          setSelectedEntry(item);
+                          setShowCancelModal(true);
+                        }}
+                      >
+                        Rút khỏi hàng đợi
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          ))}
+            </section>
+          )}
+
+          {/* ── Hàng đợi đã hết hạn (workshop kết thúc) ── */}
+          {expiredEntries.length > 0 && (
+            <section>
+              <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#886255', marginBottom: '12px' }}>
+                Đã kết thúc ({expiredEntries.length})
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {expiredEntries.map((item) => (
+                  <div
+                    className="waitlist-entry-card"
+                    key={item.registration_id}
+                    style={{ opacity: 0.65, background: '#fdf7f4' }}
+                  >
+                    <div className="waitlist-entry-position">
+                      <span className="queue-number" style={{ color: '#a0837a' }}>#{item.waitlist_position}</span>
+                      <small>Hàng đợi</small>
+                    </div>
+
+                    <div className="waitlist-entry-details">
+                      <h3 style={{ color: '#7a5b50' }}>
+                        <Link to={`/workshops/${item.workshop_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                          {item.workshop_title}
+                        </Link>
+                      </h3>
+                      <p>Địa điểm: {item.workshop_location}</p>
+                      <p>Thời gian sự kiện: {new Date(item.workshop_start_at).toLocaleString('vi-VN')}</p>
+                    </div>
+
+                    <div className="waitlist-entry-actions">
+                      <span
+                        className="status-tag status-tag--completed"
+                        style={{ fontSize: '12px', padding: '4px 10px' }}
+                      >
+                        Đã kết thúc
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
 

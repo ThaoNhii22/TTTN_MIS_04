@@ -44,12 +44,28 @@ def get_workshop_stats(db: Session, workshop: Workshop) -> Dict[str, Any]:
 
     # BR-15 Check if registration is currently open
     now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    # Xác định workshop có thực sự đã kết thúc (end_at đã qua, bất kể status DB)
+    is_ended = now >= workshop.end_at
+    # Xác định workshop đã bắt đầu (start_at đã qua, dù chưa kết thúc)
+    is_started = now >= workshop.start_at
+
+    # effective_status: trạng thái hiệu lực thực tế tính theo thời gian
+    # Dùng để frontend phân biệt rõ hơn mà không cần đổi schema DB
+    if workshop.status in ("cancelled", "completed"):
+        effective_status = workshop.status
+    elif is_ended:
+        effective_status = "completed"
+    else:
+        effective_status = workshop.status
+
     is_open = False
-    if workshop.status == "published":
+    if workshop.status == "published" and not is_ended:
         open_ok = True
         close_ok = True
         if workshop.registration_open_at:
             open_ok = now >= workshop.registration_open_at
+        # Hạn đăng ký: registration_close_at nếu có, ngược lại fallback về start_at
         if workshop.registration_close_at:
             close_ok = now <= workshop.registration_close_at
         else:
@@ -62,6 +78,9 @@ def get_workshop_stats(db: Session, workshop: Workshop) -> Dict[str, Any]:
         "attended_count": attended_count,
         "is_full": is_full,
         "is_registration_open": is_open,
+        "is_ended": is_ended,
+        "is_started": is_started,
+        "effective_status": effective_status,
     }
 
 
@@ -354,13 +373,13 @@ def cancel_workshop(
     setattr(workshop, "status", "cancelled")
     setattr(workshop, "cancel_reason", cancel_reason)
 
-    # BR-13 Cascading: Hủy toàn bộ đăng ký liên quan (confirmed + waitlist)
+    # BR-13 Cascading: Hủy toàn bộ đăng ký liên quan còn hiệu lực (registered, confirmed, waitlist, attended)
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     registrations = (
         db.query(Registration)
         .filter(
             Registration.workshop_id == workshop.workshop_id,
-            Registration.status.in_(["confirmed", "waitlist"]),
+            Registration.status.in_(["registered", "confirmed", "waitlist", "attended"]),
         )
         .all()
     )
@@ -369,9 +388,7 @@ def cancel_workshop(
         setattr(reg, "status", "cancelled")
         setattr(reg, "cancel_reason", f"Workshop bị hủy: {cancel_reason}")
         setattr(reg, "cancelled_at", now)
-
-    db.commit()
-    db.refresh(workshop)
+        setattr(reg, "waitlist_position", None)
 
     # Phân biệt Action ghi Audit Log theo actor (Organizer vs Admin - UC-07 & UC-21)
     action_name = "FORCE_CANCEL_BY_ADMIN" if actor.role == "admin" else "CANCEL_BY_ORGANIZER"
@@ -382,10 +399,21 @@ def cancel_workshop(
         target_entity="Workshops",
         target_id=getattr(workshop, "workshop_id", None),
         old_value={"status": old_status},
-        new_value={"status": "cancelled", "cancel_reason": cancel_reason, "cancelled_registrations_count": len(registrations)},
+        new_value={
+            "status": "cancelled",
+            "cancel_reason": cancel_reason,
+            "cancelled_registrations_count": len(registrations),
+        },
         ip_address=ip_address,
     )
-    db.commit()
+
+    try:
+        db.commit()
+        db.refresh(workshop)
+    except Exception:
+        db.rollback()
+        raise
+
     return workshop
 
 
@@ -399,8 +427,19 @@ def promote_waitlist_entries(
     """
     BR-03: Tự động đôn hàng đợi Waitlist (FIFO) khi có chỗ trống.
     Ưu tiên lượt đăng ký có waitlist_position nhỏ nhất (hoặc registered_at sớm nhất).
+    Không đôn nếu workshop đã kết thúc, bị hủy, hoặc đã completed.
     """
     if available_slots <= 0:
+        return []
+
+    # Guard: không đôn nếu workshop không còn hoạt động
+    workshop = db.query(Workshop).filter(Workshop.workshop_id == workshop_id).first()
+    if not workshop:
+        return []
+
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if workshop.status not in ("published",) or now >= workshop.end_at:
+        # Workshop đã kết thúc, hủy, hoặc completed — không đôn waitlist
         return []
 
     # Lấy danh sách Waitlist xếp theo thứ tự FIFO kèm khóa dòng
